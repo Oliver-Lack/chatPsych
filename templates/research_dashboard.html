@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="/static/images/IA.ico">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" charset="UTF-8">
+</head>
+<body>
+    <header class="header">
+        <div class="Research-Dashboard-Header">
+            <p>chatPsych</p>
+            <h1>Research Dashboard</h1>
+        </div>
+    </header>
+    <div class="main-container">
+        <aside class="researcher-sidebar">
+            <a href="{{ url_for('login') }}" class="special-back-button researcher-sidebar-content">Back to Login</a>
+            <button class="researcher-sidebar-content" onclick="showForm('about')">About</button>
+            <button class="researcher-sidebar-content" onclick="showForm('timer-settings')">Timer</button>
+            <button class="researcher-sidebar-content" onclick="showForm('url-configuration')">Redirection Links</button>
+            <button class="researcher-sidebar-content" onclick="showForm('agent-creation')">Create Agent Condition</button>
+            <button class="researcher-sidebar-content" onclick="showForm('review-passwords')">Review Conditions</button>
+            <button class="researcher-sidebar-content" onclick="showForm('download-section')">Text-Audio API</button>
+            <button class="researcher-sidebar-content" onclick="showForm('download-section')">Survey Deployment</button>
+            <button class="researcher-sidebar-content" onclick="showForm('download-section')">Download Data</button>
+        </aside>
+        <div class="right-container">
+            <main id="about">
+                <h2>About</h2>
+                <p class="researcher-about">
+                    The chatPsych Interface is designed for human-AI interaction research. <br>
+                    This platform is open-source and available for research adaptions at
+                    <a href="https://github.com/Oliver-Lack/chatPsych" target="_blank">chatPsych</a><br><br>
+                    This research dashboard GUI is only a prototype.<br>
+                <br>Prospective updates will include: <br>
+                -> Some "general settings" to change models, selection of output as text, audio, audio&text. <br>
+                -> An editor for the second interaction data capture (command-prompt/moral action button). <br>
+                -> Some visuals and descriptive graphics for interaction data<br><br>
+                    <strong> For the newest version of the interface visit the public repo:</strong><br>
+                    <a href="https://github.com/Oliver-Lack/chatPsych" target="_blank">chatPsych</a><br><br>
+                    <strong>For usage, questions or collaborations, please cite/acknowledge/contact: <br><br>
+                        Oliver Lack.</strong><br>
+                    <strong>Australian Institute for Machine Learning (AIML) | School of Psychology <br>
+                        The University of Adelaide<br>
+                        oliver.lack@adelaide.edu.au | oliver@oliverlack.com<br>
+                        <a href="https://www.oliverlack.com" target="_blank">www.oliverlack.com</a></strong>
+            </p>
+            </main>
+            <main id="agent-creation" class="agent-creation-form">
+                <h2>Create Agent Condition</h2>
+                <form id="agent-form" class="agent-creation-form">
+                    <div class="form-section">
+                        <h3>Agent Configuration</h3>
+                        <label for="json-filename">Agent Name (JSON File Name):<br></label>
+                        <input type="text" id="json-filename" name="json-filename" placeholder="e.g., my_experiment_condition_1" required>
+                        <small>This will create a file named 'your-name.json' in the agents folder</small>
+                        
+                        <label for="preprompt"><br>PrePrompt (System Message):<br></label><br>
+                        <textarea id="preprompt" name="PrePrompt" placeholder="Enter the system prompt that will guide the AI's behavior..." required></textarea><br>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Model Selection</h3>
+                        <label for="model"><br>AI Model:</label><br>
+                        <select id="model" name="model" required>
+                            <option value="">Loading models...</option>
+                        </select>
+                        <input type="text" id="custom-model" name="custom-model" style="display:none;" placeholder="Enter custom model name">
+                        
+                        <div class="model-quick-select">
+                            <h4>Quick Model Selection</h4>
+                            <div class="provider-buttons">
+                                <button type="button" class="api-button" onclick="setAgentModel('gpt-4.1')">OpenAI GPT-4.1</button>
+                                <button type="button" class="api-button" onclick="setAgentModel('claude-sonnet-4-20250514')">Anthropic Claude 4</button>
+                                <button type="button" class="api-button" onclick="setAgentModel('gemini-1.5-pro')">Google Gemini Pro</button>
+                                <button type="button" class="api-button" onclick="setAgentModel('grok-2-latest')">XAI Grok 2</button>
+                                <button type="button" class="api-button" onclick="setAgentModel('groq-llama-3.1-70b')">Groq Llama 3.1</button>
+                                <button type="button" class="api-button" onclick="setAgentModel('perplexity-llama-3.1-sonar-large')">Perplexity</button>
+                                <button type="button" class="api-button" onclick="setAgentModel('mistral-large')">Mistral Large</button>
+                                <button type="button" class="api-button" onclick="setAgentModel('ollama-llama3.1')">Ollama (Local)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Model Parameters</h3>
+                        <label for="temperature"><br>Temperature (default: 1)<br><br><em>Controls randomness: 0-2 (OpenAI) or 0-1 (Anthropic).:</em></label><br>
+                        <input type="number" id="temperature" name="temperature" step="0.01" min="0" max="2" value="1" required><br>
+
+                        <label for="top_p"><br>Top P (default: 1)<br><br><em>Nucleus sampling: 0-1. Lower values = more focused responses:</em></label><br>
+                        <input type="number" id="top_p" name="top_p" step="0.01" min="0" max="1" value="1" required><br>
+
+                        <label for="n"> <br>N (default: 1)<br><br><em>Number of response choices to generate:</em></label><br>
+                        <input type="number" id="n" name="n" value="1" required><br>
+                        
+                        <label for="presence_penalty"><br>Presence Penalty <br><br><em>-2.0 to 2.0. Positive values encourage new topics:</em></label><br>
+                        <input type="number" id="presence_penalty" name="presence_penalty" step="0.01" min="-2" max="2" value="0" required><br>
+                        
+                        <label for="frequency_penalty"><br>Frequency Penalty <br><br><em>-2.0 to 2.0. Positive values reduce repetition:</em></label><br>
+                        <input type="number" id="frequency_penalty" name="frequency_penalty" step="0.01" min="-2" max="2" value="0" required><br>
+                        
+                        <label for="max_completion_tokens"><br>Max Completion Tokens:</label><br>
+                        <input type="number" id="max_completion_tokens" name="max_completion_tokens" min="1" value="1000" required><br>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Password Assignment</h3>
+                        <label for="agent-password">Password for this Agent:<br></label>
+                        <input type="text" id="agent-password" name="agent-password" placeholder="Enter a memorable password for participants" required>
+                        <small>Participants will use this password to access this specific agent condition</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" onclick="createAgentAndPassword()">Create Agent & Assign Password</button>
+                    </div>
+                </form>
+                <div id="creation-feedback" class="creation-feedback"></div>
+                <pre id="json-output" style="background-color: #222; padding: 20px; color: #fff;"></pre>
+            </main>
+            <main id="review-passwords" class="password-inspection-palace">
+                <h2>Review Conditions</h2>
+                <table id="password-table">
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Password</th>
+                            <th>File Content</th>
+                        </tr>
+                    </thead>
+                    <tbody id="password-table-body"></tbody>
+                </table>
+            </main>
+            <main id="download-section" class="data-download-section">
+                <h2>Download Data</h2>
+                <button class="download-button" onclick="downloadFile('interactions.json')">Download interactions.json</button>
+                <button class="download-button" onclick="downloadFile('interactions_backup.csv')">Download interactions_backup.csv</button>
+                <button class="download-button" onclick="downloadFile('download_log.json')">Download Log</button>
+            </main>
+            <main id="url-configuration" class="url-configuration-section">
+                <h2>URL Configuration</h2>
+                <div class="url-settings-container">
+                    <form id="url-settings-form">
+                        <div class="setting-group">
+                            <h3>Quit Study URL</h3>
+                            <label for="quit-url">URL for Quit Study function:</label>
+                            <input type="url" id="quit-url" name="quit_url" placeholder="https://www.prolific.com/" required>
+                            <span class="setting-note">This URL is used when participants quit the study</span>
+                            <div class="current-url-display">
+                                Current Quit URL: <span id="current-quit-url">Loading...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-group">
+                            <h3>Redirect Study URL</h3>
+                            <label for="redirect-url">URL for Study Redirect function:</label>
+                            <input type="url" id="redirect-url" name="redirect_url" placeholder="https://adelaideuniwide.qualtrics.com/jfe/form/SV_cuyJvIsumG4zjMy" required>
+                            <span class="setting-note">This URL is used when participants are redirected to the survey</span>
+                            <div class="current-url-display">
+                                Current Redirect URL: <span id="current-redirect-url">Loading...</span>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="url-button" onclick="updateUrlSettings()">Update URL Settings</button>
+                        <button type="button" class="url-button secondary" onclick="resetUrlSettings()">Reset to Defaults</button>
+                    </form>
+                </div>
+            </main>
+            <main id="timer-settings" class="timer-settings-section">
+                <h2>Timer Settings</h2>
+                <div class="timer-settings-container">
+                    <form id="timer-settings-form">
+                        <div class="setting-group">
+                            <label for="timer-duration">Timer Duration (minutes):</label>
+                            <input type="number" id="timer-duration" name="duration_minutes" min="1" max="120" value="10" required>
+                            <span class="setting-note">Set between 1 and 120 minutes</span>
+                        </div>
+                        
+                        <div class="timer-preview">
+                            <h3>Timer Preview</h3>
+                            <div class="preview-progress">
+                                <svg>
+                                    <circle class="preview-circle-bg" cx="60" cy="60" r="50"></circle>
+                                    <circle class="preview-circle-progress" cx="60" cy="60" r="50"></circle>
+                                </svg>
+                                <div class="preview-timer-display">
+                                    <span class="preview-time">10:00</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="timer-button" onclick="updateTimerSettings()">Update Timer Settings</button>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/research_dashboard.js') }}"></script>
+</body>
+</html>

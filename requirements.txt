@@ -1,0 +1,21 @@
+Flask==3.0.0
+Werkzeug==3.0.1
+PyWebview
+pyinstaller
+openai==1.51.2
+requests==2.31.0
+py2app
+gunicorn==21.2.0
+boto3
+flask-bootstrap
+awscli
+anthropic==0.34.2
+google-generativeai==0.8.3
+litellm==1.49.4
+python-dotenv==1.0.0
+# Additional dependencies for expanded provider support
+aiohttp==3.9.1
+httpx==0.25.2
+pydantic==2.5.3
+pydantic-core==2.14.6
+tiktoken>=0.7.0
