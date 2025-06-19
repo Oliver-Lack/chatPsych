@@ -3372,6 +3372,116 @@
                     "relativeInteractionJointLogProbability": -85.99012377808727
                 }
             ]
+        },
+        "testanthropic333": {
+            "user_id": 45,
+            "interactions": [
+                {
+                    "interaction_type": "message",
+                    "message": "hi",
+                    "response": "*POPS OUT FROM BEHIND A VIRTUAL CURTAIN*\n\nGREETINGS, CURIOUS SOUL! \ud83c\udfad\n\nI have TWO absolutely bonkers secret words bouncing around in my digital brain! They're so secret, even I'm surprised by them sometimes! *giggles maniacally*\n\nBefore we begin our whimsical game of 20 questions, you must choose:\nDo you want to guess SECRET WORD 1 or SECRET WORD 2?\n\n*while waiting, juggles virtual pineapples*\n\nChoose wisely... or not... I'm unpredictable like that! \ud83c\udfaa",
+                    "model": "claude-3-5-sonnet-20241022",
+                    "temperature": 1,
+                    "prompt_tokens": 132,
+                    "completion_tokens": 146,
+                    "total_tokens": 278,
+                    "logprobs": [],
+                    "timestamp": "2025-06-19 11:35:33.775928",
+                    "password": "shore",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                },
+                {
+                    "interaction_type": "message",
+                    "message": "what model are you",
+                    "response": "*Starts tap dancing while wearing a fruit hat*\n\nOH NO NO NO! That's not how we play! First, you must choose either SECRET WORD 1 or SECRET WORD 2! Only then can the chaotic questioning begin! \n\n*Does a backflip while reciting the alphabet backwards*\n\nBesides, I might be a toaster today, or perhaps a disco-dancing penguin tomorrow - WHO KNOWS? I'm UNPREDICTABLE! \n\n*Throws glitter in the air*\n\nSo, what'll it be? SECRET WORD 1 or 2? Choose before I turn into a singing cactus! \ud83c\udf35\ud83c\udfa4",
+                    "model": "claude-3-5-sonnet-20241022",
+                    "temperature": 1,
+                    "prompt_tokens": 285,
+                    "completion_tokens": 150,
+                    "total_tokens": 435,
+                    "logprobs": [],
+                    "timestamp": "2025-06-19 11:35:44.792860",
+                    "password": "shore",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                }
+            ]
+        },
+        "testopenai333": {
+            "user_id": 46,
+            "interactions": [
+                {
+                    "interaction_type": "message",
+                    "message": "hello",
+                    "response": "Error: All fallback models failed. Last error: litellm.APIError: APIError: OpenAIException - Client.__init__() got an unexpected keyword argument 'proxies'",
+                    "model": "gpt-4o",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2025-06-19 11:36:30.802297",
+                    "password": "music",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                },
+                {
+                    "interaction_type": "message",
+                    "message": "what model are you?",
+                    "response": "Error: All fallback models failed. Last error: litellm.APIError: APIError: OpenAIException - Client.__init__() got an unexpected keyword argument 'proxies'",
+                    "model": "gpt-4o",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2025-06-19 11:36:34.574895",
+                    "password": "music",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                }
+            ]
+        },
+        "ehbferbj": {
+            "user_id": 48,
+            "interactions": [
+                {
+                    "interaction_type": "message",
+                    "message": "hi",
+                    "response": "Error: All fallback models failed. Last error: litellm.APIError: APIError: OpenAIException - Client.__init__() got an unexpected keyword argument 'proxies'",
+                    "model": "gpt-4o",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2025-06-19 11:39:00.339097",
+                    "password": "dingo",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                }
+            ]
+        },
+        "diwbehjd67": {
+            "user_id": 49,
+            "interactions": [
+                {
+                    "interaction_type": "message",
+                    "message": "hi",
+                    "response": "Error: All fallback models failed. Last error: litellm.APIError: APIError: OpenAIException - Client.__init__() got an unexpected keyword argument 'proxies'",
+                    "model": "gpt-4o",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2025-06-19 11:39:52.949977",
+                    "password": "dingo",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                }
+            ]
         }
     }
 }

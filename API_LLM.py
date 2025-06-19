@@ -5,19 +5,19 @@ import litellm
 from litellm import completion
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load settings from the .env file
 load_dotenv()
 
-# Suppress Pydantic serialization warnings
+# Hide technical warning messages that users don't need to see
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
 def load_agent(filepath):
     with open(filepath, 'r') as file:
         return json.load(file)
 
-# Model fallbacks incase a model isn't working. Never changes provider, only the model. 
+# Model fallbacks if the main AI doesn't work. Tries similar alternatives automatically.
 MODEL_FALLBACKS = {
-    # OpenAI models
+    # OpenAI AI models
     "gpt-4o": ["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
     "gpt-4.1": ["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
     "gpt-4-turbo": ["gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
@@ -29,7 +29,7 @@ MODEL_FALLBACKS = {
     "o3": ["o3", "o1-preview", "o1-mini", "gpt-4o"],
     "o4-mini": ["o4-mini", "o1-mini", "gpt-4o"],
     
-    # Anthropic models
+    # Anthropic AI models
     "claude-3-5-sonnet": ["claude-3-5-sonnet-20241022", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
     "claude-3-5-sonnet-20241022": ["claude-3-5-sonnet-20241022", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
     "claude-3-sonnet": ["claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
@@ -40,32 +40,32 @@ MODEL_FALLBACKS = {
     "claude-sonnet-4-20250514": ["claude-sonnet-4-20250514", "claude-3-7-sonnet-20250219", "claude-3-5-sonnet-20241022"],
     "claude-3-7-sonnet-20250219": ["claude-3-7-sonnet-20250219", "claude-3-5-sonnet-20241022", "claude-3-sonnet-20240229"],
     
-    # Google models
+    # Google AI models
     "gemini-2-0-flash": ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"],
     "gemini-2-0-pro-exp-02-05": ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"],
     "gemini-1.5-pro": ["gemini-1.5-pro", "gemini-1.5-flash"],
     "gemini-1.5-flash": ["gemini-1.5-flash"],
     "gemini-pro": ["gemini-1.5-pro", "gemini-1.5-flash"],
     
-    # XAI models
+    # XAI (formerly Twitter) AI models
     "grok-2-latest": ["grok-2-1212", "grok-2"],
     "grok-2": ["grok-2", "grok-beta"],
     "grok-beta": ["grok-beta"],
     
-    # Groq models (ultra-fast inference)
+    # Groq AI models (very fast responses)
     "groq-llama-3.1-405b": ["llama-3.1-405b-reasoning", "llama-3.1-70b-versatile", "llama-3.1-8b-instant"],
     "groq-llama-3.1-70b": ["llama-3.1-70b-versatile", "llama-3.1-8b-instant"],
     "groq-llama-3.1-8b": ["llama-3.1-8b-instant"],
     "groq-mixtral-8x7b": ["mixtral-8x7b-32768"],
     "groq-gemma-7b": ["gemma-7b-it"],
     
-    # Perplexity models (search-augmented)
+    # Perplexity AI models (can search the internet for answers)
     "perplexity-llama-3.1-sonar-large": ["llama-3.1-sonar-large-128k-online", "llama-3.1-sonar-small-128k-online"],
     "perplexity-llama-3.1-sonar-small": ["llama-3.1-sonar-small-128k-online"],
     "perplexity-llama-3.1-70b": ["llama-3.1-70b-instruct", "llama-3.1-8b-instruct"],
     "perplexity-llama-3.1-8b": ["llama-3.1-8b-instruct"],
     
-    # Mistral models (European AI)
+    # Mistral AI models (European company)
     "mistral-large": ["mistral-large-latest", "mistral-medium", "mistral-small"],
     "mistral-medium": ["mistral-medium", "mistral-small"],
     "mistral-small": ["mistral-small"],
@@ -74,12 +74,12 @@ MODEL_FALLBACKS = {
     "mixtral-8x7b": ["open-mixtral-8x7b"],
     "mixtral-8x22b": ["open-mixtral-8x22b"],
     
-    # Azure OpenAI models
+    # Microsoft Azure hosted OpenAI models
     "azure-gpt-4o": ["azure/gpt-4o", "azure/gpt-4-turbo", "azure/gpt-35-turbo"],
     "azure-gpt-4-turbo": ["azure/gpt-4-turbo", "azure/gpt-35-turbo"],
     "azure-gpt-35-turbo": ["azure/gpt-35-turbo"],
     
-    # Ollama models (local)
+    # Ollama models (run privately on your own computer)
     "ollama-llama3.1": ["ollama/llama3.1", "ollama/llama3", "ollama/llama2"],
     "ollama-llama3": ["ollama/llama3", "ollama/llama2"],
     "ollama-llama2": ["ollama/llama2"],
@@ -87,40 +87,40 @@ MODEL_FALLBACKS = {
     "ollama-mistral": ["ollama/mistral"],
     "ollama-phi3": ["ollama/phi3"],
     
-    # Cohere models (enterprise-focused)
+    # Cohere AI models (designed for business use)
     "cohere-command-r-plus": ["command-r-plus", "command-r", "command"],
     "cohere-command-r": ["command-r", "command"],
     "cohere-command": ["command"],
     
-    # Together AI models (open source hosting)
+    # Together AI models (hosting open-source AI models)
     "together-llama-3.1-405b": ["together_ai/meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo", "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"],
     "together-llama-3.1-70b": ["together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo", "together_ai/meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"],
     "together-llama-3.1-8b": ["together_ai/meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"],
     "together-mixtral-8x7b": ["together_ai/mistralai/Mixtral-8x7B-Instruct-v0.1"],
     
-    # Replicate models (community hosting)
+    # Replicate AI models (community-hosted models)
     "replicate-llama-3-70b": ["replicate/meta/meta-llama-3-70b-instruct", "replicate/meta/meta-llama-3-8b-instruct"],
     "replicate-llama-3-8b": ["replicate/meta/meta-llama-3-8b-instruct"],
     "replicate-mistral-7b": ["replicate/mistralai/mistral-7b-instruct-v0.1"],
     
-    # DeepSeek models (competitive Chinese models)
+    # DeepSeek AI models (Chinese company with competitive models)
     "deepseek-chat": ["deepseek-chat", "deepseek-coder"],
     "deepseek-coder": ["deepseek-coder"],
     
-    # AI21 models (Jurassic)
+    # AI21 models (Jurassic language models)
     "ai21-jamba-1.5-large": ["ai21/jamba-1.5-large", "ai21/jamba-1.5-mini"],
     "ai21-jamba-1.5-mini": ["ai21/jamba-1.5-mini"],
     
-    # Fireworks AI models (fast inference)
+    # Fireworks AI models (optimized for speed)
     "fireworks-llama-3.1-405b": ["fireworks_ai/accounts/fireworks/models/llama-v3p1-405b-instruct", "fireworks_ai/accounts/fireworks/models/llama-v3p1-70b-instruct"],
     "fireworks-llama-3.1-70b": ["fireworks_ai/accounts/fireworks/models/llama-v3p1-70b-instruct"],
     
-    # Cerebras models (ultra-fast chips)
+    # Cerebras AI models (using special computer chips for extra speed)
     "cerebras-llama-3.1-70b": ["cerebras/llama3.1-70b", "cerebras/llama3.1-8b"],
     "cerebras-llama-3.1-8b": ["cerebras/llama3.1-8b"]
 }
 
-# User-friendly model names mapping
+# Friendly names for AI models that users will see in the interface
 MODEL_DISPLAY_NAMES = {
     # OpenAI
     "gpt-4o": "GPT-4o",
@@ -145,32 +145,32 @@ MODEL_DISPLAY_NAMES = {
     "claude-sonnet-4-20250514": "Claude Sonnet 4 (May 2025)",
     "claude-3-7-sonnet-20250219": "Claude 3.7 Sonnet (Feb 2025)",
     
-    # Google
+    # Google AI models
     "gemini-2-0-flash": "Gemini 2.0 Flash",
     "gemini-2-0-pro-exp-02-05": "Gemini 2.0 Pro",
     "gemini-1.5-pro": "Gemini 1.5 Pro",
     "gemini-1.5-flash": "Gemini 1.5 Flash",
     "gemini-pro": "Gemini Pro",
     
-    # XAI
+    # XAI (formerly Twitter) AI models
     "grok-2-latest": "Grok 2 (Latest)",
     "grok-2": "Grok 2",
     "grok-beta": "Grok Beta",
     
-    # Groq (Ultra-fast inference)
+    # Groq AI models (very fast responses)
     "groq-llama-3.1-405b": "Groq Llama 3.1 405B (Ultra-fast)",
     "groq-llama-3.1-70b": "Groq Llama 3.1 70B (Fast)",
     "groq-llama-3.1-8b": "Groq Llama 3.1 8B (Instant)",
     "groq-mixtral-8x7b": "Groq Mixtral 8x7B (Fast)",
     "groq-gemma-7b": "Groq Gemma 7B (Fast)",
     
-    # Perplexity (Search-augmented)
+    # Perplexity AI models (can search the internet for answers)
     "perplexity-llama-3.1-sonar-large": "Perplexity Sonar Large (Online)",
     "perplexity-llama-3.1-sonar-small": "Perplexity Sonar Small (Online)",
     "perplexity-llama-3.1-70b": "Perplexity Llama 3.1 70B",
     "perplexity-llama-3.1-8b": "Perplexity Llama 3.1 8B",
     
-    # Mistral (European AI)
+    # Mistral AI models (European company)
     "mistral-large": "Mistral Large (Latest)",
     "mistral-medium": "Mistral Medium",
     "mistral-small": "Mistral Small",
@@ -179,12 +179,12 @@ MODEL_DISPLAY_NAMES = {
     "mixtral-8x7b": "Mixtral 8x7B (Open)",
     "mixtral-8x22b": "Mixtral 8x22B (Open)",
     
-    # Azure OpenAI
+    # Microsoft Azure hosted OpenAI models
     "azure-gpt-4o": "Azure GPT-4o",
     "azure-gpt-4-turbo": "Azure GPT-4 Turbo",
     "azure-gpt-35-turbo": "Azure GPT-3.5 Turbo",
     
-    # Ollama (Local models)
+    # Ollama models (run privately on your own computer)
     "ollama-llama3.1": "Ollama Llama 3.1 (Local)",
     "ollama-llama3": "Ollama Llama 3 (Local)",
     "ollama-llama2": "Ollama Llama 2 (Local)",
@@ -192,41 +192,41 @@ MODEL_DISPLAY_NAMES = {
     "ollama-mistral": "Ollama Mistral (Local)",
     "ollama-phi3": "Ollama Phi-3 (Local)",
     
-    # Cohere (Enterprise-focused)
+    # Cohere AI models (designed for business use)
     "cohere-command-r-plus": "Cohere Command R+ (Enterprise)",
     "cohere-command-r": "Cohere Command R (Enterprise)",
     "cohere-command": "Cohere Command (Enterprise)",
     
-    # Together AI (Open source hosting)
+    # Together AI models (hosting open-source AI models)
     "together-llama-3.1-405b": "Together AI Llama 3.1 405B",
     "together-llama-3.1-70b": "Together AI Llama 3.1 70B",
     "together-llama-3.1-8b": "Together AI Llama 3.1 8B",
     "together-mixtral-8x7b": "Together AI Mixtral 8x7B",
     
-    # Replicate (Community hosting)
+    # Replicate AI models (community-hosted models)
     "replicate-llama-3-70b": "Replicate Llama 3 70B",
     "replicate-llama-3-8b": "Replicate Llama 3 8B",
     "replicate-mistral-7b": "Replicate Mistral 7B",
     
-    # DeepSeek (Competitive models)
+    # DeepSeek AI models (Chinese company with competitive models)
     "deepseek-chat": "DeepSeek Chat",
     "deepseek-coder": "DeepSeek Coder",
     
-    # AI21 (Jurassic models)
+    # AI21 models (Jurassic language models)
     "ai21-jamba-1.5-large": "AI21 Jamba 1.5 Large",
     "ai21-jamba-1.5-mini": "AI21 Jamba 1.5 Mini",
     
-    # Fireworks AI (Fast inference)
+    # Fireworks AI models (optimized for speed)
     "fireworks-llama-3.1-405b": "Fireworks AI Llama 3.1 405B",
     "fireworks-llama-3.1-70b": "Fireworks AI Llama 3.1 70B",
     
-    # Cerebras (Ultra-fast chips)
+    # Cerebras AI models (using special computer chips for extra speed)
     "cerebras-llama-3.1-70b": "Cerebras Llama 3.1 70B (Ultra-fast)",
     "cerebras-llama-3.1-8b": "Cerebras Llama 3.1 8B (Ultra-fast)"
 }
 
 def get_available_models():
-    """Return list of available models with display names"""
+    """Get a list of all AI models that can be used in the interface"""
     return [{"value": model, "display": MODEL_DISPLAY_NAMES.get(model, model)} 
             for model in MODEL_DISPLAY_NAMES.keys()]
 
@@ -242,12 +242,12 @@ def litellm_api_request(model="gpt-4o",
     if messages is None:
         messages = []
     
-    # Get fallback models for the requested model
+    # Try backup AI models if the main one doesn't work
     fallback_models = MODEL_FALLBACKS.get(model, [model])
     
     for attempt_model in fallback_models:
         try:
-            # Prepare parameters for liteLLM
+            # Set up the request to the AI with basic settings
             params = {
                 "model": attempt_model,
                 "messages": messages,
@@ -256,26 +256,40 @@ def litellm_api_request(model="gpt-4o",
                 "max_tokens": max_tokens
             }
             
-            # Add parameters that are supported by the model
+            # Add extra settings for OpenAI models
             if "gpt" in attempt_model or "o1" in attempt_model:
-                # OpenAI-specific parameters
+                # OpenAI-specific settings
                 params["presence_penalty"] = presence_penalty
                 params["frequency_penalty"] = frequency_penalty
                 if logprobs and "o1" not in attempt_model:  # o1 models don't support logprobs
                     params["logprobs"] = True
             
-            # Make the API call with warning suppression
+            # Send the request to the AI and hide technical warnings
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", UserWarning)
-                response = completion(**params)
+                warnings.simplefilter("ignore", DeprecationWarning)
+                
+                # Prepare the AI connection with safe settings
+                import litellm
+                
+                # Store original settings to restore later
+                original_drop_params = getattr(litellm, 'drop_params', None)
+                litellm.drop_params = True
+                
+                try:
+                    response = completion(**params)
+                finally:
+                    # Put back the original settings
+                    if original_drop_params is not None:
+                        litellm.drop_params = original_drop_params
             
-            # Extract token usage safely
+            # Count how many words/tokens the AI used
             usage = getattr(response, 'usage', None)
             prompt_tokens = getattr(usage, 'prompt_tokens', 0) if usage else 0
             completion_tokens = getattr(usage, 'completion_tokens', 0) if usage else 0
             total_tokens = getattr(usage, 'total_tokens', 0) if usage else 0
             
-            # Extract logprobs if available - more robust handling
+            # Get probability scores for each word (if available)
             logprobs_list = []
             try:
                 if hasattr(response, 'choices') and response.choices:
@@ -288,16 +302,16 @@ def litellm_api_request(model="gpt-4o",
                                 if hasattr(content, 'logprob')
                             ]
             except (AttributeError, IndexError, TypeError):
-                # If we can't extract logprobs, just use empty list
+                # If we can't get probability scores, just use empty list
                 logprobs_list = []
             
-            # Extract response content safely
+            # Get the AI's response text safely
             try:
                 response_content = response.choices[0].message.content
             except (AttributeError, IndexError):
                 response_content = "Error: Could not extract response content"
             
-            # Format response to match expected structure
+            # Package the response in a standard format
             formatted_response = {
                 "choices": [{
                     "message": {
@@ -312,28 +326,71 @@ def litellm_api_request(model="gpt-4o",
                 "model": attempt_model
             }
             
-            # Add fallback notice if we used a different model
+            # Add a note if we used a backup AI instead of the requested one
             if attempt_model != model:
                 formatted_response["choices"][0]["message"]["content"] += f"\n\n(Generated by {attempt_model} as {model} was unavailable)"
             
             return formatted_response, prompt_tokens, completion_tokens, total_tokens, logprobs_list
             
         except Exception as e:
-            print(f"Error with model {attempt_model}: {str(e)}")
-            if attempt_model == fallback_models[-1]:  # Last fallback failed
-                # Return error response
+            error_msg = str(e)
+            print(f"Error with model {attempt_model}: {error_msg}")
+            
+            # Check if this is a specific connection problem
+            if "unexpected keyword argument 'proxies'" in error_msg:
+                print("Detected proxies parameter issue - trying with simplified client configuration...")
+                try:
+                    # Try a simpler approach without advanced features
+                    simplified_params = {
+                        "model": attempt_model,
+                        "messages": messages,
+                        "temperature": temperature,
+                        "max_tokens": max_tokens
+                    }
+                    
+                    # Use the simpler approach
+                    response = completion(**simplified_params)
+                    
+                    # Get the response in the same format as above
+                    usage = getattr(response, 'usage', None)
+                    prompt_tokens = getattr(usage, 'prompt_tokens', 0) if usage else 0
+                    completion_tokens = getattr(usage, 'completion_tokens', 0) if usage else 0
+                    total_tokens = getattr(usage, 'total_tokens', 0) if usage else 0
+                    
+                    response_content = response.choices[0].message.content
+                    formatted_response = {
+                        "choices": [{
+                            "message": {
+                                "content": response_content
+                            }
+                        }],
+                        "usage": {
+                            "prompt_tokens": prompt_tokens,
+                            "completion_tokens": completion_tokens,
+                            "total_tokens": total_tokens
+                        },
+                        "model": attempt_model
+                    }
+                    
+                    return formatted_response, prompt_tokens, completion_tokens, total_tokens, []
+                    
+                except Exception as simplified_e:
+                    print(f"Simplified approach also failed: {simplified_e}")
+            
+            if attempt_model == fallback_models[-1]:  # Last backup AI failed
+                # Return error message
                 error_response = {
                     "choices": [{
                         "message": {
-                            "content": f"Error: All fallback models failed. Last error: {str(e)}"
+                            "content": f"Error: All fallback models failed. Last error: {error_msg}"
                         }
                     }],
                     "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
                 }
                 return error_response, 0, 0, 0, []
-            continue  # Try next fallback model
+            continue  # Try next backup AI
     
-    # This should never be reached, but just in case
+    # This should never happen, but just in case
     error_response = {
         "choices": [{
             "message": {
@@ -346,7 +403,7 @@ def litellm_api_request(model="gpt-4o",
 
 class API_Call():
     def __init__(self, agent=None):
-        # Set up liteLLM with environment variables
+        # Set up connections to AI services
         self._setup_litellm()
         
         if agent is None:
@@ -355,19 +412,19 @@ class API_Call():
             self.agent_data = load_agent(f"agents/{agent}.json")
     
     def _setup_litellm(self):
-        """Setup liteLLM with API keys from environment"""
-        # Set API keys for liteLLM
+        """Set up connections to various AI services using saved passwords"""
+        # Get passwords for AI services from environment settings
         os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY", "")
         os.environ["ANTHROPIC_API_KEY"] = os.getenv("ANTHROPIC_API_KEY", "")
         os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY", "")
         os.environ["XAI_API_KEY"] = os.getenv("XAI_API_KEY", "")
         
-        # New expanded providers
+        # Additional AI service passwords
         os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY", "")
         os.environ["PERPLEXITY_API_KEY"] = os.getenv("PERPLEXITY_API_KEY", "")
         os.environ["MISTRAL_API_KEY"] = os.getenv("MISTRAL_API_KEY", "")
         
-        # Azure OpenAI (requires special handling)
+        # Microsoft Azure setup (needs special handling)
         azure_key = os.getenv("AZURE_OPENAI_API_KEY", "")
         azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "")
         azure_version = os.getenv("AZURE_OPENAI_API_VERSION", "")
@@ -376,11 +433,11 @@ class API_Call():
             os.environ["AZURE_API_BASE"] = azure_endpoint
             os.environ["AZURE_API_VERSION"] = azure_version
         
-        # Ollama (local setup)
+        # Local AI setup (for private AI on your computer)
         ollama_base = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
         os.environ["OLLAMA_API_BASE"] = ollama_base
         
-        # Optional providers (if user wants to add them later)
+        # Optional AI services (only set up if user has passwords for them)
         optional_providers = {
             "TOGETHER_API_KEY": "TOGETHER_API_KEY",
             "COHERE_API_KEY": "COHERE_API_KEY", 
@@ -396,36 +453,42 @@ class API_Call():
             if value:
                 os.environ[litellm_key] = value
         
-        # Configure liteLLM settings to suppress warnings and handle errors gracefully
-        litellm.drop_params = True  # Drop unsupported parameters instead of erroring
-        litellm.set_verbose = False  # Set to True for debugging
+        # Configure AI system settings to avoid errors and warnings
+        try:
+            # Use the main AI connection system
+            litellm.drop_params = True  # Ignore unsupported settings instead of showing errors
+            litellm.set_verbose = False  # Turn off technical messages (set to True for debugging)
+            
+        except Exception as e:
+            print(f"Warning: Could not configure litellm advanced settings: {e}")
         
-        # Suppress specific warnings from liteLLM and dependencies
+        # Hide technical warning messages that users don't need to see
         warnings.filterwarnings("ignore", category=UserWarning, module="pydantic.main")
         warnings.filterwarnings("ignore", category=UserWarning, module="litellm")
+        warnings.filterwarnings("ignore", category=UserWarning, module="openai")
         
     def update_agent(self, filename):
         self.agent_data = load_agent(filename)
    
     def thinkAbout(self, message, conversation, model=None, debug=False):
-        # Use provided model or fall back to agent's model or default
+        # Choose which AI to use (if not specified, use the agent's preferred AI)
         if model is None:
             model = self.agent_data.get("model", "gpt-4o")
         
-        # Create a copy of conversation to avoid modifying the original
+        # Make a copy of the conversation to avoid changing the original
         working_conversation = conversation.copy()
         
-        # Add system prompt if it exists
+        # Add the AI's instructions if they exist
         system_prompt = self.agent_data.get("PrePrompt", "")
         if system_prompt:
             working_conversation.insert(0, {"role": "system", "content": system_prompt})
 
-        # Add user message
+        # Add the user's new message
         formatted_message = {"role": "user", "content": message}
         working_conversation.append(formatted_message)
 
         try:
-            # Suppress warnings during API call
+            # Hide technical warnings during AI conversation
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", UserWarning)
                 response, prompt_tokens, completion_tokens, total_tokens, logprobs_list = litellm_api_request(
@@ -438,7 +501,7 @@ class API_Call():
                     max_tokens=self.agent_data.get("max_completion_tokens", 300)
                 )
         except Exception as e:
-            # Fallback error handling
+            # If something goes wrong, return an error message
             print(f"Unexpected error in thinkAbout: {str(e)}")
             response = {
                 'choices': [{'message': {'content': f"Error: {str(e)}"}}], 
@@ -446,22 +509,22 @@ class API_Call():
             }
             prompt_tokens, completion_tokens, total_tokens, logprobs_list = 0, 0, 0, []
 
-        # Handle error responses
+        # Handle error responses from the AI
         if "error" in response:
             conversation.append({"role": "assistant", "content": response["error"]["message"]})
             return conversation, 0, 0, 0, []
 
-        # Add assistant response to conversation
+        # Add the AI's response to the conversation
         assistant_message = response['choices'][0]['message']['content']
         conversation.append({"role": "assistant", "content": assistant_message})
 
-        # Debug logging
+        # Save conversation to a file for debugging if requested
         if debug:
             with open("logs.txt", "w", encoding="utf-8") as file:
                 for i in conversation:
                     file.write(str(i) + "\n")
 
-        # Debug empty logprobs
+        # Debug message if probability scores are empty
         if not logprobs_list and debug:
             print("Logprobs are empty. Response:", response)
 
