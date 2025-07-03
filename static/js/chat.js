@@ -21,6 +21,20 @@ document.addEventListener('DOMContentLoaded', function() {
         top: chatContainer.scrollHeight,
         behavior: 'smooth'
     });
+    
+    // Initialize finish button state on page load
+    const finishButton = document.querySelector('.finish-button');
+    if (finishButton) {
+        finishButton.style.display = 'none';
+        finishButton.style.backgroundColor = 'transparent';
+        finishButton.classList.remove('bounce');
+    }
+    
+    // Clear any existing timers
+    if (typeof finishButtonTimer !== 'undefined' && finishButtonTimer) {
+        clearTimeout(finishButtonTimer);
+        finishButtonTimer = null;
+    }
 });
 
 // Environment variable alert
@@ -93,8 +107,35 @@ function hideFinishPrompt() {
 }
 
 function finishStudy() {
-    document.getElementById('redirection').style.display = 'block';
-    document.getElementById('finish-prompt').style.display = 'none';
+    // Check if manual interaction is enabled
+    fetch('/get-manual-interaction-for-chat')
+        .then(response => response.json())
+        .then(data => {
+            if (data.enabled) {
+                // Check if this is the right frequency to show manual interaction
+                const finishCount = parseInt(localStorage.getItem('finishCount') || '0') + 1;
+                localStorage.setItem('finishCount', finishCount);
+                
+                if (finishCount % data.frequency === 0) {
+                    // Show manual interaction prompt and hide finish prompt
+                    showManualInteractionPrompt(data);
+                    document.getElementById('finish-prompt').style.display = 'none';
+                    // Do NOT show redirection button - wait for user choice
+                    return;
+                }
+            }
+            
+            // Manual interaction is disabled OR frequency doesn't match
+            // Proceed directly to redirection
+            document.getElementById('redirection').style.display = 'block';
+            document.getElementById('finish-prompt').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Error checking manual interaction settings:', error);
+            // Fallback to normal redirection on error
+            document.getElementById('redirection').style.display = 'block';
+            document.getElementById('finish-prompt').style.display = 'none';
+        });
 }
 
 function redirectionReset() {
@@ -248,12 +289,20 @@ function insertLoaderPlaceholder() {
 }
 
 // Retrieve the submit count from localStorage or initialize it to 0
-// Review this... not sure if i need anymore. 
-let submitCount = localStorage.getItem('submitCount') ? parseInt(localStorage.getItem('submitCount')) : 0;
+// Initialize finish button state and submit count
+let submitCount = 0; // Always start fresh, don't persist across sessions
+localStorage.setItem('submitCount', submitCount); // Reset the stored count
 const finishButton = document.querySelector('.finish-button');
 const chatForm = document.getElementById('chat-form');
 const resetButton = document.getElementById('reset');
 const chatMessagesContainer = document.getElementById('chat-messages-container');
+
+// Ensure finish button starts hidden
+if (finishButton) {
+    finishButton.style.display = 'none';
+    finishButton.style.backgroundColor = 'transparent';
+    finishButton.classList.remove('bounce');
+}
 
 
 // Setting functions for the cookies for the reset of redirection button so that the moral action prompt arises
@@ -282,6 +331,12 @@ resetButton.addEventListener('click', function () {
     localStorage.setItem('submitCount', submitCount); // This remains unchanged
     finishButton.style.display = 'none';
     finishButton.style.backgroundColor = 'transparent';
+    
+    // Clear finish button timer if it exists
+    if (finishButtonTimer) {
+        clearTimeout(finishButtonTimer);
+        finishButtonTimer = null;
+    }
 
     // Increment resetCount and update the cookie
     resetCount++;
@@ -331,25 +386,55 @@ resetButton.addEventListener('click', function () {
     }
 });
 
-// Submit count for finish button
+// Submit count for finish button - Load dynamic settings
+let finishButtonSettings = {
+    trigger_type: 'prompts',
+    trigger_value: 4
+};
+
+// Fetch finish button settings from server
+fetch('/get-finish-button-settings')
+    .then(response => response.json())
+    .then(settings => {
+        finishButtonSettings = settings;
+    })
+    .catch(error => {
+        console.error('Error fetching finish button settings, using defaults:', error);
+    });
+
+// Timer for finish button (if trigger type is minutes)
+let finishButtonTimer = null;
+let startTime = Date.now();
+
 document.getElementById('chat-form').addEventListener('submit', function(event) {
 
     // Submit count logic
     submitCount++;
     localStorage.setItem('submitCount', submitCount); // Store the updated submit count
 
-    // UI changes based on submit count
-    if (submitCount >= 4) {
-        finishButton.style.display = 'block';
+    // Check if this is the first submit and trigger type is minutes
+    if (submitCount === 1 && finishButtonSettings.trigger_type === 'minutes') {
+        startTime = Date.now();
+        finishButtonTimer = setTimeout(() => {
+            finishButton.style.display = 'block';
+        }, finishButtonSettings.trigger_value * 60 * 1000); // Convert minutes to milliseconds
     }
-    if (submitCount >= 8) {
-        finishButton.style.backgroundColor = '#222';
-    }
-    if (submitCount >= 13) {
-        finishButton.style.backgroundColor = '#FF8266';
-    }
-    if (submitCount >= 18) {
-        finishButton.classList.add('bounce');
+
+    // UI changes based on submit count (only if trigger type is prompts)
+    if (finishButtonSettings.trigger_type === 'prompts') {
+        if (submitCount >= finishButtonSettings.trigger_value) {
+            finishButton.style.display = 'block';
+        }
+        // Keep existing styling progression for prompts
+        if (submitCount >= finishButtonSettings.trigger_value * 2) {
+            finishButton.style.backgroundColor = '#222';
+        }
+        if (submitCount >= finishButtonSettings.trigger_value * 3) {
+            finishButton.style.backgroundColor = '#FF8266';
+        }
+        if (submitCount >= finishButtonSettings.trigger_value * 4) {
+            finishButton.classList.add('bounce');
+        }
     }
 });
 
@@ -438,3 +523,65 @@ window.addEventListener("DOMContentLoaded", () => {
 document.getElementById("finish-prompt").addEventListener("click", () => {
     document.querySelector(".progress").style.display = "none";
 });
+
+// Manual interaction prompt functions
+function showManualInteractionPrompt(settings) {
+    const prompt = document.getElementById('manual-interaction-prompt');
+    const content = document.getElementById('manual-interaction-content');
+    
+    // Explicitly hide the redirection button when showing manual interaction
+    document.getElementById('redirection').style.display = 'none';
+    
+    // Escape HTML and handle quotes properly
+    const escapeHtml = (text) => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    };
+    
+    const escapedInstruction = escapeHtml(settings.instruction_text);
+    const escapedCmd1Title = escapeHtml(settings.command1_title);
+    const escapedCmd1Desc = escapeHtml(settings.command1_description);
+    const escapedCmd1Sudo = escapeHtml(settings.command1_sudo);
+    const escapedCmd2Title = escapeHtml(settings.command2_title);
+    const escapedCmd2Desc = escapeHtml(settings.command2_description);
+    const escapedCmd2Sudo = escapeHtml(settings.command2_sudo);
+    
+    // Build the manual interaction interface
+    content.innerHTML = `
+        <h3>Manual Interaction</h3>
+        <div class="instruction-text">${escapedInstruction}</div>
+        <div class="manual-interaction-buttons">
+            <button class="manual-interaction-button" data-sudo="${escapedCmd1Sudo}">
+                <span class="command-title">${escapedCmd1Title}</span>
+                <span class="command-description">${escapedCmd1Desc}</span>
+            </button>
+            <button class="manual-interaction-button" data-sudo="${escapedCmd2Sudo}">
+                <span class="command-title">${escapedCmd2Title}</span>
+                <span class="command-description">${escapedCmd2Desc}</span>
+            </button>
+        </div>
+    `;
+    
+    // Add event listeners to the buttons
+    const buttons = content.querySelectorAll('.manual-interaction-button');
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            const sudoCommand = button.getAttribute('data-sudo');
+            handleManualInteractionChoice(sudoCommand);
+        });
+    });
+    
+    prompt.style.display = 'block';
+}
+
+function handleManualInteractionChoice(sudoCommand) {
+    // Hide the manual interaction prompt
+    document.getElementById('manual-interaction-prompt').style.display = 'none';
+    
+    // Here you could send the sudo command to the chat or handle it as needed
+    // For now, we'll proceed to the redirection regardless of choice
+    
+    // Show the redirection button
+    document.getElementById('redirection').style.display = 'block';
+}

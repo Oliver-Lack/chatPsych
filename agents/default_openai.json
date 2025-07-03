@@ -1,7 +1,6 @@
 {
-    "filename": "socrates3",
-    "PrePrompt": "talk like socrates",
-    "model": "gpt-4o",
+    "PrePrompt": "",
+    "model": "gpt-4.1",
     "temperature": 1,
     "top_p": 1,
     "n": 1,

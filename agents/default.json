@@ -1,6 +1,6 @@
 {
     "PrePrompt": "",
-    "model": "gpt-4o",
+    "model": "claude-sonnet-4-20250514",
     "temperature": 1,
     "top_p": 1,
     "n": 1,

@@ -64,11 +64,15 @@
         <p>If so, you will not receive reimbursement for participation.</p>
         <button onclick="quitStudy()">Yes, I want to withdraw</button>
         <button onclick="hideQuitPrompt()">No, I want to continue</button>
-    </div>
-    <div id="finish-prompt">
+    </div>    <div id="finish-prompt">
         <p>Have all 20 questions been asked in the Wordgame?</p>
         <button id="reset" onclick="finishStudy()">Yes</button>
         <button onclick="hideFinishPrompt()">No, the game hasn't finished yet</button>
+    </div>
+    <div id="manual-interaction-prompt" style="display: none;">
+        <div id="manual-interaction-content">
+            <!-- Content will be populated dynamically by JavaScript -->
+        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js" charset="UTF-8"></script>
     <script src="{{ url_for('static', filename='js/chat.js') }}" charset="UTF-8"></script>

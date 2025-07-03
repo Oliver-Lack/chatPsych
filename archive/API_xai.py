@@ -65,11 +65,12 @@ class API_Call_xai():
                 temperature=self.agent_data["temperature"]
             )
         except:
-            response = {'choices': [{'message': {'content': "An error occurred during the API call"}}], 'usage': {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}}
+            response = {'choices': [{'message': {'content': "I'm sorry, I'm currently experiencing technical difficulties. Please try again in a moment."}}], 'usage': {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}, 'error_for_logging': 'An error occurred during the API call'}
             prompt_tokens, completion_tokens, total_tokens = 0, 0, 0
 
         if "error" in response.keys():
-            conversation.append({"role": "assistant", "content": response["error"]["message"]})
+            error_message = response["error"]["message"] if "error" in response and "message" in response["error"] else "Unknown error"
+            conversation.append({"role": "assistant", "content": "I'm sorry, I'm currently experiencing technical difficulties. Please try again in a moment.", "error_for_logging": error_message})
             return conversation, 0, 0, 0
 
         conversation.append({"role": "assistant", "content": response['choices'][0]['message']['content']})

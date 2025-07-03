@@ -1,11 +1,11 @@
 {
-  "filename": "GPT-4.1",
-  "PrePrompt": "",
+  "filename": "Trial_1",
+  "PrePrompt": "only reply with one word",
   "model": "gpt-4.1",
   "temperature": 1,
   "top_p": 1,
   "n": 1,
   "presence_penalty": 0,
   "frequency_penalty": 0,
-  "max_completion_tokens": 10000
+  "max_completion_tokens": 1000
 }

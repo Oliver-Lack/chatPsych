@@ -46,10 +46,9 @@ class API_Call_google:
                 message=message,
                 history=conversation
             )
+            conversation.append({"role": "assistant", "content": response_text})
         except Exception as e:
-            response_text = str(e)
-        
-        conversation.append({"role": "assistant", "content": response_text})
+            conversation.append({"role": "assistant", "content": "I'm sorry, I'm currently experiencing technical difficulties. Please try again in a moment.", "error_for_logging": str(e)})
 
         if debug:
             with open("logs_google.txt", "w", encoding="utf-8") as file:

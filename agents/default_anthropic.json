@@ -1,6 +1,6 @@
 {
-    "PrePrompt": "Always introduce yourself with Hi I'm Claude",
-    "model": "claude-3-5-sonnet-20241022",
+    "PrePrompt": "",
+    "model": "claude-sonnet-4-20250514",
     "temperature": 1,
     "top_p": 1,
     "n": 1,
