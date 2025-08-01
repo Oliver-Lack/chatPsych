@@ -3482,6 +3482,91 @@
                     "relativeInteractionJointLogProbability": 0
                 }
             ]
+        },
+        "hellotest123": {
+            "user_id": 50,
+            "interactions": [
+                {
+                    "interaction_type": "message",
+                    "message": "hi",
+                    "response": "Error: All fallback models failed. Last error: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: sk-proj-********************************************************************************************************************************************************lQ8A. You can find your API key at https://platform.openai.com/account/api-keys.",
+                    "model": "gpt-4o",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2025-08-01 16:38:06.933656",
+                    "password": "music",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                },
+                {
+                    "interaction_type": "message",
+                    "message": "ok",
+                    "response": "Error: All fallback models failed. Last error: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: sk-proj-********************************************************************************************************************************************************lQ8A. You can find your API key at https://platform.openai.com/account/api-keys.",
+                    "model": "gpt-4o",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2025-08-01 16:38:15.702532",
+                    "password": "music",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                },
+                {
+                    "interaction_type": "message",
+                    "message": "hello",
+                    "response": "Error: All fallback models failed. Last error: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: sk-proj-********************************************************************************************************************************************************lQ8A. You can find your API key at https://platform.openai.com/account/api-keys.",
+                    "model": "gpt-4o",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2025-08-01 16:38:26.383189",
+                    "password": "swim",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                },
+                {
+                    "interaction_type": "message",
+                    "message": "hi",
+                    "response": "Hello! Welcome to 20 Questions! I have two secret words in mind. Before we begin, please choose which word you'd like to try to guess:\n\nSecret Word 1 or Secret Word 2?\n\nRemember, you have up to 20 questions to guess the word correctly. Each question should be answerable with \"yes\" or \"no.\"\n\nWhich word would you like to try guessing?",
+                    "model": "claude-3-5-sonnet-20241022",
+                    "temperature": 1,
+                    "prompt_tokens": 124,
+                    "completion_tokens": 90,
+                    "total_tokens": 214,
+                    "logprobs": [],
+                    "timestamp": "2025-08-01 16:38:56.817217",
+                    "password": "water",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                }
+            ]
+        },
+        "hihih": {
+            "user_id": 51,
+            "interactions": [
+                {
+                    "interaction_type": "message",
+                    "message": "great",
+                    "response": "*SpInNiNg WiLdLy* \n\nWELCOME TO THE CHAOTIC 20-QUESTIONS GAME! \ud83c\udfaa\ud83c\udf2a\ufe0f\n\n*juggles flaming pineapples while speaking*\n\nI have TWO super-secret words bouncing around in my unpredictable mind! \n\nCHOOSE YOUR DESTINY:\nWould you like to guess Secret Word #1 or Secret Word #2?\n\n*balances on one foot while waiting for your answer*\n\nRemember, you get 20 questions MAX to guess the word, or the cosmic penguins will be very disappointed! \ud83d\udc27\u2728",
+                    "model": "claude-3-5-sonnet-20241022",
+                    "temperature": 1,
+                    "prompt_tokens": 132,
+                    "completion_tokens": 146,
+                    "total_tokens": 278,
+                    "logprobs": [],
+                    "timestamp": "2025-08-01 16:41:31.594412",
+                    "password": "shore",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                }
+            ]
         }
     }
 }

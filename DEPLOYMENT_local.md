@@ -26,7 +26,7 @@ Edit the `.env` file with your actual values:
 ### Local Deployment:
 
 ```bash
-gunicorn -w 4 -b 0.0.0.0:8000 chatPsych:app
+gunicorn -w 4 -b 0.0.0.0:8080 chatPsych:app
 ```
 
 
