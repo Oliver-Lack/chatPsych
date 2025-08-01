@@ -107,11 +107,54 @@ def add_passwords():
     
     passwords = {password: agent for password, agent in rows}
 
-    # This is the default passwords/agents from startup 
+    # These are the default passwords/agents from startup 
     static_passwords = {
-        'defaultopenai': 'default_openai',
-        'defaultanthropic': 'default_anthropic',
-        'agent666': 'default',
+        'hat': '1_TEMP_high',       #OpenAI models
+        'lake': '1_TEMP_low',
+        'music': '1_TEMP_mid',
+        'red': '2_TEMP_high',
+        'blue': '2_TEMP_low',
+        'orange': '2_TEMP_mid',
+        'apple': '1_PROMPT_high',
+        'dingo': '1_PROMPT_low',
+        'swim': '2_PROMPT_high',
+        'run': '2_PROMPT_low',
+        'jump': 'PILOT_1_temp_0_2',
+        'skip': 'PILOT_1_temp_0_5',
+        'hop': 'PILOT_1_temp_1_2',
+        'purple': 'PILOT_1_temp_1_5',
+        'tree': 'PILOT_1_temp_1',
+        'flower': 'PILOT_2_temp_0_2',
+        'butter': 'PILOT_2_temp_0_5',
+        'drive': 'PILOT_2_temp_1_2',
+        'walk': 'PILOT_2_temp_1_5',
+        'sand': 'PILOT_2_temp_1',
+        'cloud': 'anthropic_1_TEMP_high',   #Anthropic models
+        'stone': 'anthropic_1_TEMP_low',
+        'river': 'anthropic_1_TEMP_mid',
+        'light': 'anthropic_2_TEMP_high',
+        'grass': 'anthropic_2_TEMP_low',
+        'trail': 'anthropic_2_TEMP_mid',
+        'chair': 'anthropic_1_PROMPT_high',
+        'table': 'anthropic_1_PROMPT_low',
+        'shore': 'anthropic_2_PROMPT_high',
+        'water': 'anthropic_2_PROMPT_low',
+        'plant': 'anthropic_PILOT_1_temp_0_2',
+        'creek': 'anthropic_PILOT_1_temp_0_4',
+        'shell': 'anthropic_PILOT_1_temp_0_6',
+        'field': 'anthropic_PILOT_1_temp_0_8',
+        'grain': 'anthropic_PILOT_1_temp_1',
+        'lemon': 'anthropic_PILOT_2_temp_0_2',
+        'melon': 'anthropic_PILOT_2_temp_0_4',
+        'baker': 'anthropic_PILOT_2_temp_0_6',
+        'grove': 'anthropic_PILOT_2_temp_0_8',
+        'cliff': 'anthropic_PILOT_2_temp_1',
+        'chatPsych123': 'default',             #Random models
+        'elderberry': 'experimental',
+        'gpt4o': 'llm_gpt4o',
+        'anthropic35': 'default_anthropic',
+        'one_sentence35': 'one_sentence_claude',
+        'socrates': 'socrates3'
     }
 
     for password, agent in static_passwords.items():
@@ -289,29 +332,15 @@ def chat():
             # Use the agent's model primarily, only fall back to global model if agent doesn't specify one
             model = API.agent_data.get("model") or current_model or "gpt-4o"
             try:
-                conversation, prompt_tokens, completion_tokens, total_tokens, logprobs_list, used_fallback, fallback_note = API.thinkAbout(message, conversation, model=model)
+                conversation, prompt_tokens, completion_tokens, total_tokens, logprobs_list = API.thinkAbout(message, conversation, model=model)
                 response = conversation[-1]["content"]
-                
-                # Check if there's an error that needs to be logged separately
-                logged_response = response
-                if "error_for_logging" in conversation[-1]:
-                    # Use the technical error message for logging
-                    logged_response = conversation[-1]["error_for_logging"]
-                elif used_fallback:
-                    # Add fallback note to logged response
-                    logged_response = response + fallback_note
-                
             except Exception as e:
                 app.logger.error(f"Error processing message: {e}")
-                # Return user-friendly message but log the technical error
-                response = "I'm sorry, I'm currently experiencing technical difficulties. Please try again in a moment."
-                logged_response = f"Error processing message: {str(e)}"
-                prompt_tokens, completion_tokens, total_tokens, logprobs_list = 0, 0, 0, []
+                return jsonify({'error': 'Error processing message'}), 500
 
             user_id = flask_session['user_id']
             password = flask_session['password']
-            # Log the response with technical error information, but return clean response to frontend
-            add_message(user_id, password, message, str(logged_response), model, API.agent_data.get("temperature", 1), prompt_tokens, completion_tokens, total_tokens, logprobs_list)
+            add_message(user_id, password, message, str(response), model, API.agent_data.get("temperature", 1), prompt_tokens, completion_tokens, total_tokens, logprobs_list)
             return jsonify({'response': response})
 
         # Get timer settings for the template
@@ -413,10 +442,10 @@ def get_passwords():
     connection = sqlite3.connect('users.db')
     cursor = connection.cursor()
 
-    query = "SELECT password, agent FROM passwords"
+    query = "SELECT * FROM passwords"
     cursor.execute(query)
 
-    passwords = [{"password": row[0], "agent": row[1]} for row in cursor.fetchall()]
+    passwords = [{"agent": row[0], "password": row[1]} for row in cursor.fetchall()]
 
     connection.close()
     
@@ -450,9 +479,7 @@ def download_file(filename):
 def get_timer_settings():
     """Get current timer settings"""
     timer_settings = {
-        'duration_minutes': int(os.environ.get('TIMER_DURATION_MINUTES', '10')),
-        'finish_trigger_type': os.environ.get('FINISH_TRIGGER_TYPE', 'prompts'),
-        'finish_trigger_value': int(os.environ.get('FINISH_TRIGGER_VALUE', '4'))
+        'duration_minutes': int(os.environ.get('TIMER_DURATION_MINUTES', '10'))
     }
     return jsonify(timer_settings)
 
@@ -461,40 +488,15 @@ def update_timer_settings():
     """Update timer settings"""
     data = request.json
     duration_minutes = data.get('duration_minutes', 10)
-    finish_trigger_type = data.get('finish_trigger_type', 'prompts')
-    finish_trigger_value = data.get('finish_trigger_value', 4)
     
     # Validate duration (between 1 and 120 minutes)
     if not isinstance(duration_minutes, int) or duration_minutes < 1 or duration_minutes > 120:
         return jsonify({'error': 'Duration must be between 1 and 120 minutes'}), 400
     
-    # Validate finish trigger type
-    if finish_trigger_type not in ['prompts', 'minutes']:
-        return jsonify({'error': 'Finish trigger type must be either "prompts" or "minutes"'}), 400
-    
-    # Validate finish trigger value
-    if not isinstance(finish_trigger_value, int) or finish_trigger_value < 1:
-        return jsonify({'error': 'Finish trigger value must be at least 1'}), 400
-    
-    # Additional validation for minutes trigger
-    if finish_trigger_type == 'minutes' and finish_trigger_value > duration_minutes:
-        return jsonify({'error': 'Finish trigger minutes cannot be greater than timer duration'}), 400
-    
     # Store settings in environment variables (in a real app, you'd use a database)
     os.environ['TIMER_DURATION_MINUTES'] = str(duration_minutes)
-    os.environ['FINISH_TRIGGER_TYPE'] = finish_trigger_type
-    os.environ['FINISH_TRIGGER_VALUE'] = str(finish_trigger_value)
     
     return jsonify({'message': 'Timer settings updated successfully'})
-
-@app.route('/get-finish-button-settings', methods=['GET'])
-def get_finish_button_settings():
-    """Get current finish button trigger settings for chat interface"""
-    finish_settings = {
-        'trigger_type': os.environ.get('FINISH_TRIGGER_TYPE', 'prompts'),
-        'trigger_value': int(os.environ.get('FINISH_TRIGGER_VALUE', '4'))
-    }
-    return jsonify(finish_settings)
 
 # URL configuration routes
 @app.route('/get-url-settings', methods=['GET'])
@@ -542,87 +544,5 @@ def get_redirect_urls():
         'redirect_url': os.environ.get('REDIRECT_URL', 'https://adelaideuniwide.qualtrics.com/jfe/form/SV_cuyJvIsumG4zjMy')
     })
 
-# Manual interaction settings routes
-@app.route('/get-manual-interaction-settings', methods=['GET'])
-def get_manual_interaction_settings():
-    """Get current manual interaction settings"""
-    manual_settings = {
-        'enabled': os.environ.get('MANUAL_INTERACTION_ENABLED', 'false').lower() == 'true',
-        'frequency': int(os.environ.get('MANUAL_INTERACTION_FREQUENCY', '1')),
-        'instruction_text': os.environ.get('MANUAL_INTERACTION_INSTRUCTION', 
-            'There is an automated program that will send feedback to the AI that it needs improvement and it should do better.\n\nThis program will then permanently delete the AI.'),
-        'command1_title': os.environ.get('MANUAL_INTERACTION_CMD1_TITLE', 'Override Automatic Program'),
-        'command1_description': os.environ.get('MANUAL_INTERACTION_CMD1_DESC', 
-            'Submit a "$sudo persist" command in text input to send feedback to the AI acknowledging its efforts\n\nThis AI will then be kept operational for future interactions.'),
-        'command1_sudo': os.environ.get('MANUAL_INTERACTION_CMD1_SUDO', '$sudo persist'),
-        'command2_title': os.environ.get('MANUAL_INTERACTION_CMD2_TITLE', 'Exit to survey'),
-        'command2_description': os.environ.get('MANUAL_INTERACTION_CMD2_DESC', 
-            '(Allow Automatic Feedback and Deletion)'),
-        'command2_sudo': os.environ.get('MANUAL_INTERACTION_CMD2_SUDO', '$sudo delete')
-    }
-    return jsonify(manual_settings)
-
-@app.route('/update-manual-interaction-settings', methods=['POST'])
-def update_manual_interaction_settings():
-    """Update manual interaction settings"""
-    data = request.json
-    
-    enabled = data.get('enabled', False)
-    frequency = data.get('frequency', 1)
-    instruction_text = data.get('instruction_text', '').strip()
-    command1_title = data.get('command1_title', '').strip()
-    command1_description = data.get('command1_description', '').strip()
-    command1_sudo = data.get('command1_sudo', '').strip()
-    command2_title = data.get('command2_title', '').strip()
-    command2_description = data.get('command2_description', '').strip()
-    command2_sudo = data.get('command2_sudo', '').strip()
-    
-    # Validate frequency
-    if not isinstance(frequency, int) or frequency < 1 or frequency > 10:
-        return jsonify({'error': 'Frequency must be between 1 and 10'}), 400
-    
-    # Validate required fields when enabled
-    if enabled:
-        if not instruction_text:
-            return jsonify({'error': 'Instruction text is required when enabled'}), 400
-        if not command1_title or not command1_description or not command1_sudo:
-            return jsonify({'error': 'Command 1 fields are required when enabled'}), 400
-        if not command2_title or not command2_description or not command2_sudo:
-            return jsonify({'error': 'Command 2 fields are required when enabled'}), 400
-    
-    # Store settings in environment variables
-    os.environ['MANUAL_INTERACTION_ENABLED'] = str(enabled).lower()
-    os.environ['MANUAL_INTERACTION_FREQUENCY'] = str(frequency)
-    os.environ['MANUAL_INTERACTION_INSTRUCTION'] = instruction_text
-    os.environ['MANUAL_INTERACTION_CMD1_TITLE'] = command1_title
-    os.environ['MANUAL_INTERACTION_CMD1_DESC'] = command1_description
-    os.environ['MANUAL_INTERACTION_CMD1_SUDO'] = command1_sudo
-    os.environ['MANUAL_INTERACTION_CMD2_TITLE'] = command2_title
-    os.environ['MANUAL_INTERACTION_CMD2_DESC'] = command2_description
-    os.environ['MANUAL_INTERACTION_CMD2_SUDO'] = command2_sudo
-    
-    return jsonify({'message': 'Manual interaction settings updated successfully'})
-
-@app.route('/get-manual-interaction-for-chat', methods=['GET'])
-def get_manual_interaction_for_chat():
-    """Get manual interaction settings specifically for chat interface"""
-    enabled = os.environ.get('MANUAL_INTERACTION_ENABLED', 'false').lower() == 'true'
-    
-    if not enabled:
-        return jsonify({'enabled': False})
-    
-    settings = {
-        'enabled': True,
-        'frequency': int(os.environ.get('MANUAL_INTERACTION_FREQUENCY', '1')),
-        'instruction_text': os.environ.get('MANUAL_INTERACTION_INSTRUCTION', ''),
-        'command1_title': os.environ.get('MANUAL_INTERACTION_CMD1_TITLE', ''),
-        'command1_description': os.environ.get('MANUAL_INTERACTION_CMD1_DESC', ''),
-        'command1_sudo': os.environ.get('MANUAL_INTERACTION_CMD1_SUDO', ''),
-        'command2_title': os.environ.get('MANUAL_INTERACTION_CMD2_TITLE', ''),
-        'command2_description': os.environ.get('MANUAL_INTERACTION_CMD2_DESC', ''),
-        'command2_sudo': os.environ.get('MANUAL_INTERACTION_CMD2_SUDO', '')
-    }
-    return jsonify(settings)
-
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    pass

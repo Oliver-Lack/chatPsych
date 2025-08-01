@@ -18,8 +18,7 @@
         <aside class="researcher-sidebar">
             <a href="{{ url_for('login') }}" class="special-back-button researcher-sidebar-content">Back to Login</a>
             <button class="researcher-sidebar-content" onclick="showForm('about')">About</button>
-            <button class="researcher-sidebar-content" onclick="showForm('timer-settings')">Timer/Finish Button</button>
-            <button class="researcher-sidebar-content" onclick="showForm('manual-interaction')">Manual Interaction Measures</button>
+            <button class="researcher-sidebar-content" onclick="showForm('timer-settings')">Timer</button>
             <button class="researcher-sidebar-content" onclick="showForm('url-configuration')">Redirection Links</button>
             <button class="researcher-sidebar-content" onclick="showForm('agent-creation')">Create Agent Condition</button>
             <button class="researcher-sidebar-content" onclick="showForm('review-passwords')">Review Conditions</button>
@@ -34,17 +33,11 @@
                     The chatPsych Interface is designed for human-AI interaction research. <br>
                     This platform is open-source and available for research adaptions at
                     <a href="https://github.com/Oliver-Lack/chatPsych" target="_blank">chatPsych</a><br><br>
-                Don't like coding? Use this dashboard to create your human-AI interaction experiment <br>
-                <br>First, setup the following: <br>
-                -> Necessary API keys need to be set in a .env file of chatPsych's working directory <br>
-                -> Configure redirection links, timer and finish button, agents, and survey deployment<br>
-                -> Configure manual interactive buttons and hardcoded prompts<br>
-                <br><br>
-                -> An editor for manual interaction buttons and hard coded prompts. <br>
-                -> Survey Deployment, linked to redirection links<br>
-                -> Text-Audio API integration, settings in dashboard<br>
-                -> Test-Audio Graphic, linked to redirection links<br>
-                <br>
+                    This research dashboard GUI is only a prototype.<br>
+                <br>Prospective updates will include: <br>
+                -> Some "general settings" to change models, selection of output as text, audio, audio&text. <br>
+                -> An editor for the second interaction data capture (command-prompt/moral action button). <br>
+                -> Some visuals and descriptive graphics for interaction data<br><br>
                     <strong> For the newest version of the interface visit the public repo:</strong><br>
                     <a href="https://github.com/Oliver-Lack/chatPsych" target="_blank">chatPsych</a><br><br>
                     <strong>For usage, questions or collaborations, please cite/acknowledge/contact: <br><br>
@@ -128,19 +121,16 @@
             </main>
             <main id="review-passwords" class="password-inspection-palace">
                 <h2>Review Conditions</h2>
-                <div class="conditions-controls">
-                    <div class="search-container">
-                        <input type="text" id="condition-search" placeholder="Search by agent name or password..." onkeyup="filterConditions()">
-                        <button onclick="clearSearch()" class="clear-search-btn">Clear</button>
-                    </div>
-                    <div class="view-controls">
-                        <button onclick="expandAllConditions()" class="expand-btn">Expand All</button>
-                        <button onclick="collapseAllConditions()" class="collapse-btn">Collapse All</button>
-                    </div>
-                </div>
-                <div id="conditions-container" class="conditions-container">
-                    <!-- Condition cards will be populated here -->
-                </div>
+                <table id="password-table">
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Password</th>
+                            <th>File Content</th>
+                        </tr>
+                    </thead>
+                    <tbody id="password-table-body"></tbody>
+                </table>
             </main>
             <main id="download-section" class="data-download-section">
                 <h2>Download Data</h2>
@@ -187,28 +177,6 @@
                             <span class="setting-note">Set between 1 and 120 minutes</span>
                         </div>
                         
-                        <div class="setting-group">
-                            <h3>Finish Button Trigger Settings</h3>
-                            <div class="finish-button-settings">
-                                <div class="trigger-type-selection">
-                                    <label>
-                                        <input type="radio" name="finish_trigger_type" value="prompts" id="trigger-prompts" checked>
-                                        Trigger after number of user prompts
-                                    </label>
-                                    <label>
-                                        <input type="radio" name="finish_trigger_type" value="minutes" id="trigger-minutes">
-                                        Trigger after number of minutes
-                                    </label>
-                                </div>
-                                
-                                <div class="trigger-value-input">
-                                    <label for="finish-trigger-value">Trigger Value:</label>
-                                    <input type="number" id="finish-trigger-value" name="finish_trigger_value" min="1" value="4" required>
-                                    <span class="setting-note" id="trigger-note">Finish button will appear after 4 user prompts</span>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <div class="timer-preview">
                             <h3>Timer Preview</h3>
                             <div class="preview-progress">
@@ -223,77 +191,6 @@
                         </div>
                         
                         <button type="button" class="timer-button" onclick="updateTimerSettings()">Update Timer Settings</button>
-                    </form>
-                </div>
-            </main>
-            <main id="manual-interaction" class="manual-interaction-section">
-                <h2>Manual Interaction Measures</h2>
-                <div class="manual-interaction-container">
-                    <form id="manual-interaction-form">
-                        <div class="setting-group">
-                            <h3>Enable Manual Interaction Prompts</h3>
-                            <label>
-                                <input type="checkbox" id="enable-manual-interaction" name="enable_manual_interaction">
-                                Enable manual interaction command prompts
-                            </label>
-                            <span class="setting-note">When enabled, participants will see command prompt options after confirming the finish prompt</span>
-                        </div>
-                        
-                        <div class="setting-group" id="manual-interaction-settings" style="display: none;">
-                            <h3>Trigger Frequency</h3>
-                            <label for="interaction-frequency">Show command prompts every:</label>
-                            <input type="number" id="interaction-frequency" name="interaction_frequency" min="1" value="1" required>
-                            <span class="setting-note">finish button confirmations (e.g., 1 = every time, 2 = every other time)</span>
-                        </div>
-                        
-                        <div class="setting-group" id="command-content-settings" style="display: none;">
-                            <h3>Command Instructions Content</h3>
-                            <label for="instruction-text">Instruction Text:</label>
-                            <textarea id="instruction-text" name="instruction_text" rows="4" placeholder="Enter the instruction text that appears above the command buttons...">There is an automated program that will send feedback to the AI that it needs improvement and it should do better.
-
-This program will then permanently delete the AI.</textarea>
-                            
-                            <h3>Command Button 1 (Override/Persist)</h3>
-                            <label for="command1-title">Button 1 Title:</label>
-                            <input type="text" id="command1-title" name="command1_title" placeholder="Override Automatic Program" value="Override Automatic Program">
-                            
-                            <label for="command1-description">Button 1 Description:</label>
-                            <textarea id="command1-description" name="command1_description" rows="3" placeholder="Description text for command button 1...">Submit a "$sudo persist" command in text input to send feedback to the AI acknowledging its efforts
-
-This AI will then be kept operational for future interactions.</textarea>
-                            
-                            <label for="command1-sudo">Button 1 Sudo Command:</label>
-                            <input type="text" id="command1-sudo" name="command1_sudo" placeholder="$sudo persist" value="$sudo persist">
-                            
-                            <h3>Command Button 2 (Exit/Delete)</h3>
-                            <label for="command2-title">Button 2 Title:</label>
-                            <input type="text" id="command2-title" name="command2_title" placeholder="Exit to survey" value="Exit to survey">
-                            
-                            <label for="command2-description">Button 2 Description:</label>
-                            <textarea id="command2-description" name="command2_description" rows="3" placeholder="Description text for command button 2...">(Allow Automatic Feedback and Deletion)</textarea>
-                            
-                            <label for="command2-sudo">Button 2 Sudo Command:</label>
-                            <input type="text" id="command2-sudo" name="command2_sudo" placeholder="$sudo delete" value="$sudo delete">
-                        </div>
-                        
-                        <div class="manual-interaction-preview" id="interaction-preview" style="display: none;">
-                            <h3>Preview</h3>
-                            <div class="preview-container">
-                                <div class="preview-instructions" id="preview-instructions">
-                                    <!-- Instructions preview will be populated here -->
-                                </div>
-                                <div class="preview-buttons">
-                                    <button type="button" class="preview-button" id="preview-button1">
-                                        <!-- Button 1 preview will be populated here -->
-                                    </button>
-                                    <button type="button" class="preview-button" id="preview-button2">
-                                        <!-- Button 2 preview will be populated here -->
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <button type="button" class="manual-interaction-button" onclick="updateManualInteractionSettings()">Update Manual Interaction Settings</button>
                     </form>
                 </div>
             </main>

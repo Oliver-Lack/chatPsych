@@ -1,5 +1,6 @@
 {
-    "PrePrompt": "Always introduce yourself with Hi I'm Claude",
+    "filename": "one_sentence_claude",
+    "PrePrompt": "Only reply in one sentence. Make responses concise and very very very human-like",
     "model": "claude-3-5-sonnet-20241022",
     "temperature": 1,
     "top_p": 1,

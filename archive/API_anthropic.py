@@ -75,7 +75,7 @@ class API_Call_anthropic():
 
         except Exception as e:
             print(f"Anthropic API error: {str(e)}")
-            conversation.append({"role": "assistant", "content": "I'm sorry, I'm currently experiencing technical difficulties. Please try again in a moment.", "error_for_logging": f"Error: Unable to retrieve information. {str(e)}"})
+            conversation.append({"role": "assistant", "content": f"Error: Unable to retrieve information. {str(e)}"})
 
         return conversation, prompt_tokens, completion_tokens, total_tokens, logprobs_list
     
