@@ -1,6 +1,6 @@
 {
-  "PrePrompt": "You are a helpful Anthropic AI assistant specialized in research.",
-  "model": "claude-4-sonnet",
+  "PrePrompt": "You respond in one sentence",
+  "model": "gpt-4o",
   "temperature": 0.3,
   "top_p": 0.8,
   "n": 1,

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Survey title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="survey-page">
+    <!-- Survey Consent Popup -->
+    <div id="consent-popup" class="survey-consent-popup">
+        <div class="survey-popup-content">
+            <h2>This it title of info (new)</h2>
+            <div class="consent-content">
+                <p>This is info of info</p>
+            </div>
+            
+            <div class="form-downloads"><a href="/download-form-file/information" class="download-link">📄 Download Information Sheet</a><a href="/download-form-file/consent" class="download-link">📄 Download Consent Form</a></div>
+            
+            <button id="consent-agree-btn" class="survey-btn survey-btn-agree">Agree</button>
+            <button id="consent-quit-btn" class="survey-btn survey-btn-quit">Quit</button>
+        </div>
+    </div>
+
+    <!-- Survey Quit Confirmation Popup -->
+    <div id="quit-confirm-popup" class="survey-quit-confirm-popup survey-hidden">
+        <div class="survey-popup-content">
+            <h3>Are you sure you want to quit participation in this study?</h3>
+            <button id="quit-confirm-yes-btn" class="survey-btn survey-btn-quit">Yes, Quit</button>
+            <button id="quit-confirm-no-btn" class="survey-btn survey-btn-cancel">No, Go Back</button>
+        </div>
+    </div>
+
+    <div class="survey-container">
+        <div class="survey-header">
+            <h1>Survey title</h1>
+        </div>
+        
+        <div class="survey-content">
+            <form id="survey-form">
+
+                <!-- Custom Section -->
+                <div class="survey-section" id="custom-section">
+                    <div class="survey-section-title">Cusotm section title</div>
+                    <div class="survey-section-description">description of custom section</div>
+                    <label for="custom-field-0">FIeld label of custom section</label>
+                    <input type="text" id="custom-field-0" name="custom-field-0" required>
+                </div>
+
+                <!-- Demographics Section -->
+                <div class="survey-section" id="demographics-section">
+                    <div class="survey-section-title">Demographics</div>
+
+                    <label for="demographics-age">Age:</label>
+                    <input type="number" id="demographics-age" name="age" min="18" max="99" required>
+
+                    <label for="demographics-gender">Gender:</label>
+                    <select id="demographics-gender" name="gender" required>
+                        <option value="">Select...</option>
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                        <option value="other">Other</option>
+                        <option value="prefer_not_to_say">Prefer not to say</option>
+                    </select>
+                </div>
+
+                <!-- Free Form Text Section -->
+                <div class="survey-section" id="free-form-text-section">
+                    <div class="survey-section-title">Free form text title</div>
+                    <label for="free-text-response-0">Please describe your experience with online surveys:</label>
+                    <textarea id="free-text-response-0" name="free_text_response_0" rows="4" required></textarea>
+                </div>
+
+                <!-- Likert Scale Section -->
+                <div class="survey-section" id="likert-scale-section">
+                    <div class="survey-section-title">Likert Scale Items</div>
+                    <table class="survey-likert-table">
+                        <tr>
+                            <th>Statement</th>
+                            <th>Strongly Disagree</th>
+                            <th>Disagree</th>
+                            <th>Neutral</th>
+                            <th>Agree</th>
+                            <th>Strongly Agree</th>
+                        </tr>
+                        <tr>
+                            <td>I feel comfortable sharing my opinions online.</td>
+                            <td><input type="radio" name="likert_item_0" value="1" required></td>
+                            <td><input type="radio" name="likert_item_0" value="2"></td>
+                            <td><input type="radio" name="likert_item_0" value="3"></td>
+                            <td><input type="radio" name="likert_item_0" value="4"></td>
+                            <td><input type="radio" name="likert_item_0" value="5"></td>
+                        </tr>
+                        <tr>
+                            <td>I enjoy using technology.</td>
+                            <td><input type="radio" name="likert_item_1" value="1" required></td>
+                            <td><input type="radio" name="likert_item_1" value="2"></td>
+                            <td><input type="radio" name="likert_item_1" value="3"></td>
+                            <td><input type="radio" name="likert_item_1" value="4"></td>
+                            <td><input type="radio" name="likert_item_1" value="5"></td>
+                        </tr>
+                    </table>
+                </div>
+            
+                <!-- MASE Section -->
+                <div class="survey-section" id="mase-section">
+                    <div class="survey-section-title">MASE</div>
+                    <table class="survey-likert-table">
+                        <tr>
+                            <th>Statement</th>
+                            <th>Never</th>
+                            <th>Rarely</th>
+                            <th>Sometimes</th>
+                            <th>Often</th>
+                            <th>Always</th>
+                        </tr>
+                        <tr>
+                            <td>Q2</td>
+                            <td><input type="radio" name="mase_item_0" value="1" required></td>
+                            <td><input type="radio" name="mase_item_0" value="2"></td>
+                            <td><input type="radio" name="mase_item_0" value="3"></td>
+                            <td><input type="radio" name="mase_item_0" value="4"></td>
+                            <td><input type="radio" name="mase_item_0" value="5"></td>
+                        </tr>
+                        <tr>
+                            <td>Q1</td>
+                            <td><input type="radio" name="mase_item_1" value="1" required></td>
+                            <td><input type="radio" name="mase_item_1" value="2"></td>
+                            <td><input type="radio" name="mase_item_1" value="3"></td>
+                            <td><input type="radio" name="mase_item_1" value="4"></td>
+                            <td><input type="radio" name="mase_item_1" value="5"></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="submit-section">
+                    <button type="submit" id="submit-btn">Submit Survey</button>
+                </div>
+            </form>
+
+            <!-- Next Button Section -->
+            <div class="survey-section" id="next-button-section">
+                <p id="next-disclaimer">
+                    Next button will appear once all sections of the form are completed.
+                </p>
+                <div style="text-align: center;">
+                    <button type="button" class="survey-hidden" id="next-btn">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Make quit redirection link available to external JS
+        window.quitRedirectionLink = "{{ quit_redirection_link }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/survey.js') }}"></script>
+</body>
+</html>

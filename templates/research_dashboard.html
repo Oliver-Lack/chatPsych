@@ -21,9 +21,8 @@
             <button class="researcher-sidebar-content" onclick="showForm('timer-settings')">Timer</button>
             <button class="researcher-sidebar-content" onclick="showForm('url-configuration')">Redirection Links</button>
             <button class="researcher-sidebar-content" onclick="showForm('agent-creation')">Create Agent Condition</button>
+            <button class="researcher-sidebar-content" onclick="showForm('pre-interaction-survey')">Pre-Interaction Survey</button>
             <button class="researcher-sidebar-content" onclick="showForm('review-passwords')">Review Conditions</button>
-            <button class="researcher-sidebar-content" onclick="showForm('download-section')">Text-Audio API</button>
-            <button class="researcher-sidebar-content" onclick="showForm('download-section')">Survey Deployment</button>
             <button class="researcher-sidebar-content" onclick="showForm('download-section')">Download Data</button>
         </aside>
         <div class="right-container">
@@ -31,15 +30,12 @@
                 <h2>About</h2>
                 <p class="researcher-about">
                     The chatPsych Interface is designed for human-AI interaction research. <br>
-                    This platform is open-source and available for research adaptions at
-                    <a href="https://github.com/Oliver-Lack/chatPsych" target="_blank">chatPsych</a><br><br>
-                    This research dashboard GUI is only a prototype.<br>
+                    This platform is open-source and available for adaption. <br><br>
+                    <strong> For the newest version of the interface visit the public repo:</strong>
+                    <a href="https://github.com/Oliver-Lack/chatPsych" target="_blank">chatPsych</a><br>
                 <br>Prospective updates will include: <br>
-                -> Some "general settings" to change models, selection of output as text, audio, audio&text. <br>
-                -> An editor for the second interaction data capture (command-prompt/moral action button). <br>
-                -> Some visuals and descriptive graphics for interaction data<br><br>
-                    <strong> For the newest version of the interface visit the public repo:</strong><br>
-                    <a href="https://github.com/Oliver-Lack/chatPsych" target="_blank">chatPsych</a><br><br>
+                -> Text-audio api integration and graphics <br>
+                -> A Docker image to facilitate easier deployment<br><br>
                     <strong>For usage, questions or collaborations, please cite/acknowledge/contact: <br><br>
                         Oliver Lack.</strong><br>
                     <strong>Australian Institute for Machine Learning (AIML) | School of Psychology <br>
@@ -53,7 +49,7 @@
                 <form id="agent-form" class="agent-creation-form">
                     <div class="form-section">
                         <h3>Agent Configuration</h3>
-                        <label for="json-filename">Agent Name (JSON File Name):<br></label>
+                        <label for="json-filename">Agent Name (JSON File Name):<br></label><br>
                         <input type="text" id="json-filename" name="json-filename" placeholder="e.g., my_experiment_condition_1" required>
                         <small>This will create a file named 'your-name.json' in the agents folder</small>
                         
@@ -86,28 +82,35 @@
 
                     <div class="form-section">
                         <h3>Model Parameters</h3>
-                        <label for="temperature"><br>Temperature (default: 1)<br><br><em>Controls randomness: 0-2 (OpenAI) or 0-1 (Anthropic).:</em></label><br>
+                        <label for="temperature"><br>Temperature (default: 1)<br><br><em>Controls randomness: 0-2 (OpenAI) or 0-1 (Anthropic).:</em></label>
+                        <br><br>
                         <input type="number" id="temperature" name="temperature" step="0.01" min="0" max="2" value="1" required><br>
 
-                        <label for="top_p"><br>Top P (default: 1)<br><br><em>Nucleus sampling: 0-1. Lower values = more focused responses:</em></label><br>
+                        <label for="top_p"><br>Top P (default: 1)<br><br><em>Nucleus sampling: 0-1. Lower values = more focused responses:</em></label>
+                        <br><br>
                         <input type="number" id="top_p" name="top_p" step="0.01" min="0" max="1" value="1" required><br>
 
-                        <label for="n"> <br>N (default: 1)<br><br><em>Number of response choices to generate:</em></label><br>
+                        <label for="n"> <br>N (default: 1)<br><br><em>Number of response choices to generate:</em></label>
+                        <br><br>
                         <input type="number" id="n" name="n" value="1" required><br>
                         
-                        <label for="presence_penalty"><br>Presence Penalty <br><br><em>-2.0 to 2.0. Positive values encourage new topics:</em></label><br>
+                        <label for="presence_penalty"><br>Presence Penalty <br><br><em>-2.0 to 2.0. Positive values encourage new topics:</em></label>
+                        <br><br>
                         <input type="number" id="presence_penalty" name="presence_penalty" step="0.01" min="-2" max="2" value="0" required><br>
                         
-                        <label for="frequency_penalty"><br>Frequency Penalty <br><br><em>-2.0 to 2.0. Positive values reduce repetition:</em></label><br>
+                        <label for="frequency_penalty"><br>Frequency Penalty <br><br><em>-2.0 to 2.0. Positive values reduce repetition:</em></label>
+                        <br><br>
                         <input type="number" id="frequency_penalty" name="frequency_penalty" step="0.01" min="-2" max="2" value="0" required><br>
                         
-                        <label for="max_completion_tokens"><br>Max Completion Tokens:</label><br>
+                        <label for="max_completion_tokens"><br>Max Completion Tokens:</label>
+                        <br><br>
                         <input type="number" id="max_completion_tokens" name="max_completion_tokens" min="1" value="1000" required><br>
                     </div>
 
                     <div class="form-section">
                         <h3>Password Assignment</h3>
-                        <label for="agent-password">Password for this Agent:<br></label>
+                        <label for="agent-password">Password for this Agent:</label>
+                        <br><br>
                         <input type="text" id="agent-password" name="agent-password" placeholder="Enter a memorable password for participants" required>
                         <small>Participants will use this password to access this specific agent condition</small>
                     </div>
@@ -119,6 +122,114 @@
                 <div id="creation-feedback" class="creation-feedback"></div>
                 <pre id="json-output" style="background-color: #222; padding: 20px; color: #fff;"></pre>
             </main>
+            
+            <!-- Pre-Interaction Survey Section -->
+            <main id="pre-interaction-survey" class="pre-interaction-survey-form">
+                <h2>Pre-Interaction Survey Configuration</h2>
+                
+                <!-- Information and Consent Forms Section -->
+                <div class="form-section">
+                    <h3>Information and Consent Forms</h3>
+                    
+                    <div class="form-subsection">
+                        <label for="information-title">Information Sheet Title:</label>
+                        <input type="text" id="information-title" name="information-title" value="Enter title for information sheet..." placeholder="Enter title for information sheet">
+                        
+                        <label for="information-content">Information Sheet Content:</label>
+                        <textarea id="information-content" name="information-content" rows="6" placeholder="Enter the information sheet content that participants will see...">Enter the information sheet content that participants will see...</textarea>
+                        
+                        <div class="file-upload-section">
+                            <label for="information-file">Upload Information Sheet (PDF):</label>
+                            <input type="file" id="information-file" name="information-file" accept=".pdf" onchange="handleFileUpload('information')">
+                            <div id="information-file-status" class="file-status"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-subsection">
+                        <label for="consent-content">Consent Form Content:</label>
+                        <textarea id="consent-content" name="consent-content" rows="4" placeholder="Enter consent form content...">Enter consent form content...</textarea>
+                        
+                        <div class="file-upload-section">
+                            <label for="consent-file">Upload Consent Form (PDF):</label>
+                            <input type="file" id="consent-file" name="consent-file" accept=".pdf" onchange="handleFileUpload('consent')">
+                            <div id="consent-file-status" class="file-status"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Survey Sections Configuration -->
+                <div class="form-section">
+                    <h3>Survey Sections</h3>
+                    <div class="survey-sections-container" id="survey-sections-container">
+                        
+                        <!-- Add Survey Section Control -->
+                        <div class="add-section-control">
+                            <div class="section-type-selector">
+                                <label for="section-type-select">Select Section Type:</label>
+                                <select id="section-type-select">
+                                    <option value="demographics">Demographics Section</option>
+                                    <option value="likert">Likert Scale Section</option>
+                                    <option value="freetext">Free Text Section</option>
+                                    <option value="custom">Custom Section</option>
+                                </select>
+                                <button type="button" class="btn-add" onclick="addSurveySection()">+ Add Survey Section</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Dynamic sections will be added here -->
+                        <div id="dynamic-sections-container"></div>
+                    </div>
+                </div>
+                
+                <!-- Survey Settings -->
+                <div class="form-section">
+                    <h3>Survey Settings</h3>
+                    
+                    <div class="setting-group">
+                        <label for="survey-title">Survey Page Title:</label>
+                        <input type="text" id="survey-title" value="Survey Form" placeholder="Survey page title">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <input type="checkbox" id="show-progress" checked>
+                        <label for="show-progress">Show Progress Indicator</label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <input type="checkbox" id="randomize-sections">
+                        <label for="randomize-sections">Randomize Section Order</label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <input type="checkbox" id="randomize-items">
+                        <label for="randomize-items">Randomize Item Order (within Likert and Free Text sections)</label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="completion-message">Completion Message:</label>
+                        <textarea id="completion-message" rows="3" placeholder="Message shown when survey is completed">Survey completed! Redirecting to chat...</textarea>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="form-actions">
+                    <button type="button" class="btn-primary" onclick="previewSurvey()">Preview Survey</button>
+                    <button type="button" class="btn-primary" onclick="saveSurveyConfiguration()">Save Survey Configuration</button>
+                    <button type="button" class="btn-secondary" onclick="resetSurveyToDefault()">Reset to Default</button>
+                    <button type="button" class="btn-secondary" onclick="loadSurveyConfiguration()">Load Saved Configuration</button>
+                </div>
+                
+                <div id="survey-feedback" class="creation-feedback"></div>
+                
+                <!-- Survey Preview -->
+                <div id="survey-preview" class="survey-preview" style="display: none;">
+                    <h3>Survey Preview</h3>
+                    <div class="preview-container">
+                        <iframe id="survey-preview-iframe" width="100%" height="600px" style="border: 1px solid #ccc;"></iframe>
+                    </div>
+                </div>
+            </main>
+            
             <main id="review-passwords" class="password-inspection-palace">
                 <h2>Review Conditions</h2>
                 <table id="password-table">
@@ -134,8 +245,15 @@
             </main>
             <main id="download-section" class="data-download-section">
                 <h2>Download Data</h2>
+                <h3>Chat Interaction Data</h3>
                 <button class="download-button" onclick="downloadFile('interactions.json')">Download interactions.json</button>
                 <button class="download-button" onclick="downloadFile('interactions_backup.csv')">Download interactions_backup.csv</button>
+                
+                <h3>Survey Data</h3>
+                <button class="download-button" onclick="downloadSurveyFile('survey.json')">Download survey.json</button>
+                <button class="download-button" onclick="downloadSurveyFile('survey.csv')">Download survey.csv</button>
+                
+                <h3>System Logs</h3>
                 <button class="download-button" onclick="downloadFile('download_log.json')">Download Log</button>
             </main>
             <main id="url-configuration" class="url-configuration-section">

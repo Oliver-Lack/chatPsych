@@ -9,6 +9,11 @@ body {
   overflow-x: hidden;
 }
 
+/* Ensure all elements use Helvetica font */
+* {
+  font-family: 'Helvetica', sans-serif;
+}
+
 .hidden {
   opacity: 0;
   transition: opacity 0.5s ease; /* Adjust the duration as needed */
@@ -343,6 +348,7 @@ button {
   margin-top: 5px;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease-in-out;
+  font-family: 'Helvetica', sans-serif;
 }
 
 button:hover {
@@ -449,17 +455,21 @@ button:active {
 }
 
 .researcher-about {
+  position: fixed;
+  left: 400px; /* 350px sidebar + 50px spacing */
+  top: calc(10vh + 50px); /* header height + 50px spacing */
+  right: 50px; /* 50px spacing from right edge */
+  width: auto;
+  margin: 0;
   font-size: 16px;
   color: #e7e4e4;
-  width: 40%;
-  height: 70%;
   line-height: 1.6;
-  margin-top: 5%;
-  margin-left: 40%;
   padding: 80px;
   background-color: #222;
   border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: calc(90vh - 100px); /* Prevent overflow beyond viewport */
 }
 
 .researcher-about a {
@@ -534,15 +544,19 @@ button:active {
 }
 
 #agent-creation {
-  width: 50%;
-  margin-left: 40%;
-  margin-right: 10%;
-  margin-top: 8%;
+  position: fixed;
+  left: 400px; /* 350px sidebar + 50px spacing */
+  top: calc(10vh + 50px); /* header height + 50px spacing */
+  right: 50px; /* 50px spacing from right edge */
+  width: auto;
+  margin: 0;
   padding: 20px;
   border-radius: 10px;
   color: #e9e9e9;
   background-color: #222;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: calc(90vh - 100px); /* Prevent overflow beyond viewport */
 }
 
 #agent-creation h2 {
@@ -580,6 +594,7 @@ button:active {
   border-radius: 5px;
   font-size: 16px;
   align-items: center;
+  font-family: 'Helvetica', sans-serif;
 }
 
 .agent-creation-form textarea {
@@ -603,20 +618,24 @@ button:active {
 }
 
 .password-inspection-palace {
-  width: 60%;
-  margin-left: 30%;
-  margin-right: 10%;
-  margin-top: 8%;
+  position: fixed;
+  left: 400px; /* 350px sidebar + 50px spacing */
+  top: calc(10vh + 50px); /* header height + 50px spacing */
+  right: 50px; /* 50px spacing from right edge */
+  width: auto;
+  margin: 0;
   padding: 20px;
   border-radius: 10px;
   color: #e9e9e9;
   background-color: #222;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: calc(90vh - 100px); /* Prevent overflow beyond viewport */
 }
 
 .password-inspection-palace h2 {
   color: #e6e6e6;
-  text-align: center;
+  text-align: left;
 }
 
 #password-table {
@@ -642,7 +661,7 @@ button:active {
 
 .special-back-button {  
   padding: 25px 25px;
-  background-color: #aeaeae;
+  background-color: #555;
   color: #fff;
   text-decoration: none;
   border-radius: 5px;
@@ -690,15 +709,19 @@ button:active {
 }
 
 #edit-passwords {
-  width: 50%;
-  margin-left: 40%;
-  margin-right: 10%;
-  margin-top: 8%;
+  position: fixed;
+  left: 400px; /* 350px sidebar + 50px spacing */
+  top: calc(10vh + 50px); /* header height + 50px spacing */
+  right: 50px; /* 50px spacing from right edge */
+  width: auto;
+  margin: 0;
   padding: 20px;
   border-radius: 10px;
   color: #e9e9e9;
   background-color: #222;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: calc(90vh - 100px); /* Prevent overflow beyond viewport */
 }
 
 #edit-passwords h2 {
@@ -746,33 +769,38 @@ button:active {
 }
 
 .data-download-section {
-  width: 50%;
-  margin-left: 40%;
-  margin-right: 10%;
-  margin-top: 8%;
+  position: fixed;
+  left: 400px; /* 350px sidebar + 50px spacing */
+  top: calc(10vh + 50px); /* header height + 50px spacing */
+  right: 50px; /* 50px spacing from right edge */
+  width: auto;
+  margin: 0;
   padding: 20px;
   border-radius: 10px;
   color: #e9e9e9;
   background-color: #333;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: calc(90vh - 100px); /* Prevent overflow beyond viewport */
 }
 
 .data-download-section h2 {
   color: #e6e6e6;
-  text-align: center;
+  text-align: left;
 }
 
 .download-button {
   margin-top: 15px;
+  align-items: center;
   margin-bottom: 10px;
   padding: 10px;
-  background-color: #818181;
+  background-color: #555;
   color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
-  width: 100%;
+  width: 50%;
 }
 
 .download-button:hover {
@@ -780,15 +808,19 @@ button:active {
 }
 
 .api-selection-section {
-  width: 50%;
-  margin-left: 40%;
-  margin-right: 10%;
-  margin-top: 8%;
+  position: fixed;
+  left: 400px; /* 350px sidebar + 50px spacing */
+  top: calc(10vh + 50px); /* header height + 50px spacing */
+  right: 50px; /* 50px spacing from right edge */
+  width: auto;
+  margin: 0;
   padding: 20px;
   border-radius: 10px;
   color: #e9e9e9;
   background-color: #222;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: calc(90vh - 100px); /* Prevent overflow beyond viewport */
 }
 
 .api-selection-section h2 {
@@ -928,6 +960,7 @@ button:active {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 1.2s ease;
   outline: none;
+  font-family: 'Helvetica', sans-serif;
 }
 
 .input-field:focus {
@@ -1038,6 +1071,7 @@ button:active {
   color: #ffffff; 
   font-size: 14px;
   transition: all 1.2s ease;
+  font-family: 'Helvetica', sans-serif;
 }
 
 .text-input:focus {
@@ -1063,7 +1097,7 @@ select {
   padding: 10px;
   font-size: 16px;
   color: #333333;
-  font-family: sans-serif;
+  font-family: 'Helvetica', sans-serif;
   cursor: pointer;
   display: inline-block;
   position: relative;
@@ -1193,15 +1227,19 @@ select option:checked {
 /* Timer Settings Styles */
 .timer-settings-section,
 .url-configuration-section {
-  width: 50%;
-  margin-left: 40%;
-  margin-right: 10%;
-  margin-top: 8%;
+  position: fixed;
+  left: 400px; /* 350px sidebar + 50px spacing */
+  top: calc(10vh + 50px); /* header height + 50px spacing */
+  right: 50px; /* 50px spacing from right edge */
+  width: auto;
+  margin: 0;
   padding: 20px;
   border-radius: 10px;
   color: #e9e9e9;
   background-color: #222;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: calc(90vh - 100px); /* Prevent overflow beyond viewport */
 }
 
 .timer-settings-container,
@@ -1354,7 +1392,7 @@ select option:checked {
   border-radius: 5px;
   padding: 10px;
   margin-top: 10px;
-  font-family: monospace;
+  font-family: 'Helvetica', sans-serif;
   font-size: 14px;
   border-left: 4px solid #4CAF50;
 }
@@ -1446,6 +1484,13 @@ select option:checked {
   color: white;
 }
 
+/* Override for pre-interaction survey buttons to make them narrower */
+.pre-interaction-survey-form .form-actions button {
+  min-width: 180px;
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
 .form-actions button:hover {
   background-color: #e56b4a;
   transform: translateY(-2px);
@@ -1476,4 +1521,855 @@ select option:checked {
   background-color: #2196F3;
   color: white;
   border-left: 5px solid #1565C0;
+}
+
+/* Survey page styling */
+/* Survey Page Body Styling */
+body.survey-page {
+  font-family: 'Helvetica', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  color: #2c3e50;
+  line-height: 1.6;
+}
+
+/* Survey Container and Layout */
+.survey-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  min-height: 100vh;
+}
+
+.survey-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 40px 30px;
+  text-align: center;
+  border-radius: 0;
+}
+
+.survey-header h1 {
+  margin: 0;
+  font-size: 2.5em;
+  font-weight: 300;
+  letter-spacing: 1px;
+  font-family: 'Helvetica', sans-serif;
+}
+
+.survey-content {
+  padding: 40px 50px;
+}
+
+/* Survey Section Styles - Updated for Qualtrics Look */
+.survey-section { 
+  margin-bottom: 40px; 
+  padding: 30px; 
+  background: #ffffff;
+  border: 1px solid #e1e8ed;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.survey-section:hover {
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.survey-section-title { 
+  font-size: 1.8em;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid #667eea;
+  display: inline-block;
+}
+
+.survey-section-description {
+  font-size: 1.1em;
+  color: #7f8c8d;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+/* Survey Form Elements */
+.survey-section label {
+  display: block;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 8px;
+  font-size: 1.1em;
+  font-family: 'Helvetica', sans-serif;
+}
+
+.survey-section input[type="number"], 
+.survey-section input[type="text"], 
+.survey-section select, 
+.survey-section textarea {
+  width: 100%;
+  padding: 15px 18px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: 'Helvetica', sans-serif;
+  transition: all 0.3s ease;
+  background: #fafbfc;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.survey-section input[type="number"]:focus, 
+.survey-section input[type="text"]:focus, 
+.survey-section select:focus, 
+.survey-section textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Likert Scale Styling */
+.survey-likert-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 20px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.survey-likert-table th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 18px 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95em;
+  border: none;
+}
+
+.survey-likert-table td {
+  padding: 20px 15px;
+  text-align: center;
+  background: #fafbfc;
+  border-bottom: 1px solid #e1e8ed;
+  transition: background-color 0.3s ease;
+}
+
+.survey-likert-table tr:hover td {
+  background: #f1f3f4;
+}
+
+.survey-likert-table td:first-child {
+  text-align: left;
+  font-weight: 500;
+  color: #2c3e50;
+  padding-left: 25px;
+  max-width: 300px;
+}
+
+.survey-likert-table input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+/* Survey Button Styling */
+.survey-btn {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Helvetica', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.survey-btn-agree {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.survey-btn-agree:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.survey-btn-quit {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.survey-btn-quit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
+.survey-btn-cancel {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+}
+
+.survey-btn-cancel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(149, 165, 166, 0.4);
+}
+
+/* Submit Section */
+.submit-section {
+  text-align: center;
+  padding: 40px 0;
+  background: #f8f9fa;
+  margin: 40px -50px -40px -50px;
+  border-radius: 0 0 12px 12px;
+}
+
+#submit-btn {
+  padding: 18px 50px;
+  font-size: 18px;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+  font-family: 'Helvetica', sans-serif;
+}
+
+#submit-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(40, 167, 69, 0.4);
+}
+
+/* Next Button Styling */
+#next-btn {
+  padding: 18px 50px;
+  font-size: 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+  font-family: 'Helvetica', sans-serif;
+}
+
+#next-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+}
+
+#next-disclaimer {
+  color: #7f8c8d;
+  font-style: italic;
+  margin-bottom: 25px;
+  font-size: 1.1em;
+  text-align: center;
+}
+
+/* Enhanced Survey Popup Styles - Qualtrics Design */
+.survey-consent-popup, .survey-quit-confirm-popup {
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100vw; 
+  height: 100vh;
+  background: rgba(0,0,0,0.7); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+}
+
+.survey-popup-content {
+  background: #ffffff; 
+  padding: 40px 50px;
+  border-radius: 15px; 
+  max-width: 600px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  border: 1px solid #e1e8ed;
+}
+
+.survey-popup-content h2 {
+  color: #2c3e50;
+  font-size: 2em;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.survey-popup-content h3 {
+  color: #e74c3c;
+  font-size: 1.6em;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.survey-popup-content p {
+  color: #34495e;
+  font-size: 1.1em;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.consent-content {
+  text-align: left;
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.form-downloads {
+  margin: 25px 0;
+  padding: 20px;
+  background: #f1f3f4;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.download-link {
+  display: inline-block;
+  margin: 8px 15px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white !important;
+  text-decoration: none;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.download-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  text-decoration: none;
+}
+
+.survey-hidden { 
+  display: none !important; 
+}
+
+.survey-btn { 
+  padding: 15px 30px; 
+  margin: 15px 10px; 
+  border: none; 
+  border-radius: 25px; 
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Helvetica', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  min-width: 160px;
+}
+
+.survey-btn-agree { 
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.survey-btn-agree:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.survey-btn-quit { 
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.survey-btn-quit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+}
+
+.survey-btn-cancel { 
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+.survey-btn-cancel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+}
+
+/* Pre-Interaction Survey Researcher Dashboard */
+.pre-interaction-survey-form {
+  position: fixed;
+  left: 400px; /* 350px sidebar + 50px spacing */
+  top: calc(10vh + 50px); /* header height + 50px spacing */
+  right: 50px; /* 50px spacing from right edge */
+  width: auto;
+  margin: 0;
+  padding: 20px;
+  border-radius: 10px;
+  color: #e9e9e9;
+  background-color: #222;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  max-height: calc(90vh - 100px); /* Prevent overflow beyond viewport */
+}
+
+.pre-interaction-survey-form.active {
+  display: block;
+}
+
+.form-subsection {
+  background: #222;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 5px;
+}
+
+.survey-sections-container {
+  border-radius: 5px;
+  padding: 15px;
+}
+
+.add-section-control {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #222;
+  border: 2px solid #28a745;
+  border-radius: 5px;
+}
+
+.section-type-selector {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.section-type-selector label {
+  color: #e0e0e0;
+  font-weight: bold;
+}
+
+.section-type-selector select {
+  padding: 8px 12px;
+  background: #393939;
+  color: white;
+  border: 1px solid #555;
+  border-radius: 3px;
+  min-width: 200px;
+}
+
+.survey-section-config {
+  margin-bottom: 20px;
+  border: 3px solid #555;
+  border-radius: 5px;
+  background: #222;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: #222;
+  cursor: pointer;
+}
+
+.section-header h4 {
+  margin: 0;
+  color: #e0e0e0;
+}
+
+.section-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-content {
+  padding: 15px;
+  display: none;
+}
+
+.section-content.expanded {
+  display: block;
+}
+
+.field-config {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 8px;
+  background: #222;
+  border-radius: 3px;
+}
+
+.demographics-fields, .likert-items-container, .freetext-questions {
+  margin-top: 15px;
+}
+
+.likert-item, .freetext-question {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 10px;
+  background: #222;
+  border-radius: 3px;
+  border: 1px solid #e0e0e0;
+}
+
+.likert-item input[type="text"], .freetext-question input[type="text"] {
+  flex: 1;
+}
+
+.btn-small {
+  padding: 5px 10px;
+  font-size: 12px;
+  background: #222;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn-add {
+  padding: 8px 15px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  margin: 10px 0;
+}
+
+.btn-remove {
+  padding: 5px 8px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-primary {
+  padding: 10px 20px;
+  background: #FF8266;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+/* Ensure proper button colors in pre-interaction survey */
+.pre-interaction-survey-form .btn-primary {
+  background: #FF8266;
+}
+
+.pre-interaction-survey-form .btn-primary:hover {
+  background: #fd6745;
+}
+
+.pre-interaction-survey-form .btn-secondary {
+  background: #6c757d;
+}
+
+.pre-interaction-survey-form .btn-secondary:hover {
+  background: #545b62;
+}
+
+.file-upload-section {
+  margin: 15px 0;
+  padding: 15px;
+  background: #222;
+  border-radius: 5px;
+  border: 2px dashed #ddd;
+}
+
+.file-status {
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
+.file-status.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.file-status.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.setting-group {
+  margin: 15px 0;
+  padding: 10px;
+  background: #222;
+  border-radius: 5px;
+}
+
+.setting-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.survey-preview {
+  margin-top: 30px;
+  border-top: 2px solid #007bff;
+  padding-top: 20px;
+}
+
+.preview-container {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.gender-options input {
+  width: 100%;
+  margin-top: 5px;
+}
+
+.likert-scale-config {
+  margin: 15px 0;
+  padding: 10px;
+  background: #222;
+  border-radius: 5px;
+  border: 2px dashed #ddd;
+}
+
+/* Survey form download links */
+.form-downloads {
+  margin: 15px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.download-link {
+  display: inline-block;
+  margin: 5px 10px;
+  padding: 8px 15px;
+  background: #007bff;
+  color: white !important;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.download-link:hover {
+  background: #0056b3;
+  text-decoration: none;
+}
+
+.consent-content {
+  text-align: left;
+  margin: 15px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 5px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.consent-content ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.consent-content li {
+  margin: 5px 0;
+}
+
+/* Enhanced input box styles for survey configuration */
+#information-title,
+#information-content,
+#completion-message,
+#consent-content,
+#survey-title {
+  display: block;
+  width: 80%;
+  max-width: none;
+  margin: 10px 0 20px 0;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+  border: 2px solid #444;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 16px;
+  font-family: 'Helvetica', sans-serif;
+  line-height: 1.5;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  resize: vertical;
+  min-height: 20px;
+  position: relative;
+}
+
+/* Add subtle inner shadow and texture for input appearance */
+#information-title:before,
+#information-content:before,
+#completion-message:before,
+#consent-content:before,
+#survey-title:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.01) 2px,
+      rgba(255, 255, 255, 0.01) 4px
+    );
+  border-radius: 12px;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+#information-title,
+#survey-title {
+  min-height: 50px;
+}
+
+#information-content,
+#completion-message,
+#consent-content {
+  min-height: 120px;
+  resize: vertical;
+}
+
+#information-title:focus,
+#information-content:focus,
+#completion-message:focus,
+#consent-content:focus,
+#survey-title:focus {
+  outline: none;
+  border-color: #FF8266;
+  background: linear-gradient(135deg, #333333 0%, #222222 100%);
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    0 0 0 3px rgba(255, 130, 102, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+#information-title:hover,
+#information-content:hover,
+#completion-message:hover,
+#consent-content:hover,
+#survey-title:hover {
+  border-color: #666;
+  background: linear-gradient(135deg, #2d2d2d 0%, #1d1d1d 100%);
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  cursor: text;
+}
+
+#information-title::placeholder,
+#information-content::placeholder,
+#completion-message::placeholder,
+#consent-content::placeholder,
+#survey-title::placeholder {
+  color: #888;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Add subtle typing indicator when focused */
+#information-title:focus::after,
+#information-content:focus::after,
+#completion-message:focus::after,
+#consent-content:focus::after,
+#survey-title:focus::after {
+  content: '';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  width: 2px;
+  height: 20px;
+  background: #FF8266;
+  transform: translateY(-50%);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Label styling for these inputs */
+label[for="information-title"],
+label[for="information-content"],
+label[for="completion-message"],
+label[for="consent-content"],
+label[for="survey-title"] {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  color: #FF8266;
+  margin-bottom: 8px;
+  margin-top: 25px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
