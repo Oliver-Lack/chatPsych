@@ -8,11 +8,11 @@ chatPsych is an open-source Artificial Intelligence (AI) interface web app for H
 <img src="static/images/Demo/chat.png" alt="alt text" width="800"/>
 
 For usage, questions or collaborations, please cite/acknowledge/contact:
-Oliver Lack
-Australian Institute for Machine Learning (AIML) | School of Psychology
-The University of Adelaide
-oliver.lack@adelaide.edu.au | oliver@oliverlack.com
-https://www.oliverlack.com
+<br>Oliver Lack
+<br>Australian Institute for Machine Learning (AIML) | School of Psychology
+<br>The University of Adelaide
+<br>oliver.lack@adelaide.edu.au | oliver@oliverlack.com
+<br>https://www.oliverlack.com
 
 
 ## Summary
