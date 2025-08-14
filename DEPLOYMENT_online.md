@@ -1,163 +1,187 @@
+# Server Deployment Guide (chatPsych)
 
-# Original Guide
+## 0) Before you launch (Info only)
+- Buy a domain. Point DNS to your server’s Elastic IP.
+- Services for this deployment guide: AWS EC2, Ubuntu, Flask, Gunicorn, Apache2, Certbot.
+- Note: you can deploy with any server running Ubuntu or similar Linux distro in the same way as described below.
 
+## 1) Launch EC2 and SSH
 
-## Server Deployment
+Step 1: Launch an EC2 instance with Ubuntu 22.04 LTS.
+- Choose an instance type (t3.medium good for 50ish participants concurrently).
+- Configure security group to allow HTTP (80), HTTPS (443), and SSH (22) access.
+- Download the key pair (e.g., `chatpsych.pem`) and set permissions:
+From local computer directory holding the pem file run SSH terminal command:
+For example: 
+ssh -i "chatpsych.pem" ubuntu@ec2-52-64-0-79.ap-southeast-2.compute.amazonaws.com
 
-How to run on a server (e.g., AWS EC2 Instance or magical cloud connected to the internet):
+## 2) Initial setup on the instance
 
-Before Instance launch!  
-- Get a domain name and set up server (AWS account activation and set elastic IP to domain in host service). You'll have to edit DNS settings in domain provider.  
-
-Overview of examples components -> AWS EC2, Ubuntu, Flask, Gunicorn, Apache2, Certbot
-
-Important Tip - DO NOT stuff up any of the sudo chown commands. You will F#*! up permissions to root if you forget the wrong /. I’ve done this twice and wanted to punch a window both times. If this happens…Pack up your belongings, delete the instance, and start again…  
-
-
-Now get an EC2 Instance running  
-
-	SSH into instance: (remember to be in directory of the .pem key file)
-EX.  ssh -i "wordie.pem" ubuntu@ec2-52-64-0-79.ap-southeast-2.compute.amazonaws.com
-
-	Once SSH successful, follow these commands:
-
+While SSH into the EC2 instance — run:
 sudo apt-get update
 sudo apt-get install python3.venv
-sudo mkdir /srv/wordie
-sudo chown ubuntu:ubuntu /srv/wordie
+sudo mkdir /srv/chatpsych
+sudo chown ubuntu:ubuntu /srv/chatpsych
 
-	Send directory from local computer to wordie AWS instance (Will need to edit paths and names 	accordingly)
-	From local workspace directory
-Example code to do this:
-Ex. rsync -avz -e "ssh -i /Users/a1809024/Desktop/PMC/AI_Interface/AWS/wordie.pem" ./* ubuntu@wordie-pilot.xyz:/srv/wordie/
-Ex. rsync -avz --exclude="vent" --exclude="__pycache__" ../Wordie_1_0/ ubuntu@wordie.xyz:/srv/wordie/	
-Ex. scp -i /Users/a1809024/Desktop/PMC/AI_Interface/AWS -r ./ ubuntu@wordie-pilot.xyz:/srv/wordie
-	Head back to SSH connection
+## 3) Upload codebase to the server
 
-cd /srv/wordie && ls -l
+Info only:
+- From your local project folder, send files to /srv/chatpsych on the instance.
+
+Local computer — run (pick one of examples below or make your own; edit paths/domains as needed):
+Ex. rsync -avz -e "ssh -i /Users/a1809024/Desktop/PMC/AI_Interface/AWS/chatpsych.pem" ./* ubuntu@chatpsych-pilot.xyz:/srv/chatpsych/
+Ex. rsync -avz --exclude="vent" --exclude="__pycache__" ../Chatpsych_1_0/ ubuntu@chatpsych.xyz:/srv/chatpsych/	
+Ex. scp -i /Users/a1809024/Desktop/PMC/AI_Interface/AWS -r ./ ubuntu@chatpsych-pilot.xyz:/srv/chatpsych
+
+Alternatively you could just clone chatPsych repository (or your own repository adaption) from GitHub using https: 
+Ex. 
+sudo apt install git-all
+git clone https://github.com/Oliver-Lack/chatPsych.git
+
+## 4) App environment and service
+
+In EC2 instance — run:
+cd /srv/chatpsych && ls -l
 python3 -m venv venv
 source venv/bin/activate
 pip install Flask
 pip install gunicorn
 pip install -r requirements.txt
 deactivate
-sudo nano /etc/systemd/system/wordie.service
-	
-	Setup wordie background service in nano by pasting the following below into editor 
-	followed by 	control+O, enter, then control+X.
+sudo nano /etc/systemd/system/chatpsych.service
+
+In EC2 instance — edit the now opened file (paste below, then Ctrl+O, Enter, Ctrl+X):
+```nano
 [Unit]
-Description=Wordie Flask App
+Description=Chatpsych Flask App
 After=network.target
 
 [Service]
-User=wordie_user
-Group=wordie_user
-WorkingDirectory=/srv/wordie/
-ExecStart=/srv/wordie/venv/bin/gunicorn wordie:app -w 4 -b 127.0.0.1:8000        
+User=chatpsych_user
+Group=chatpsych_user
+WorkingDirectory=/srv/chatpsych/
+ExecStart=/srv/chatpsych/venv/bin/gunicorn chatpsych:app -w 4 -b 127.0.0.1:8000        
 Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
+```
 
+Then, in EC2 instance — run:
 sudo systemctl daemon-reload
-sudo systemctl enable --now wordie.service
+sudo systemctl enable --now chatpsych.service
 sudo apt install apache2
 cd /etc/apache2/sites-available/
 sudo rm default-ssl.conf
 sudo service apache2 start
-sudo mv 000-default.conf wordie.xyz.conf
-sudo nano wordie.xyz.conf
-	
-	Edit wordie conf file by pasting the below into the nan editor
-	
+sudo mv 000-default.conf chatpsych.xyz.conf
+sudo nano chatpsych.xyz.conf
+
+In EC2 instance — edit file that is now open (paste, then Ctrl+O, Enter, Ctrl+X):
+```nano
 <VirtualHost *:80>
-        ServerName wordie.xyz
-        ServerAlias www.wordie.xyz
+        ServerName chatpsych.xyz
+        ServerAlias www.chatpsych.xyz
 
         ProxyPass / http://127.0.0.1:8000/
         ProxyPassReverse / http://127.0.0.1:8000/
 </VirtualHost>
+```
 
-
+Then, in EC2 instance — run:
 sudo a2enmod proxy proxy_http
 sudo a2dissite 000-default.conf
-sudo a2ensite wordie.xyz.conf
-sudo service wordie start
+sudo a2ensite chatpsych.xyz.conf
+sudo service chatpsych start
 sudo snap install --classic certbot
 sudo ln -s /snap/bin/certbot /usr/bin/certbot
 sudo certbot --apache
-	set ssl cert fr both domains by selecting 1 2 enter
+
+Info only:
+- In Certbot: set SSL for both domains by selecting 1, 2, Enter.
+
+In EC2 instance — run:
 sudo crontab -e
-	select 1 for nano and paste the following in nano, writeout, exit, to renew SSL cert automatically
-	0 4 * * 1 /usr/bin/certbot --renew && /usr/sbin/service apache2 reload
-sudo adduser --system --no-create-home --group wordie_user
-sudo nano /etc/systemd/system/wordie.service
-	Set/Check the user and group in the .service file to the user you just added “wordie_user”
-sudo chown -R wordie_user:wordie_user /srv/wordie/
+
+Info only:
+- Choose nano “1”. Paste the line below to auto-renew. Save/exit.
+
+EC2 instance — paste in crontab:
+0 4 * * 1 /usr/bin/certbot --renew && /usr/sbin/service apache2 reload
+
+In EC2 instance — run:
+sudo adduser --system --no-create-home --group chatpsych_user
+sudo nano /etc/systemd/system/chatpsych.service
+
+Info only:
+- Ensure [Service] has User=chatpsych_user and Group=chatpsych_user.
+
+EC2 instance — run:
+sudo chown -R chatpsych_user:chatpsych_user /srv/chatpsych/
 sudo systemctl daemon-reload
-sudo service wordie restart
-sudo service wordie status
+sudo service chatpsych restart
+sudo service chatpsych status
 
+## 5) Environment variables
 
-	Now you need to set all env variables for secret keys and API keys. 
-
-cd /srv/wordie
+In EC2 instance — run:
+cd /srv/chatpsych
 source venv/bin/activate
-sudo /srv/wordie/venv/bin/pip install python-dotenv
-sudo nano /srv/wordie/.env
-	
-	Now write in .env file
- 	
-	EX.
+sudo /srv/chatpsych/venv/bin/pip install python-dotenv
+sudo nano /srv/chatpsych/.env
 
-	# OpenAI API Key (Wordie unpredictability project)
-	OPENAI_API_KEY=Secret Key
+EC2 instance — edit file (example; put your real secrets. There is an example .env file in the chatPsych repo):
+```nano
+OPENAI_API_KEY=Secret Key
 
-    # Anthropic
-    ANTHROPIC_API_KEY=Secret Key
+ANTHROPIC_API_KEY=Secret Key
 
-	# Flask Secret Key
-	FLASK_SECRET_KEY=Secret Key
+FLASK_SECRET_KEY=Secret Key
 
-    #researcher login page
-    researcher_username="wordie"
-    researcher_password="laplace666$"
+researcher_username="chatpsych"
+researcher_password="laplace666$"
+```
 
-sudo nano /etc/systemd/system/wordie.service
-	add    EnvironmentFile=/srv/wordie/.env
-	in the [Service] section of the service file
+EC2 instance — run:
+sudo nano /etc/systemd/system/chatpsych.service
 
+Info only:
+- Add this line inside [Service]:
+- EnvironmentFile=/srv/chatpsych/.env
+
+EC2 instance — run:
 sudo systemctl daemon-reload
-sudo systemctl restart wordie
-sudo systemctl status wordie
+sudo systemctl restart chatpsych
+sudo systemctl status chatpsych
 deactivate
 
-	Adding swap space to stop memory crashing at hight spikes
+## 6) Optional: swap (stability)
+
+EC2 instance — run:
 sudo fallocate -l 1G /swapfile
 sudo chmod 0600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 free -m
 sudo nano /etc/fstab
-	add this to bottom empty line
-	/swapfile       none            swap    sw              0 0
+
+EC2 instance — edit file (add at end):
+/swapfile       none            swap    sw              0 0
+
+EC2 instance — run:
 sudo reboot
 
+## 7) Server Performance Logging
 
+Info only:
+- Logs CPU, memory, network. Runs in background.
 
-## Server Performance Logging
-
-**Setting up server performance logs**  
-
-The following commands will setup server performance logs (memory, CPU usage and Traffic).  
-Commands  
-----------------  
-mkdir -p /logs  
+In the EC2 instance — run:
+mkdir -p /logs
 cd /logs
-sudo nano /logs/log_resources.sh  
-----------------  
+sudo nano /logs/log_resources.sh
 
-	Add the following to the file:
+EC2 instance — edit file (paste):
 while true; do
     sar -u 1 1 >> /logs/cpu_usage.log
     sar -r 1 1 >> /logs/memory_usage.log
@@ -165,28 +189,26 @@ while true; do
     sleep 10
 done
 
-Commands  
-----------------  
+In the EC2 instance — run:
 chmod +x /logs/log_resources.sh
 sudo nohup /logs/log_resources.sh &
-----------------  
 
-	To stop the process, find its PID (process ID) and kill it:
-Commands  
-----------------  
+Info only:
+- To stop, find PID and kill.
+
+EC2 instance — run:
 ps aux | grep log_resources.sh
 kill <PID>
-----------------  
-  
-**Visualising the logs**  
 
-Commands
-----------------
+## 8) Visualize logs (quick console plots)
+
+In the EC2 instance — run:
 cd /logs
 sudo bash -c "awk '/^[0-9]/ {print \$1, \$8}' cpu_usage.log > cpu_plot_data.log"
 sudo bash -c "awk '/^[0-9]/ {print \$1, \$8}' memory_usage.log > memory_plot_data.log"
 sudo bash -c "awk '/^[0-9]/ {print \$1, \$8}' network_traffic.log > network_plot_data.log"
 
+EC2 instance — run:
 gnuplot <<-EOFMarker
     set terminal dumb
     set xdata time
@@ -204,25 +226,12 @@ gnuplot <<-EOFMarker
     set ylabel "Traffic (bytes)"
     plot "network_plot_data.log" using 1:2 with lines title "Network Traffic"
 EOFMarker
-----------------
 
-**Live Monitoring**
+## 9) Live monitoring
 
-Commands
-----------------
+In the EC2 instance — run:
 sudo apt install htop
 htop
-----------------
 
-
-**WOHOO done…hopefully....nearly**
-
-  Go to your browser and visit the IP or the domain name connected (domains can’t take up to 6 hours to connect to the IP). 
-
-
-
-
-
-
-
-
+## 10) Final check (Info only)
+- Visit your server IP or chatpsych domain. DNS may take up to 6 hours.

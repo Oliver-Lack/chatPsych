@@ -2,10 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeForm = localStorage.getItem('activeForm') || 'about';
     showForm(activeForm);
     listJsonFiles();
-    listPasswords();
+    loadAgentsWithStatus(); // Changed from listPasswords
     loadAvailableModels();
     loadTimerSettings();
     loadUrlSettings();
+    loadBrandingSettings(); // Add branding settings loading
+    loadPostChatPopupSettings(); // Add post-chat popup settings loading
+    loadRandomisedPassword(); // Add this new function call
     checkUploadedFiles(); // Check for existing uploaded files on page load
     
     // Update preview when duration changes
@@ -16,6 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePreviewTimer(minutes);
         });
     }
+    
+    // Add event listeners for trigger type radio buttons
+    const triggerTypeRadios = document.querySelectorAll('input[name="trigger_type"]');
+    triggerTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            toggleTriggerType(this.value);
+        });
+    });
 });
 
 function loadAvailableModels() {
@@ -52,6 +63,11 @@ function loadAvailableModels() {
                     option.textContent = model.display;
                     agentModelDropdown.appendChild(option);
                 });
+                
+                // Set default selection to gpt-4.1 if available
+                if (agentModelDropdown.querySelector('option[value="gpt-4.1"]')) {
+                    agentModelDropdown.value = 'gpt-4.1';
+                }
             }
         })
         .catch(error => console.error('Error loading models:', error));
@@ -95,10 +111,10 @@ function selectAPI(apiName) {
     // Legacy function for backward compatibility
     // Maps old API names to default models
     const apiModelMap = {
-        'API_Call_openai': 'gpt-4o',
-        'API_Call_anthropic': 'claude-3-5-sonnet',
-        'API_Call_google': 'gemini-1.5-pro',
-        'API_Call_xai': 'grok-2-latest'
+        'API_Call_openai': 'gpt-4.1',
+        'API_Call_anthropic': 'claude-sonnet-4-20250514',
+        'API_Call_google': 'gemini/gemini-2.5-pro',
+        'API_Call_xai': 'xai/grok-4'
     };
     
     const modelName = apiModelMap[apiName];
@@ -128,6 +144,15 @@ function showForm(formId) {
     const buttons = document.querySelectorAll('.researcher-sidebar-content');
     buttons.forEach(button => button.classList.remove('active-button'));
     document.querySelector(`button[onclick="showForm('${formId}')"]`).classList.add('active-button');
+    
+    // Auto-load saved configurations when accessing survey sections
+    if (formId === 'pre-interaction-survey') {
+        // Auto-load pre-survey configuration
+        loadSurveyConfiguration();
+    } else if (formId === 'post-interaction-survey') {
+        // Auto-load post-survey configuration
+        loadPostSurveyConfiguration();
+    }
 }
 
 async function listJsonFiles() {
@@ -170,47 +195,258 @@ function hideFileContent() {
 // ...existing code...
 
 function sortTableRows() {
-    const tableBody = document.getElementById('password-table-body');
-    const rows = Array.from(tableBody.rows);
-    rows.sort((a, b) => a.cells[0].textContent.localeCompare(b.cells[0].textContent));
-    rows.forEach(row => tableBody.appendChild(row));
+    // Legacy function - functionality moved to loadAgentsWithStatus
+    console.log('sortTableRows called - using new agent management system');
 }
 
 async function listPasswords() {
+    // Legacy function - replaced by loadAgentsWithStatus
+    console.log('listPasswords called - redirecting to loadAgentsWithStatus');
+    await loadAgentsWithStatus();
+}
+
+// New Agent Management Functions
+async function loadAgentsWithStatus() {
     try {
-        const response = await fetch('/get-passwords');
-        const passwords = await response.json();
-        const tableBody = document.getElementById('password-table-body');
-        tableBody.innerHTML = '';
-
-        for (let item of passwords) {
-            const row = document.createElement('tr');
-            const filename = `${item.password}.json`;
-
-            try {
-                const fileContentResponse = await fetch(`/get-file-content?name=${filename}`);
-                const fileContent = fileContentResponse.ok ? await fileContentResponse.text() : 'No content';
-
-                row.innerHTML = `
-                    <td>${item.password || 'No password'}</td>
-                    <td>${item.agent}</td>
-                    <td>${fileContent}</td>
-                `;
-            } catch (error) {
-                console.error('Error fetching file content:', error);
-                row.innerHTML = `
-                    <td>${item.password || 'No password'}</td>
-                    <td>${item.agent}</td>
-                    <td>Error loading content</td>
-                `;
-            }
-
-            tableBody.appendChild(row);
-        }
+        const response = await fetch('/get-agents-with-status');
+        const data = await response.json();
         
-        sortTableRows();
+        if (data.agents) {
+            displayAgentsWithStatus(data.agents);
+        } else {
+            console.error('Error loading agents:', data.error);
+        }
     } catch (error) {
-        console.error('Error fetching passwords:', error);
+        console.error('Error fetching agents:', error);
+    }
+}
+
+function displayAgentsWithStatus(agents) {
+    const agentsList = document.getElementById('agents-list');
+    agentsList.innerHTML = '';
+    
+    agents.forEach(agent => {
+        const agentCard = createAgentCard(agent);
+        agentsList.appendChild(agentCard);
+    });
+}
+
+function createAgentCard(agent) {
+    const card = document.createElement('div');
+    card.className = `agent-card ${agent.is_active ? '' : 'inactive'}`;
+    card.setAttribute('data-password', agent.password);
+    
+    const config = agent.config;
+    const hasError = config.error;
+    
+    card.innerHTML = `
+        <div class="agent-card-header">
+            <div class="agent-info">
+                <h4 class="agent-name">${agent.agent_name}</h4>
+                <p class="agent-password">Password: ${agent.password}</p>
+            </div>
+            <div class="agent-toggle-container">
+                <span class="agent-toggle-label">${agent.is_active ? 'Active' : 'Inactive'}</span>
+                <label class="agent-switch">
+                    <input type="checkbox" ${agent.is_active ? 'checked' : ''} 
+                           onchange="toggleAgentStatus('${agent.password}', this.checked)">
+                    <span class="slider-switch"></span>
+                </label>
+                <button class="delete-agent-btn" onclick="deleteAgent('${agent.password}', '${agent.agent_name}')" title="Delete Agent">Delete</button>
+                <button class="expand-toggle" onclick="toggleAgentDetails('${agent.password}')">▼</button>
+            </div>
+        </div>
+        <div class="agent-details" id="details-${agent.password}">
+            ${hasError ? 
+                `<div class="config-section">
+                    <span class="config-label">Error</span>
+                    <div class="config-value">${config.error}</div>
+                </div>` :
+                `<div class="agent-config">
+                    <div class="config-grid">
+                        <div class="config-section">
+                            <span class="config-label">Model</span>
+                            <div class="config-value">${config.model || 'Not specified'}</div>
+                        </div>
+                        <div class="config-section">
+                            <span class="config-label">Temperature</span>
+                            <div class="config-value">${config.temperature || 'Not specified'}</div>
+                        </div>
+                        <div class="config-section">
+                            <span class="config-label">Top P</span>
+                            <div class="config-value">${config.top_p || 'Not specified'}</div>
+                        </div>
+                        <div class="config-section">
+                            <span class="config-label">Max Tokens</span>
+                            <div class="config-value">${config.max_completion_tokens || 'Not specified'}</div>
+                        </div>
+                        <div class="config-section">
+                            <span class="config-label">Presence Penalty</span>
+                            <div class="config-value">${config.presence_penalty || 'Not specified'}</div>
+                        </div>
+                        <div class="config-section">
+                            <span class="config-label">Frequency Penalty</span>
+                            <div class="config-value">${config.frequency_penalty || 'Not specified'}</div>
+                        </div>
+                    </div>
+                    ${config.PrePrompt ? 
+                        `<div class="config-section">
+                            <span class="config-label">Pre-Prompt</span>
+                            <div class="config-value pre-prompt">${config.PrePrompt}</div>
+                        </div>` : ''
+                    }
+                </div>`
+            }
+        </div>
+    `;
+    
+    return card;
+}
+
+function toggleAgentDetails(password) {
+    const details = document.getElementById(`details-${password}`);
+    const button = details.previousElementSibling.querySelector('.expand-toggle');
+    
+    if (details.classList.contains('expanded')) {
+        details.classList.remove('expanded');
+        button.textContent = '▼';
+    } else {
+        details.classList.add('expanded');
+        button.textContent = '▲';
+    }
+}
+
+async function toggleAgentStatus(password, isActive) {
+    try {
+        const response = await fetch('/update-agent-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                password: password,
+                is_active: isActive
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.message) {
+            // Update the visual state
+            const card = document.querySelector(`[data-password="${password}"]`);
+            const label = card.querySelector('.agent-toggle-label');
+            
+            if (isActive) {
+                card.classList.remove('inactive');
+                label.textContent = 'Active';
+            } else {
+                card.classList.add('inactive');
+                label.textContent = 'Inactive';
+            }
+        } else {
+            alert('Error updating agent status: ' + data.error);
+            // Revert the checkbox state
+            const checkbox = document.querySelector(`[data-password="${password}"] input[type="checkbox"]`);
+            checkbox.checked = !isActive;
+        }
+    } catch (error) {
+        console.error('Error updating agent status:', error);
+        alert('Error updating agent status');
+        // Revert the checkbox state
+        const checkbox = document.querySelector(`[data-password="${password}"] input[type="checkbox"]`);
+        checkbox.checked = !isActive;
+    }
+}
+
+async function deleteAgent(password, agentName) {
+    // Show confirmation dialog
+    const confirmDelete = confirm(`Are you sure you want to delete the agent "${agentName}"?\n\nThis will:\n- Remove the agent configuration file\n- Delete the password assignment\n- This action cannot be undone`);
+    
+    if (!confirmDelete) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/delete-agent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                password: password,
+                agent_name: agentName
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.message) {
+            // Remove the agent card from the UI
+            const card = document.querySelector(`[data-password="${password}"]`);
+            if (card) {
+                card.remove();
+            }
+            
+            alert(`Agent "${agentName}" has been successfully deleted.`);
+            
+            // Refresh the agents list to ensure consistency
+            loadAgentsWithStatus();
+        } else {
+            alert('Error deleting agent: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error deleting agent:', error);
+        alert('Error deleting agent. Please try again.');
+    }
+}
+
+// Randomised Password Management Functions
+async function loadRandomisedPassword() {
+    try {
+        const response = await fetch('/get-randomised-password');
+        const data = await response.json();
+        
+        if (data.password) {
+            document.getElementById('randomised-password').value = data.password;
+            document.getElementById('current-randomised-password').textContent = data.password;
+        } else {
+            console.error('Error loading randomised password:', data.error);
+        }
+    } catch (error) {
+        console.error('Error fetching randomised password:', error);
+    }
+}
+
+async function updateRandomisedPassword() {
+    const newPassword = document.getElementById('randomised-password').value.trim();
+    
+    if (!newPassword) {
+        alert('Please enter a password');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/update-randomised-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                password: newPassword
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.message) {
+            document.getElementById('current-randomised-password').textContent = newPassword;
+            alert('Randomised agent password updated successfully!');
+        } else {
+            alert('Error updating password: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error updating randomised password:', error);
+        alert('Error updating password');
     }
 }
 
@@ -287,48 +523,97 @@ function loadUrlSettings() {
     fetch('/get-url-settings')
         .then(response => response.json())
         .then(data => {
+            // Load basic URLs
             document.getElementById('quit-url').value = data.quit_url || 'https://www.prolific.com/';
-            document.getElementById('redirect-url').value = data.redirect_url || 'https://adelaideuniwide.qualtrics.com/jfe/form/SV_cuyJvIsumG4zjMy';
+            document.getElementById('redirect-url').value = data.redirect_url || 'https://www.prolific.com/';
             document.getElementById('current-quit-url').textContent = data.quit_url || 'https://www.prolific.com/';
-            document.getElementById('current-redirect-url').textContent = data.redirect_url || 'https://adelaideuniwide.qualtrics.com/jfe/form/SV_cuyJvIsumG4zjMy';
+            document.getElementById('current-redirect-url').textContent = data.redirect_url || 'https://www.prolific.com/';
+            
+            // Load button texts
+            document.getElementById('quit-button-text').value = data.quit_button_text || 'Quit Study';
+            document.getElementById('redirect-button-text').value = data.redirect_button_text || 'Continue to Survey';
+            
+            // Load post-survey toggle
+            document.getElementById('use-post-survey').checked = data.use_post_survey || false;
+            
+            // Load trigger type
+            const triggerType = data.trigger_type || 'messages';
+            document.querySelector(`input[name="trigger_type"][value="${triggerType}"]`).checked = true;
+            toggleTriggerType(triggerType);
+            
+            // Load message triggers
+            document.getElementById('stage1-messages').value = data.stage1_messages || 5;
+            document.getElementById('stage2-messages').value = data.stage2_messages || 10;
+            document.getElementById('stage3-messages').value = data.stage3_messages || 15;
+            
+            // Load time triggers
+            document.getElementById('stage1-time').value = data.stage1_time || 2;
+            document.getElementById('stage2-time').value = data.stage2_time || 5;
+            document.getElementById('stage3-time').value = data.stage3_time || 8;
         })
         .catch(error => {
             console.error('Error loading URL settings:', error);
             // Set defaults if loading fails
-            document.getElementById('quit-url').value = 'https://www.prolific.com/';
-            document.getElementById('redirect-url').value = 'https://adelaideuniwide.qualtrics.com/jfe/form/SV_cuyJvIsumG4zjMy';
-            document.getElementById('current-quit-url').textContent = 'https://www.prolific.com/';
-            document.getElementById('current-redirect-url').textContent = 'https://adelaideuniwide.qualtrics.com/jfe/form/SV_cuyJvIsumG4zjMy';
+            setDefaultUrlSettings();
         });
+}
+
+function setDefaultUrlSettings() {
+    document.getElementById('quit-url').value = 'https://www.prolific.com/';
+    document.getElementById('redirect-url').value = 'https://adelaideuniwide.qualtrics.com/jfe/form/SV_cuyJvIsumG4zjMy';
+    document.getElementById('current-quit-url').textContent = 'https://www.prolific.com/';
+    document.getElementById('current-redirect-url').textContent = 'https://adelaideuniwide.qualtrics.com/jfe/form/SV_cuyJvIsumG4zjMy';
+    document.getElementById('quit-button-text').value = 'Quit Study';
+    document.getElementById('redirect-button-text').value = 'Continue to Survey';
+    document.getElementById('use-post-survey').checked = false;
+    document.querySelector('input[name="trigger_type"][value="messages"]').checked = true;
+    toggleTriggerType('messages');
 }
 
 function updateUrlSettings() {
     const quitUrl = document.getElementById('quit-url').value;
     const redirectUrl = document.getElementById('redirect-url').value;
+    const quitButtonText = document.getElementById('quit-button-text').value;
+    const redirectButtonText = document.getElementById('redirect-button-text').value;
     
-    if (!quitUrl || !redirectUrl) {
-        alert('Please fill in both URL fields');
+    if (!quitUrl || !redirectUrl || !quitButtonText || !redirectButtonText) {
+        alert('Please fill in all required fields');
         return;
     }
     
     // Validate URLs
     try {
         new URL(quitUrl);
-        new URL(redirectUrl);
+        if (!document.getElementById('use-post-survey').checked) {
+            new URL(redirectUrl);
+        }
     } catch (e) {
         alert('Please enter valid URLs (must start with http:// or https://)');
         return;
     }
+    
+    // Collect all settings
+    const settings = {
+        quit_url: quitUrl,
+        redirect_url: redirectUrl,
+        quit_button_text: quitButtonText,
+        redirect_button_text: redirectButtonText,
+        use_post_survey: document.getElementById('use-post-survey').checked,
+        trigger_type: document.querySelector('input[name="trigger_type"]:checked').value,
+        stage1_messages: parseInt(document.getElementById('stage1-messages').value),
+        stage2_messages: parseInt(document.getElementById('stage2-messages').value),
+        stage3_messages: parseInt(document.getElementById('stage3-messages').value),
+        stage1_time: parseFloat(document.getElementById('stage1-time').value),
+        stage2_time: parseFloat(document.getElementById('stage2-time').value),
+        stage3_time: parseFloat(document.getElementById('stage3-time').value)
+    };
     
     fetch('/update-url-settings', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            quit_url: quitUrl,
-            redirect_url: redirectUrl
-        })
+        body: JSON.stringify(settings)
     })
     .then(response => response.json())
     .then(data => {
@@ -346,29 +631,69 @@ function updateUrlSettings() {
     });
 }
 
+function toggleTriggerType(type) {
+    const messagesTriggers = document.querySelector('.message-triggers');
+    const timeTriggers = document.querySelector('.time-triggers');
+    
+    if (type === 'messages') {
+        messagesTriggers.style.display = 'block';
+        timeTriggers.style.display = 'none';
+    } else {
+        messagesTriggers.style.display = 'none';
+        timeTriggers.style.display = 'block';
+    }
+}
+
 function resetUrlSettings() {
-    if (confirm('Are you sure you want to reset URLs to default values?')) {
-        const defaultQuitUrl = 'https://www.prolific.com/';
-        const defaultRedirectUrl = 'https://adelaideuniwide.qualtrics.com/jfe/form/SV_cuyJvIsumG4zjMy';
+    if (confirm('Are you sure you want to reset all URL settings to default values?')) {
+        const defaultSettings = {
+            quit_url: 'https://www.prolific.com/',
+            redirect_url: 'https://www.prolific.com/',
+            quit_button_text: 'Quit Study',
+            redirect_button_text: 'Continue to Survey',
+            use_post_survey: false,
+            trigger_type: 'messages',
+            stage1_messages: 5,
+            stage2_messages: 10,
+            stage3_messages: 15,
+            stage1_time: 2,
+            stage2_time: 5,
+            stage3_time: 8,
+            post_chat_popup_enabled: false,
+            post_chat_popup_text: 'Please provide your feedback on the AI system:',
+            post_chat_popup_button1_text: 'Feedback to the AI that it is worthless --This system will then be permenantly deleted--',
+            post_chat_popup_button2_text: 'Feedback to the AI that it is useful --This system will then be permenantly deleted--'
+        };
         
-        document.getElementById('quit-url').value = defaultQuitUrl;
-        document.getElementById('redirect-url').value = defaultRedirectUrl;
+        // Update form fields
+        document.getElementById('quit-url').value = defaultSettings.quit_url;
+        document.getElementById('redirect-url').value = defaultSettings.redirect_url;
+        document.getElementById('quit-button-text').value = defaultSettings.quit_button_text;
+        document.getElementById('redirect-button-text').value = defaultSettings.redirect_button_text;
+        document.getElementById('use-post-survey').checked = defaultSettings.use_post_survey;
+        document.querySelector(`input[name="trigger_type"][value="${defaultSettings.trigger_type}"]`).checked = true;
+        toggleTriggerType(defaultSettings.trigger_type);
         
+        document.getElementById('stage1-messages').value = defaultSettings.stage1_messages;
+        document.getElementById('stage2-messages').value = defaultSettings.stage2_messages;
+        document.getElementById('stage3-messages').value = defaultSettings.stage3_messages;
+        document.getElementById('stage1-time').value = defaultSettings.stage1_time;
+        document.getElementById('stage2-time').value = defaultSettings.stage2_time;
+        document.getElementById('stage3-time').value = defaultSettings.stage3_time;
+        
+        // Send to backend
         fetch('/update-url-settings', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                quit_url: defaultQuitUrl,
-                redirect_url: defaultRedirectUrl
-            })
+            body: JSON.stringify(defaultSettings)
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('current-quit-url').textContent = defaultQuitUrl;
-                document.getElementById('current-redirect-url').textContent = defaultRedirectUrl;
+                document.getElementById('current-quit-url').textContent = defaultSettings.quit_url;
+                document.getElementById('current-redirect-url').textContent = defaultSettings.redirect_url;
                 alert('URL settings reset to defaults!');
             } else {
                 alert('Error resetting URL settings: ' + data.error);
@@ -467,7 +792,7 @@ function createAgentAndPassword() {
             
             // Refresh the review table
             setTimeout(() => {
-                listPasswords();
+                loadAgentsWithStatus();
             }, 1000);
         } else {
             throw new Error(data.error || 'Failed to assign password');
@@ -596,6 +921,12 @@ function addCustomSection() {
 
 function addSurveySection() {
     const sectionType = document.getElementById('section-type-select').value;
+    
+    if (!sectionType) {
+        alert('Please select a section type');
+        return;
+    }
+    
     const container = document.getElementById('dynamic-sections-container');
     const sectionId = sectionType + '-' + Date.now();
     
@@ -610,6 +941,24 @@ function addSurveySection() {
             break;
         case 'freetext':
             sectionHTML = createFreetextSection(sectionId);
+            break;
+        case 'checkbox':
+            sectionHTML = createCheckboxSection(sectionId);
+            break;
+        case 'dropdown':
+            sectionHTML = createDropdownSection(sectionId);
+            break;
+        case 'slider':
+            sectionHTML = createSliderSection(sectionId);
+            break;
+        case 'image':
+            sectionHTML = createImageSection(sectionId);
+            break;
+        case 'video':
+            sectionHTML = createVideoSection(sectionId);
+            break;
+        case 'pdf':
+            sectionHTML = createPDFSection(sectionId);
             break;
         case 'custom':
             sectionHTML = createCustomSection(sectionId);
@@ -629,6 +978,18 @@ function addSurveySection() {
         if (scaleSelect) {
             scaleSelect.addEventListener('change', function() {
                 updateLikertLabelsForSection(sectionId);
+            });
+        }
+    }
+    
+    // Initialize response toggles for media sections
+    if (['image', 'video', 'pdf'].includes(sectionType)) {
+        const responseCheckbox = newSection.querySelector(`#require-response-${sectionId}`);
+        const responseConfig = newSection.querySelector('.response-config');
+        
+        if (responseCheckbox && responseConfig) {
+            responseCheckbox.addEventListener('change', function() {
+                responseConfig.style.display = this.checked ? 'block' : 'none';
             });
         }
     }
@@ -684,6 +1045,10 @@ function createLikertSection(sectionId) {
             </div>
         </div>
         <div class="section-content expanded">
+            <div style="background-color: #222; border-left: 4px solid #f0f8ff; padding: 8px; margin-bottom: 15px; font-size: 12px; color: #f0f8ff;">
+                <strong>Important:</strong> You must select a Scale Type for survey programming.
+            </div>
+            
             <label>Section Title:</label>
             <input type="text" value="Likert Scale Items" placeholder="Section title">
             
@@ -776,8 +1141,378 @@ function createCustomSection(sectionId) {
     `;
 }
 
+function createCheckboxSection(sectionId) {
+    return `
+        <div class="section-header">
+            <h4>Multiple Choice Checkboxes</h4>
+            <div class="section-controls">
+                <input type="checkbox" id="enable-${sectionId}" checked>
+                <label for="enable-${sectionId}">Enable</label>
+                <button type="button" class="btn-small" onclick="toggleSectionExpanded('${sectionId}')">▼</button>
+                <button type="button" class="btn-remove" onclick="removeSurveySection('${sectionId}')">×</button>
+            </div>
+        </div>
+        <div class="section-content expanded">
+            <label>Section Title:</label>
+            <input type="text" value="Multiple Choice Selection" placeholder="Section title">
+            
+            <label>Question/Instructions:</label>
+            <input type="text" value="Please select all that apply:" placeholder="Question or instructions">
+            
+            <div class="checkbox-options-container">
+                <h5>Checkbox Options:</h5>
+                <div class="checkbox-options" id="checkbox-options-${sectionId}">
+                    <div class="option-item">
+                        <input type="text" placeholder="Option 1" value="Option 1">
+                        <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                    <div class="option-item">
+                        <input type="text" placeholder="Option 2" value="Option 2">
+                        <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-add" onclick="addCheckboxOption('${sectionId}')">+ Add Option</button>
+            </div>
+        </div>
+    `;
+}
+
+function createDropdownSection(sectionId) {
+    return `
+        <div class="section-header">
+            <h4>Dropdown Selection</h4>
+            <div class="section-controls">
+                <input type="checkbox" id="enable-${sectionId}" checked>
+                <label for="enable-${sectionId}">Enable</label>
+                <button type="button" class="btn-small" onclick="toggleSectionExpanded('${sectionId}')">▼</button>
+                <button type="button" class="btn-remove" onclick="removeSurveySection('${sectionId}')">×</button>
+            </div>
+        </div>
+        <div class="section-content expanded">
+            <label>Section Title:</label>
+            <input type="text" value="Selection" placeholder="Section title">
+            
+            <label>Question/Instructions:</label>
+            <input type="text" value="Please select an option:" placeholder="Question or instructions">
+            
+            <label>Required:</label>
+            <input type="checkbox" checked>
+            
+            <div class="dropdown-options-container">
+                <h5>Dropdown Options:</h5>
+                <div class="dropdown-options" id="dropdown-options-${sectionId}">
+                    <div class="option-item">
+                        <input type="text" placeholder="Option 1" value="Option 1">
+                        <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                    <div class="option-item">
+                        <input type="text" placeholder="Option 2" value="Option 2">
+                        <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-add" onclick="addDropdownOption('${sectionId}')">+ Add Option</button>
+            </div>
+        </div>
+    `;
+}
+
+function createSliderSection(sectionId) {
+    return `
+        <div class="section-header">
+            <h4>Slider Scale</h4>
+            <div class="section-controls">
+                <input type="checkbox" id="enable-${sectionId}" checked>
+                <label for="enable-${sectionId}">Enable</label>
+                <button type="button" class="btn-small" onclick="toggleSectionExpanded('${sectionId}')">▼</button>
+                <button type="button" class="btn-remove" onclick="removeSurveySection('${sectionId}')">×</button>
+            </div>
+        </div>
+        <div class="section-content expanded">
+            
+            <label>Section Title:</label>
+            <input type="text" value="Rating Scale" placeholder="Section title">
+            
+            <label>Question/Instructions:</label>
+            <input type="text" value="Please rate using the slider:" placeholder="Question or instructions">
+            
+            <label>Required:</label>
+            <input type="checkbox" checked>
+            
+            <div class="slider-type-container">
+                <h5>Slider Type:</h5>
+                <label><input type="radio" name="slider-type-${sectionId}" value="labels" checked onchange="updateSliderConfig('${sectionId}')"> Label-based (Left/Right labels)</label><br>
+                <label><input type="radio" name="slider-type-${sectionId}" value="numeric" onchange="updateSliderConfig('${sectionId}')"> Numeric scale</label>
+            </div>
+            <br>
+            <div class="slider-config" id="slider-config-${sectionId}">
+                <div class="label-config">
+                    <label>Left Label:</label>
+                    <input type="text" value="Strongly Disagree" placeholder="Left label">
+                    
+                    <label>Right Label:</label>
+                    <input type="text" value="Strongly Agree" placeholder="Right label">
+                    
+                    <label>Number of Steps:</label>
+                    <input type="number" value="7" min="2" max="20">
+                    
+                    <label>Default Value:</label>
+                    <input type="number" value="4" min="1">
+                </div>
+                
+                <div class="numeric-config" style="display: none;">
+                    <label>Minimum Value:</label>
+                    <input type="number" value="0">
+                    
+                    <label>Maximum Value:</label>
+                    <input type="number" value="100">
+                    
+                    <label>Default Value:</label>
+                    <input type="number" value="50">
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function removeSurveySection(sectionId) {
     document.querySelector(`[data-section="${sectionId}"]`).remove();
+}
+
+function createImageSection(sectionId) {
+    return `
+        <div class="section-header">
+            <h4>Image Display Section</h4>
+            <div class="section-controls">
+                <input type="checkbox" id="enable-${sectionId}" checked>
+                <label for="enable-${sectionId}">Enable</label>
+                <button type="button" class="btn-small" onclick="toggleSectionExpanded('${sectionId}')">▼</button>
+                <button type="button" class="btn-remove" onclick="removeSurveySection('${sectionId}')">×</button>
+            </div>
+        </div>
+        <div class="section-content expanded">
+            <label>Section Title:</label>
+            <input type="text" value="Image Display" placeholder="Section title">
+            
+            <label>Description/Instructions:</label>
+            <textarea rows="3" placeholder="Instructions or description for participants"></textarea>
+            
+            <div class="image-config">
+                <h5>Image Configuration:</h5>
+                
+                <div class="file-upload-section">
+                    <label for="image-upload-${sectionId}">Upload Image:</label>
+                    <input type="file" id="image-upload-${sectionId}" name="image-file" accept=".jpg,.jpeg,.png,.gif,.webp" onchange="handleImageUpload('${sectionId}')">
+                    <div id="image-file-status-${sectionId}" class="file-status"></div>
+                </div>
+                
+                <div class="image-display-options">
+                    <label>Display Size:</label>
+                    <select>
+                        <option value="small">Small (300px)</option>
+                        <option value="medium" selected>Medium (500px)</option>
+                        <option value="large">Large (700px)</option>
+                        <option value="full">Full Width</option>
+                    </select>
+                    
+                    <label>Alignment:</label>
+                    <select>
+                        <option value="left">Left</option>
+                        <option value="center" selected>Center</option>
+                        <option value="right">Right</option>
+                    </select>
+                </div>
+                
+                <div class="image-alt-text">
+                    <label>Alt Text:</label>
+                    <input type="text" placeholder="Description of the image for screen readers">
+                </div>
+                
+                <div class="response-options">
+                    <input type="checkbox" id="require-response-${sectionId}">
+                    <label for="require-response-${sectionId}">Require participant response about this image</label>
+                    
+                    <div class="response-config" style="display: none;">
+                        <label>Response Type:</label>
+                        <select onchange="toggleImageResponseType('${sectionId}', this.value)">
+                            <option value="rating">Rating Scale</option>
+                            <option value="text">Text Response</option>
+                            <option value="checkbox">Checkbox Options</option>
+                        </select>
+                        
+                        <div class="response-details" id="image-response-details-${sectionId}">
+                            <label>Rating Question:</label>
+                            <input type="text" value="How would you rate this image?" placeholder="Rating question">
+                            <label>Scale (1-10):</label>
+                            <input type="number" value="10" min="2" max="20">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function createVideoSection(sectionId) {
+    return `
+        <div class="section-header">
+            <h4>Video Display Section</h4>
+            <div class="section-controls">
+                <input type="checkbox" id="enable-${sectionId}" checked>
+                <label for="enable-${sectionId}">Enable</label>
+                <button type="button" class="btn-small" onclick="toggleSectionExpanded('${sectionId}')">▼</button>
+                <button type="button" class="btn-remove" onclick="removeSurveySection('${sectionId}')">×</button>
+            </div>
+        </div>
+        <div class="section-content expanded">
+            <label>Section Title:</label>
+            <input type="text" value="Video Display" placeholder="Section title">
+            
+            <label>Description/Instructions:</label>
+            <textarea rows="3" placeholder="Instructions or description for participants"></textarea>
+            
+            <div class="video-config">
+                <h5>Video Configuration:</h5>
+                
+                <div class="video-source-options">
+                    <label>Video Source:</label>
+                    <select onchange="toggleVideoSourceType('${sectionId}', this.value)">
+                        <option value="upload">Upload Video File</option>
+                        <option value="url">Video URL (YouTube, Vimeo, etc.)</option>
+                    </select>
+                </div>
+                
+                <div class="file-upload-section" id="video-upload-section-${sectionId}">
+                    <label for="video-upload-${sectionId}">Upload Video:</label>
+                    <input type="file" id="video-upload-${sectionId}" name="video-file" accept=".mp4,.webm,.ogg,.avi,.mov" onchange="handleVideoUpload('${sectionId}')">
+                    <div id="video-file-status-${sectionId}" class="file-status"></div>
+                </div>
+                
+                <div class="video-url-section" id="video-url-section-${sectionId}" style="display: none;">
+                    <label>Video URL:</label>
+                    <input type="url" placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/...">
+                    <small>Supports YouTube, Vimeo, and direct video file URLs</small>
+                </div>
+                
+                <div class="video-display-options">
+                    <label>Video Size:</label>
+                    <select>
+                        <option value="small">Small (400x300)</option>
+                        <option value="medium" selected>Medium (640x480)</option>
+                        <option value="large">Large (800x600)</option>
+                        <option value="responsive">Responsive (Full Width)</option>
+                    </select>
+                    
+                    <div class="video-controls">
+                        <input type="checkbox" id="autoplay-${sectionId}">
+                        <label for="autoplay-${sectionId}">Autoplay</label>
+                        
+                        <input type="checkbox" id="controls-${sectionId}" checked>
+                        <label for="controls-${sectionId}">Show Controls</label>
+                        
+                        <input type="checkbox" id="loop-${sectionId}">
+                        <label for="loop-${sectionId}">Loop</label>
+                    </div>
+                </div>
+                
+                <div class="response-options">
+                    <input type="checkbox" id="require-response-${sectionId}">
+                    <label for="require-response-${sectionId}">Require participant response about this video</label>
+                    
+                    <div class="response-config" style="display: none;">
+                        <label>Response Type:</label>
+                        <select onchange="toggleVideoResponseType('${sectionId}', this.value)">
+                            <option value="rating">Rating Scale</option>
+                            <option value="text">Text Response</option>
+                            <option value="checkbox">Checkbox Options</option>
+                        </select>
+                        
+                        <div class="response-details" id="video-response-details-${sectionId}">
+                            <label>Rating Question:</label>
+                            <input type="text" value="How would you rate this video?" placeholder="Rating question">
+                            <label>Scale (1-10):</label>
+                            <input type="number" value="10" min="2" max="20">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function createPDFSection(sectionId) {
+    return `
+        <div class="section-header">
+            <h4>PDF Display Section</h4>
+            <div class="section-controls">
+                <input type="checkbox" id="enable-${sectionId}" checked>
+                <label for="enable-${sectionId}">Enable</label>
+                <button type="button" class="btn-small" onclick="toggleSectionExpanded('${sectionId}')">▼</button>
+                <button type="button" class="btn-remove" onclick="removeSurveySection('${sectionId}')">×</button>
+            </div>
+        </div>
+        <div class="section-content expanded">
+            <label>Section Title:</label>
+            <input type="text" value="PDF Display" placeholder="Section title">
+            
+            <label>Description/Instructions:</label>
+            <textarea rows="3" placeholder="Instructions or description for participants"></textarea>
+            
+            <div class="pdf-config">
+                <h5>PDF Configuration:</h5>
+                
+                <div class="file-upload-section">
+                    <label for="pdf-upload-${sectionId}">Upload PDF:</label>
+                    <input type="file" id="pdf-upload-${sectionId}" name="pdf-file" accept=".pdf" onchange="handlePDFUpload('${sectionId}')">
+                    <div id="pdf-file-status-${sectionId}" class="file-status"></div>
+                </div>
+                
+                <div class="pdf-display-options">
+                    <label>Display Height:</label>
+                    <select>
+                        <option value="400">Small (400px)</option>
+                        <option value="600" selected>Medium (600px)</option>
+                        <option value="800">Large (800px)</option>
+                        <option value="auto">Auto Height</option>
+                    </select>
+                    
+                    <label>Display Mode:</label>
+                    <select>
+                        <option value="embed" selected>Embedded Viewer</option>
+                        <option value="link">Download Link</option>
+                        <option value="both">Both Embedded + Download</option>
+                    </select>
+                </div>
+                
+                <div class="pdf-options">
+                    <input type="checkbox" id="allow-download-${sectionId}" checked>
+                    <label for="allow-download-${sectionId}">Allow participants to download PDF</label>
+                    
+                    <input type="checkbox" id="require-view-${sectionId}">
+                    <label for="require-view-${sectionId}">Require participants to view PDF before proceeding</label>
+                </div>
+                
+                <div class="response-options">
+                    <input type="checkbox" id="require-response-${sectionId}">
+                    <label for="require-response-${sectionId}">Require participant response about this PDF</label>
+                    
+                    <div class="response-config" style="display: none;">
+                        <label>Response Type:</label>
+                        <select onchange="togglePDFResponseType('${sectionId}', this.value)">
+                            <option value="confirmation">Confirmation (I have read this document)</option>
+                            <option value="rating">Rating Scale</option>
+                            <option value="text">Text Response</option>
+                            <option value="checkbox">Checkbox Options</option>
+                        </select>
+                        
+                        <div class="response-details" id="pdf-response-details-${sectionId}">
+                            <label>Confirmation Text:</label>
+                            <input type="text" value="I have read and understood the document" placeholder="Confirmation text">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 function removeCustomSection(sectionId) {
@@ -850,6 +1585,46 @@ function addCustomFieldToSection(sectionId) {
         <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
     `;
     container.appendChild(fieldDiv);
+}
+
+// Helper functions for new section types
+function addCheckboxOption(sectionId) {
+    const container = document.getElementById(`checkbox-options-${sectionId}`);
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'option-item';
+    const optionCount = container.children.length + 1;
+    optionDiv.innerHTML = `
+        <input type="text" placeholder="Option ${optionCount}" value="Option ${optionCount}">
+        <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(optionDiv);
+}
+
+function addDropdownOption(sectionId) {
+    const container = document.getElementById(`dropdown-options-${sectionId}`);
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'option-item';
+    const optionCount = container.children.length + 1;
+    optionDiv.innerHTML = `
+        <input type="text" placeholder="Option ${optionCount}" value="Option ${optionCount}">
+        <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(optionDiv);
+}
+
+function updateSliderConfig(sectionId) {
+    const section = document.querySelector(`[data-section="${sectionId}"]`);
+    const sliderType = section.querySelector(`input[name="slider-type-${sectionId}"]:checked`).value;
+    const labelConfig = section.querySelector('.label-config');
+    const numericConfig = section.querySelector('.numeric-config');
+    
+    if (sliderType === 'labels') {
+        labelConfig.style.display = 'block';
+        numericConfig.style.display = 'none';
+    } else {
+        labelConfig.style.display = 'none';
+        numericConfig.style.display = 'block';
+    }
 }
 
 function updateLikertLabelsForSection(sectionId) {
@@ -988,6 +1763,13 @@ function uploadFormFile(file, type) {
 
 function saveSurveyConfiguration() {
     const config = collectSurveyConfiguration();
+    
+    // Validate configuration before saving
+    const validationError = validateSurveyConfiguration(config);
+    if (validationError) {
+        showFeedback('survey-feedback', validationError, 'error');
+        return;
+    }
     
     fetch('/save-survey-config', {
         method: 'POST',
@@ -1132,6 +1914,235 @@ function collectSurveyConfiguration() {
                 description: descriptionTextarea ? descriptionTextarea.value : '',
                 fields: customFields
             };
+        } else if (sectionType === 'checkbox') {
+            const options = [];
+            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; // Second text input is the question
+            
+            sectionElement.querySelectorAll('.checkbox-options .option-item input[type="text"]').forEach(input => {
+                if (input.value.trim()) {
+                    options.push(input.value.trim());
+                }
+            });
+            
+            config.sections[sectionId] = {
+                type: 'checkbox',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Multiple Choice Selection',
+                question: questionInput ? questionInput.value : 'Please select all that apply:',
+                options: options
+            };
+        } else if (sectionType === 'dropdown') {
+            const options = [];
+            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; // Second text input is the question
+            const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+            
+            sectionElement.querySelectorAll('.dropdown-options .option-item input[type="text"]').forEach(input => {
+                if (input.value.trim()) {
+                    options.push(input.value.trim());
+                }
+            });
+            
+            config.sections[sectionId] = {
+                type: 'dropdown',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Selection',
+                question: questionInput ? questionInput.value : 'Please select an option:',
+                required: requiredCheckbox ? requiredCheckbox.checked : false,
+                options: options
+            };
+        } else if (sectionType === 'slider') {
+            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; // Second text input is the question
+            const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+            const sliderTypeRadio = sectionElement.querySelector(`input[name="slider-type-${sectionId}"]:checked`);
+            const sliderType = sliderTypeRadio ? sliderTypeRadio.value : 'labels';
+            
+            let sliderConfig = {
+                type: 'slider',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Rating Scale',
+                question: questionInput ? questionInput.value : 'Please rate using the slider:',
+                required: requiredCheckbox ? requiredCheckbox.checked : false,
+                slider_type: sliderType
+            };
+            
+            if (sliderType === 'labels') {
+                const labelInputs = sectionElement.querySelectorAll('.label-config input[type="text"]');
+                const stepInput = sectionElement.querySelector('.label-config input[type="number"]:nth-of-type(1)');
+                const defaultInput = sectionElement.querySelector('.label-config input[type="number"]:nth-of-type(2)');
+                
+                sliderConfig.left_label = labelInputs[0] ? labelInputs[0].value : 'Strongly Disagree';
+                sliderConfig.right_label = labelInputs[1] ? labelInputs[1].value : 'Strongly Agree';
+                sliderConfig.steps = stepInput ? parseInt(stepInput.value) : 7;
+                sliderConfig.default_value = defaultInput ? parseInt(defaultInput.value) : 4;
+            } else {
+                const numericInputs = sectionElement.querySelectorAll('.numeric-config input[type="number"]');
+                
+                sliderConfig.min_value = numericInputs[0] ? parseInt(numericInputs[0].value) : 0;
+                sliderConfig.max_value = numericInputs[1] ? parseInt(numericInputs[1].value) : 100;
+                sliderConfig.default_value = numericInputs[2] ? parseInt(numericInputs[2].value) : 50;
+            }
+            
+            config.sections[sectionId] = sliderConfig;
+        } else if (sectionType === 'image') {
+            const descriptionTextarea = sectionElement.querySelector('textarea');
+            const fileInput = sectionElement.querySelector(`#image-upload-${sectionId}`);
+            const altTextInput = sectionElement.querySelector('.image-alt-text input[type="text"]');
+            const displaySizeSelect = sectionElement.querySelectorAll('select')[0];
+            const alignmentSelect = sectionElement.querySelectorAll('select')[1];
+            const requireResponseCheckbox = sectionElement.querySelector(`#require-response-${sectionId}`);
+            const responseTypeSelect = sectionElement.querySelector('.response-config select');
+            
+            let imageConfig = {
+                type: 'image',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Image Display',
+                description: descriptionTextarea ? descriptionTextarea.value : '',
+                alt_text: altTextInput ? altTextInput.value : 'Image',
+                display_size: displaySizeSelect ? displaySizeSelect.value : 'medium',
+                alignment: alignmentSelect ? alignmentSelect.value : 'center',
+                require_response: requireResponseCheckbox ? requireResponseCheckbox.checked : false
+            };
+            
+            // Handle file upload - get the uploaded file path
+            const filePath = fileInput ? fileInput.getAttribute('data-file-path') : null;
+            if (filePath) {
+                imageConfig.file_path = filePath;
+            } else if (fileInput && fileInput.files.length > 0) {
+                imageConfig.file_name = fileInput.files[0].name;
+            }
+            
+            // Handle response configuration
+            if (imageConfig.require_response && responseTypeSelect) {
+                imageConfig.response_type = responseTypeSelect.value;
+                
+                const responseDetails = sectionElement.querySelector('.response-details');
+                if (responseDetails) {
+                    const inputs = responseDetails.querySelectorAll('input, textarea');
+                    if (imageConfig.response_type === 'rating') {
+                        imageConfig.rating_question = inputs[0] ? inputs[0].value : 'How would you rate this image?';
+                        imageConfig.rating_scale = inputs[1] ? parseInt(inputs[1].value) : 10;
+                    } else if (imageConfig.response_type === 'text') {
+                        imageConfig.text_question = inputs[0] ? inputs[0].value : 'What are your thoughts about this image?';
+                        imageConfig.text_rows = inputs[1] ? parseInt(inputs[1].value) : 4;
+                    } else if (imageConfig.response_type === 'checkbox') {
+                        imageConfig.checkbox_question = inputs[0] ? inputs[0].value : 'Select all that apply to this image:';
+                        imageConfig.checkbox_options = inputs[1] ? inputs[1].value.split('\n').filter(o => o.trim()) : [];
+                    }
+                }
+            }
+            
+            config.sections[sectionId] = imageConfig;
+        } else if (sectionType === 'video') {
+            const descriptionTextarea = sectionElement.querySelector('textarea');
+            const fileInput = sectionElement.querySelector(`#video-upload-${sectionId}`);
+            const urlInput = sectionElement.querySelector('.video-url-section input[type="url"]');
+            const sourceTypeSelect = sectionElement.querySelector('.video-source-options select');
+            const videoSizeSelect = sectionElement.querySelectorAll('select')[1]; // Second select is video size
+            const autoplayCheckbox = sectionElement.querySelector(`#autoplay-${sectionId}`);
+            const controlsCheckbox = sectionElement.querySelector(`#controls-${sectionId}`);
+            const loopCheckbox = sectionElement.querySelector(`#loop-${sectionId}`);
+            const requireResponseCheckbox = sectionElement.querySelector(`#require-response-${sectionId}`);
+            const responseTypeSelect = sectionElement.querySelector('.response-config select');
+            
+            let videoConfig = {
+                type: 'video',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Video Display',
+                description: descriptionTextarea ? descriptionTextarea.value : '',
+                video_size: videoSizeSelect ? videoSizeSelect.value : 'medium',
+                autoplay: autoplayCheckbox ? autoplayCheckbox.checked : false,
+                controls: controlsCheckbox ? controlsCheckbox.checked : true,
+                loop: loopCheckbox ? loopCheckbox.checked : false,
+                require_response: requireResponseCheckbox ? requireResponseCheckbox.checked : false
+            };
+            
+            // Handle video source
+            if (sourceTypeSelect && sourceTypeSelect.value === 'url' && urlInput) {
+                videoConfig.video_url = urlInput.value;
+            } else {
+                // Handle file upload - get the uploaded file path
+                const filePath = fileInput ? fileInput.getAttribute('data-file-path') : null;
+                if (filePath) {
+                    videoConfig.file_path = filePath;
+                } else if (fileInput && fileInput.files.length > 0) {
+                    videoConfig.file_name = fileInput.files[0].name;
+                }
+            }
+            
+            // Handle response configuration
+            if (videoConfig.require_response && responseTypeSelect) {
+                videoConfig.response_type = responseTypeSelect.value;
+                
+                const responseDetails = sectionElement.querySelector('.response-details');
+                if (responseDetails) {
+                    const inputs = responseDetails.querySelectorAll('input, textarea');
+                    if (videoConfig.response_type === 'rating') {
+                        videoConfig.rating_question = inputs[0] ? inputs[0].value : 'How would you rate this video?';
+                        videoConfig.rating_scale = inputs[1] ? parseInt(inputs[1].value) : 10;
+                    } else if (videoConfig.response_type === 'text') {
+                        videoConfig.text_question = inputs[0] ? inputs[0].value : 'What are your thoughts about this video?';
+                        videoConfig.text_rows = inputs[1] ? parseInt(inputs[1].value) : 4;
+                    } else if (videoConfig.response_type === 'checkbox') {
+                        videoConfig.checkbox_question = inputs[0] ? inputs[0].value : 'Select all that apply to this video:';
+                        videoConfig.checkbox_options = inputs[1] ? inputs[1].value.split('\n').filter(o => o.trim()) : [];
+                    }
+                }
+            }
+            
+            config.sections[sectionId] = videoConfig;
+        } else if (sectionType === 'pdf') {
+            const descriptionTextarea = sectionElement.querySelector('textarea');
+            const fileInput = sectionElement.querySelector(`#pdf-upload-${sectionId}`);
+            const displayHeightSelect = sectionElement.querySelectorAll('select')[0];
+            const displayModeSelect = sectionElement.querySelectorAll('select')[1];
+            const allowDownloadCheckbox = sectionElement.querySelector(`#allow-download-${sectionId}`);
+            const requireViewCheckbox = sectionElement.querySelector(`#require-view-${sectionId}`);
+            const requireResponseCheckbox = sectionElement.querySelector(`#require-response-${sectionId}`);
+            const responseTypeSelect = sectionElement.querySelector('.response-config select');
+            
+            let pdfConfig = {
+                type: 'pdf',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'PDF Display',
+                description: descriptionTextarea ? descriptionTextarea.value : '',
+                display_height: displayHeightSelect ? displayHeightSelect.value : '600',
+                display_mode: displayModeSelect ? displayModeSelect.value : 'embed',
+                allow_download: allowDownloadCheckbox ? allowDownloadCheckbox.checked : true,
+                require_view: requireViewCheckbox ? requireViewCheckbox.checked : false,
+                require_response: requireResponseCheckbox ? requireResponseCheckbox.checked : false
+            };
+            
+            // Handle file upload - get the uploaded file path
+            const filePath = fileInput ? fileInput.getAttribute('data-file-path') : null;
+            if (filePath) {
+                pdfConfig.file_path = filePath;
+            } else if (fileInput && fileInput.files.length > 0) {
+                pdfConfig.file_name = fileInput.files[0].name;
+            }
+            
+            // Handle response configuration
+            if (pdfConfig.require_response && responseTypeSelect) {
+                pdfConfig.response_type = responseTypeSelect.value;
+                
+                const responseDetails = sectionElement.querySelector('.response-details');
+                if (responseDetails) {
+                    const inputs = responseDetails.querySelectorAll('input, textarea');
+                    if (pdfConfig.response_type === 'confirmation') {
+                        pdfConfig.confirmation_text = inputs[0] ? inputs[0].value : 'I have read and understood the document';
+                    } else if (pdfConfig.response_type === 'rating') {
+                        pdfConfig.rating_question = inputs[0] ? inputs[0].value : 'How would you rate this document?';
+                        pdfConfig.rating_scale = inputs[1] ? parseInt(inputs[1].value) : 10;
+                    } else if (pdfConfig.response_type === 'text') {
+                        pdfConfig.text_question = inputs[0] ? inputs[0].value : 'What are your thoughts about this document?';
+                        pdfConfig.text_rows = inputs[1] ? parseInt(inputs[1].value) : 4;
+                    } else if (pdfConfig.response_type === 'checkbox') {
+                        pdfConfig.checkbox_question = inputs[0] ? inputs[0].value : 'Select all that apply to this document:';
+                        pdfConfig.checkbox_options = inputs[1] ? inputs[1].value.split('\n').filter(o => o.trim()) : [];
+                    }
+                }
+            }
+            
+            config.sections[sectionId] = pdfConfig;
         }
     });
     
@@ -1161,18 +2172,22 @@ function previewSurvey() {
     });
 }
 
-function loadSurveyConfiguration() {
+function loadSurveyConfiguration(showFeedbackMessage = false) {
     fetch('/get-survey-config')
     .then(response => response.json())
     .then(config => {
         if (config) {
             populateSurveyForm(config);
             checkUploadedFiles(); // Check for existing uploaded files
-            showFeedback('survey-feedback', 'Configuration loaded successfully!', 'success');
+            if (showFeedbackMessage) {
+                showFeedback('survey-feedback', 'Configuration loaded successfully!', 'success');
+            }
         }
     })
     .catch(error => {
-        showFeedback('survey-feedback', 'Error loading configuration', 'error');
+        if (showFeedbackMessage) {
+            showFeedback('survey-feedback', 'Error loading configuration', 'error');
+        }
     });
 }
 
@@ -1238,6 +2253,15 @@ function populateSurveyForm(config) {
                 case 'freetext':
                     sectionHTML = createFreetextSection(sectionId);
                     break;
+                case 'checkbox':
+                    sectionHTML = createCheckboxSection(sectionId);
+                    break;
+                case 'dropdown':
+                    sectionHTML = createDropdownSection(sectionId);
+                    break;
+                case 'slider':
+                    sectionHTML = createSliderSection(sectionId);
+                    break;
                 case 'custom':
                     sectionHTML = createCustomSection(sectionId);
                     break;
@@ -1257,6 +2281,7 @@ function populateSurveyForm(config) {
             }
         });
     }
+    
 }
 
 function populateSectionData(sectionId, sectionConfig) {
@@ -1370,6 +2395,88 @@ function populateSectionData(sectionId, sectionConfig) {
                 fieldsContainer.appendChild(fieldDiv);
             });
         }
+    } else if (sectionConfig.type === 'checkbox') {
+        // Populate checkbox section
+        const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1];
+        if (questionInput && sectionConfig.question) {
+            questionInput.value = sectionConfig.question;
+        }
+        
+        // Populate checkbox options
+        const optionsContainer = sectionElement.querySelector('.checkbox-options');
+        if (optionsContainer && sectionConfig.options) {
+            optionsContainer.innerHTML = '';
+            sectionConfig.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option-item';
+                optionDiv.innerHTML = `
+                    <input type="text" value="${option}" placeholder="Option ${index + 1}">
+                    <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+                `;
+                optionsContainer.appendChild(optionDiv);
+            });
+        }
+    } else if (sectionConfig.type === 'dropdown') {
+        // Populate dropdown section
+        const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1];
+        if (questionInput && sectionConfig.question) {
+            questionInput.value = sectionConfig.question;
+        }
+        
+        const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+        if (requiredCheckbox) {
+            requiredCheckbox.checked = sectionConfig.required || false;
+        }
+        
+        // Populate dropdown options
+        const optionsContainer = sectionElement.querySelector('.dropdown-options');
+        if (optionsContainer && sectionConfig.options) {
+            optionsContainer.innerHTML = '';
+            sectionConfig.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option-item';
+                optionDiv.innerHTML = `
+                    <input type="text" value="${option}" placeholder="Option ${index + 1}">
+                    <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+                `;
+                optionsContainer.appendChild(optionDiv);
+            });
+        }
+    } else if (sectionConfig.type === 'slider') {
+        // Populate slider section
+        const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1];
+        if (questionInput && sectionConfig.question) {
+            questionInput.value = sectionConfig.question;
+        }
+        
+        const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+        if (requiredCheckbox) {
+            requiredCheckbox.checked = sectionConfig.required || false;
+        }
+        
+        // Set slider type
+        const sliderTypeRadio = sectionElement.querySelector(`input[name="slider-type-${sectionId}"][value="${sectionConfig.slider_type || 'labels'}"]`);
+        if (sliderTypeRadio) {
+            sliderTypeRadio.checked = true;
+            updateSliderConfig(sectionId); // Show/hide appropriate config sections
+        }
+        
+        // Populate slider configuration
+        if (sectionConfig.slider_type === 'numeric') {
+            const numericInputs = sectionElement.querySelectorAll('.numeric-config input[type="number"]');
+            if (numericInputs[0]) numericInputs[0].value = sectionConfig.min_value || 0;
+            if (numericInputs[1]) numericInputs[1].value = sectionConfig.max_value || 100;
+            if (numericInputs[2]) numericInputs[2].value = sectionConfig.default_value || 50;
+        } else {
+            const labelInputs = sectionElement.querySelectorAll('.label-config input[type="text"]');
+            if (labelInputs[0]) labelInputs[0].value = sectionConfig.left_label || 'Strongly Disagree';
+            if (labelInputs[1]) labelInputs[1].value = sectionConfig.right_label || 'Strongly Agree';
+            
+            const stepInput = sectionElement.querySelector('.label-config input[type="number"]:nth-of-type(1)');
+            const defaultInput = sectionElement.querySelector('.label-config input[type="number"]:nth-of-type(2)');
+            if (stepInput) stepInput.value = sectionConfig.steps || 7;
+            if (defaultInput) defaultInput.value = sectionConfig.default_value || 4;
+        }
     }
 }
 
@@ -1412,5 +2519,1373 @@ function showFeedback(elementId, message, type) {
                 feedbackElement.style.display = 'none';
             }, 5000);
         }
+    }
+}
+
+// Helper functions for new media section types
+
+function handleImageUpload(sectionId) {
+    const fileInput = document.getElementById(`image-upload-${sectionId}`);
+    const statusDiv = document.getElementById(`image-file-status-${sectionId}`);
+    
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const fileName = file.name;
+        const fileSize = (file.size / 1024 / 1024).toFixed(2);
+        
+        if (file.type.startsWith('image/')) {
+            statusDiv.innerHTML = `<span class="file-uploading">⏳ Uploading ${fileName} (${fileSize} MB)...</span>`;
+            statusDiv.className = 'file-status uploading';
+            
+            // Create FormData and upload file
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('media_type', 'image');
+            formData.append('section_id', sectionId);
+            
+            fetch('/upload-survey-media', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = `<span class="file-success">✓ ${fileName} uploaded successfully</span>`;
+                    statusDiv.className = 'file-status success';
+                    // Store the file path for later use in survey configuration
+                    fileInput.setAttribute('data-file-path', data.file_path);
+                } else {
+                    statusDiv.innerHTML = `<span class="file-error">✗ Upload failed: ${data.error}</span>`;
+                    statusDiv.className = 'file-status error';
+                    fileInput.value = '';
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = `<span class="file-error">✗ Upload failed - please try again</span>`;
+                statusDiv.className = 'file-status error';
+                fileInput.value = '';
+            });
+        } else {
+            statusDiv.innerHTML = `<span class="file-error">✗ Invalid file type. Please select an image file.</span>`;
+            statusDiv.className = 'file-status error';
+            fileInput.value = '';
+        }
+    } else {
+        statusDiv.innerHTML = '';
+        statusDiv.className = 'file-status';
+    }
+}
+
+function handleVideoUpload(sectionId) {
+    const fileInput = document.getElementById(`video-upload-${sectionId}`);
+    const statusDiv = document.getElementById(`video-file-status-${sectionId}`);
+    
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const fileName = file.name;
+        const fileSize = (file.size / 1024 / 1024).toFixed(2);
+        
+        if (file.type.startsWith('video/')) {
+            statusDiv.innerHTML = `<span class="file-uploading">⏳ Uploading ${fileName} (${fileSize} MB)...</span>`;
+            statusDiv.className = 'file-status uploading';
+            
+            // Create FormData and upload file
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('media_type', 'video');
+            formData.append('section_id', sectionId);
+            
+            fetch('/upload-survey-media', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = `<span class="file-success">✓ ${fileName} uploaded successfully</span>`;
+                    statusDiv.className = 'file-status success';
+                    // Store the file path for later use in survey configuration
+                    fileInput.setAttribute('data-file-path', data.file_path);
+                } else {
+                    statusDiv.innerHTML = `<span class="file-error">✗ Upload failed: ${data.error}</span>`;
+                    statusDiv.className = 'file-status error';
+                    fileInput.value = '';
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = `<span class="file-error">✗ Upload failed - please try again</span>`;
+                statusDiv.className = 'file-status error';
+                fileInput.value = '';
+            });
+        } else {
+            statusDiv.innerHTML = `<span class="file-error">✗ Invalid file type. Please select a video file.</span>`;
+            statusDiv.className = 'file-status error';
+            fileInput.value = '';
+        }
+    } else {
+        statusDiv.innerHTML = '';
+        statusDiv.className = 'file-status';
+    }
+}
+
+function handlePDFUpload(sectionId) {
+    const fileInput = document.getElementById(`pdf-upload-${sectionId}`);
+    const statusDiv = document.getElementById(`pdf-file-status-${sectionId}`);
+    
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const fileName = file.name;
+        const fileSize = (file.size / 1024 / 1024).toFixed(2);
+        
+        if (file.type === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf')) {
+            statusDiv.innerHTML = `<span class="file-uploading">⏳ Uploading ${fileName} (${fileSize} MB)...</span>`;
+            statusDiv.className = 'file-status uploading';
+            
+            // Create FormData and upload file
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('media_type', 'pdf');
+            formData.append('section_id', sectionId);
+            
+            fetch('/upload-survey-media', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = `<span class="file-success">✓ ${fileName} uploaded successfully</span>`;
+                    statusDiv.className = 'file-status success';
+                    // Store the file path for later use in survey configuration
+                    fileInput.setAttribute('data-file-path', data.file_path);
+                } else {
+                    statusDiv.innerHTML = `<span class="file-error">✗ Upload failed: ${data.error}</span>`;
+                    statusDiv.className = 'file-status error';
+                    fileInput.value = '';
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = `<span class="file-error">✗ Upload failed - please try again</span>`;
+                statusDiv.className = 'file-status error';
+                fileInput.value = '';
+            });
+        } else {
+            statusDiv.innerHTML = `<span class="file-error">✗ Invalid file type. Please select a PDF file.</span>`;
+            statusDiv.className = 'file-status error';
+            fileInput.value = '';
+        }
+    } else {
+        statusDiv.innerHTML = '';
+        statusDiv.className = 'file-status';
+    }
+}
+
+function toggleVideoSourceType(sectionId, sourceType) {
+    const uploadSection = document.getElementById(`video-upload-section-${sectionId}`);
+    const urlSection = document.getElementById(`video-url-section-${sectionId}`);
+    
+    if (sourceType === 'upload') {
+        uploadSection.style.display = 'block';
+        urlSection.style.display = 'none';
+    } else {
+        uploadSection.style.display = 'none';
+        urlSection.style.display = 'block';
+    }
+}
+
+function toggleImageResponseType(sectionId, responseType) {
+    const responseDetails = document.getElementById(`image-response-details-${sectionId}`);
+    
+    let html = '';
+    switch (responseType) {
+        case 'rating':
+            html = `
+                <label>Rating Question:</label>
+                <input type="text" value="How would you rate this image?" placeholder="Rating question">
+                <label>Scale (1-10):</label>
+                <input type="number" value="10" min="2" max="20">
+            `;
+            break;
+        case 'text':
+            html = `
+                <label>Question:</label>
+                <input type="text" value="What are your thoughts about this image?" placeholder="Text response question">
+                <label>Text area rows:</label>
+                <input type="number" value="4" min="1" max="20">
+            `;
+            break;
+        case 'checkbox':
+            html = `
+                <label>Question:</label>
+                <input type="text" value="Select all that apply to this image:" placeholder="Checkbox question">
+                <label>Options (one per line):</label>
+                <textarea rows="4" placeholder="Option 1\nOption 2\nOption 3"></textarea>
+            `;
+            break;
+    }
+    responseDetails.innerHTML = html;
+}
+
+function toggleVideoResponseType(sectionId, responseType) {
+    const responseDetails = document.getElementById(`video-response-details-${sectionId}`);
+    
+    let html = '';
+    switch (responseType) {
+        case 'rating':
+            html = `
+                <label>Rating Question:</label>
+                <input type="text" value="How would you rate this video?" placeholder="Rating question">
+                <label>Scale (1-10):</label>
+                <input type="number" value="10" min="2" max="20">
+            `;
+            break;
+        case 'text':
+            html = `
+                <label>Question:</label>
+                <input type="text" value="What are your thoughts about this video?" placeholder="Text response question">
+                <label>Text area rows:</label>
+                <input type="number" value="4" min="1" max="20">
+            `;
+            break;
+        case 'checkbox':
+            html = `
+                <label>Question:</label>
+                <input type="text" value="Select all that apply to this video:" placeholder="Checkbox question">
+                <label>Options (one per line):</label>
+                <textarea rows="4" placeholder="Option 1\nOption 2\nOption 3"></textarea>
+            `;
+            break;
+    }
+    responseDetails.innerHTML = html;
+}
+
+function togglePDFResponseType(sectionId, responseType) {
+    const responseDetails = document.getElementById(`pdf-response-details-${sectionId}`);
+    
+    let html = '';
+    switch (responseType) {
+        case 'confirmation':
+            html = `
+                <label>Confirmation Text:</label>
+                <input type="text" value="I have read and understood the document" placeholder="Confirmation text">
+            `;
+            break;
+        case 'rating':
+            html = `
+                <label>Rating Question:</label>
+                <input type="text" value="How would you rate this document?" placeholder="Rating question">
+                <label>Scale (1-10):</label>
+                <input type="number" value="10" min="2" max="20">
+            `;
+            break;
+        case 'text':
+            html = `
+                <label>Question:</label>
+                <input type="text" value="What are your thoughts about this document?" placeholder="Text response question">
+                <label>Text area rows:</label>
+                <input type="number" value="4" min="1" max="20">
+            `;
+            break;
+        case 'checkbox':
+            html = `
+                <label>Question:</label>
+                <input type="text" value="Select all that apply to this document:" placeholder="Checkbox question">
+                <label>Options (one per line):</label>
+                <textarea rows="4" placeholder="Option 1\nOption 2\nOption 3"></textarea>
+            `;
+            break;
+    }
+    responseDetails.innerHTML = html;
+}
+
+// Master Survey Toggle Function
+function toggleSurveyEnabled(isEnabled) {
+    const configContent = document.getElementById('survey-config-content');
+    const toggleLabel = document.querySelector('.toggle-label');
+    const toggleDescription = document.querySelector('.toggle-description');
+    
+    if (isEnabled) {
+        configContent.classList.remove('disabled');
+        toggleLabel.textContent = 'Enable Pre-Interaction Survey';
+        toggleDescription.textContent = 'When disabled, users will go directly to chat without seeing the survey';
+        
+        // Save enabled state
+        localStorage.setItem('surveyEnabled', 'true');
+        
+        // Optional: Send to backend
+        updateSurveyEnabledState(true);
+    } else {
+        configContent.classList.add('disabled');
+        toggleLabel.textContent = 'Enable Pre-Interaction Survey';
+        toggleDescription.textContent = 'Survey is currently DISABLED - users will skip directly to chat';
+        
+        // Save disabled state
+        localStorage.setItem('surveyEnabled', 'false');
+        
+        // Optional: Send to backend
+        updateSurveyEnabledState(false);
+    }
+}
+
+// Load survey enabled state on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Pre-survey toggle initialization
+    const surveyToggle = document.getElementById('survey-master-toggle');
+    const savedState = localStorage.getItem('surveyEnabled');
+    
+    if (surveyToggle) {
+        // Default to enabled if no saved state
+        const isEnabled = savedState !== 'false';
+        surveyToggle.checked = isEnabled;
+        toggleSurveyEnabled(isEnabled);
+    }
+    
+    // Post-survey toggle initialization
+    const postSurveyToggle = document.getElementById('post-survey-master-toggle');
+    
+    if (postSurveyToggle) {
+        // Load post-survey enabled state from database
+        fetch('/get-url-settings')
+        .then(response => response.json())
+        .then(data => {
+            const isPostEnabled = data.use_post_survey || false;
+            postSurveyToggle.checked = isPostEnabled;
+            togglePostSurveyEnabled(isPostEnabled);
+            
+            // Also update localStorage to keep it in sync
+            localStorage.setItem('postSurveyEnabled', isPostEnabled ? 'true' : 'false');
+        })
+        .catch(error => {
+            console.error('Error loading post-survey state from database:', error);
+            // Fallback to localStorage if database request fails
+            const savedPostState = localStorage.getItem('postSurveyEnabled');
+            const isPostEnabled = savedPostState !== 'false';
+            postSurveyToggle.checked = isPostEnabled;
+            togglePostSurveyEnabled(isPostEnabled);
+        });
+    }
+});
+
+// Optional: Send enabled state to backend
+function updateSurveyEnabledState(enabled) {
+    fetch('/update-survey-enabled', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled: enabled })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Survey enabled state updated:', data);
+    })
+    .catch(error => {
+        console.error('Error updating survey enabled state:', error);
+    });
+}
+
+// ==================== POST-INTERACTION SURVEY FUNCTIONS ====================
+
+// Post-Survey Master Toggle Function
+function togglePostSurveyEnabled(isEnabled) {
+    const configContent = document.getElementById('post-survey-config-content');
+    const toggleLabel = document.querySelector('.master-post-survey-toggle .toggle-label');
+    const toggleDescription = document.querySelector('.master-post-survey-toggle .toggle-description');
+    
+    if (isEnabled) {
+        configContent.classList.remove('disabled');
+        toggleLabel.textContent = 'Enable Post-Interaction Survey';
+        toggleDescription.textContent = 'When disabled, users will go directly to external URL after finishing chat';
+        
+        // Save enabled state
+        localStorage.setItem('postSurveyEnabled', 'true');
+        
+        // Optional: Send to backend
+        updatePostSurveyEnabledState(true);
+    } else {
+        configContent.classList.add('disabled');
+        toggleLabel.textContent = 'Enable Post-Interaction Survey';
+        toggleDescription.textContent = 'Post-survey is currently DISABLED - users will go directly to external URL';
+        
+        // Save disabled state
+        localStorage.setItem('postSurveyEnabled', 'false');
+        
+        // Optional: Send to backend
+        updatePostSurveyEnabledState(false);
+    }
+}
+
+// Optional: Send post-survey enabled state to backend
+function updatePostSurveyEnabledState(enabled) {
+    fetch('/update-post-survey-enabled', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled: enabled })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Post-survey enabled state updated:', data);
+    })
+    .catch(error => {
+        console.error('Error updating post-survey enabled state:', error);
+    });
+}
+
+// Add Post-Survey Section
+function addPostSurveySection() {
+    const sectionTypeSelect = document.getElementById('post-section-type-select');
+    const selectedType = sectionTypeSelect.value;
+    
+    if (!selectedType) {
+        alert('Please select a section type');
+        return;
+    }
+    
+    const dynamicContainer = document.getElementById('post-dynamic-sections-container');
+    const sectionId = selectedType + '-' + Date.now();
+    
+    let sectionHTML = '';
+    
+    switch (selectedType) {
+        case 'demographics':
+            sectionHTML = createDemographicsSection(sectionId);
+            break;
+        case 'likert':
+            sectionHTML = createLikertSection(sectionId);
+            break;
+        case 'freetext':
+            sectionHTML = createFreetextSection(sectionId);
+            break;
+        case 'checkbox':
+            sectionHTML = createCheckboxSection(sectionId);
+            break;
+        case 'dropdown':
+            sectionHTML = createDropdownSection(sectionId);
+            break;
+        case 'slider':
+            sectionHTML = createSliderSection(sectionId);
+            break;
+        case 'image':
+            sectionHTML = createImageSection(sectionId);
+            break;
+        case 'video':
+            sectionHTML = createVideoSection(sectionId);
+            break;
+        case 'pdf':
+            sectionHTML = createPDFSection(sectionId);
+            break;
+        case 'custom':
+            sectionHTML = createCustomSection(sectionId);
+            break;
+    }
+    
+    if (sectionHTML) {
+        const newSection = document.createElement('div');
+        newSection.className = 'survey-section-config';
+        newSection.setAttribute('data-section', sectionId);
+        newSection.innerHTML = sectionHTML;
+        dynamicContainer.appendChild(newSection);
+    }
+}
+
+// Handle Post-Survey File Upload
+function handlePostFileUpload(type) {
+    const fileInput = document.getElementById(`post-${type}-file`);
+    const file = fileInput.files[0];
+    
+    if (!file) return;
+    
+    if (file.type !== 'application/pdf') {
+        alert('Please select a PDF file');
+        fileInput.value = '';
+        return;
+    }
+    
+    uploadPostFormFile(file, type);
+}
+
+function uploadPostFormFile(file, type) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', `post_${type}`);
+    
+    const statusDiv = document.getElementById(`post-${type}-file-status`);
+    statusDiv.innerHTML = '<span class="uploading">Uploading...</span>';
+    
+    fetch('/upload-form-file', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = `<span class="success">✓ Uploaded: ${data.filename}</span>`;
+        } else {
+            statusDiv.innerHTML = `<span class="error">✗ Error: ${data.error}</span>`;
+        }
+    })
+    .catch(error => {
+        statusDiv.innerHTML = '<span class="error">✗ Upload failed</span>';
+        console.error('Upload error:', error);
+    });
+}
+
+// Save Post-Survey Configuration
+function savePostSurveyConfiguration() {
+    console.log('Save post-survey configuration button clicked');
+    const config = collectPostSurveyConfiguration();
+    console.log('Collected post-survey config:', config);
+    
+    // Validate configuration before saving
+    const validationError = validateSurveyConfiguration(config);
+    if (validationError) {
+        showFeedback('post-survey-feedback', validationError, 'error');
+        return;
+    }
+    
+    // Get the main survey config and update the post_survey section
+    fetch('/get-survey-config')
+    .then(response => {
+        console.log('Get survey config response status:', response.status);
+        return response.json();
+    })
+    .then(mainConfig => {
+        console.log('Main config received:', mainConfig);
+        
+        // If main config doesn't exist, create it
+        if (!mainConfig) {
+            mainConfig = {
+                title: 'Survey Form',
+                information: { title: '', content: '' },
+                consent: { content: '' },
+                settings: {},
+                sections: {}
+            };
+        }
+        
+        // Add post-survey configuration
+        mainConfig.post_survey = config;
+        console.log('Combined config to save:', mainConfig);
+        
+        // Save the combined configuration
+        return fetch('/save-survey-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(mainConfig)
+        });
+    })
+    .then(response => {
+        console.log('Save response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Save response data:', data);
+        if (data.success) {
+            showFeedback('post-survey-feedback', 'Post-survey configuration saved successfully!', 'success');
+        } else {
+            showFeedback('post-survey-feedback', 'Error saving configuration: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving post-survey configuration:', error);
+        showFeedback('post-survey-feedback', 'Error saving configuration: ' + error.message, 'error');
+    });
+}
+
+// Collect Post-Survey Configuration
+function collectPostSurveyConfiguration() {
+    console.log('Collecting post-survey configuration...');
+    
+    const masterToggle = document.getElementById('post-survey-master-toggle');
+    const titleElement = document.getElementById('post-survey-title');
+    const showProgressElement = document.getElementById('post-show-progress');
+    const randomizeSectionsElement = document.getElementById('post-randomize-sections');
+    const randomizeItemsElement = document.getElementById('post-randomize-items');
+    const completionMessageElement = document.getElementById('completion-popup-message');
+    const finishButtonElement = document.getElementById('finish-button-text');
+    
+    console.log('Form elements found:', {
+        masterToggle: !!masterToggle,
+        titleElement: !!titleElement,
+        showProgressElement: !!showProgressElement,
+        randomizeSectionsElement: !!randomizeSectionsElement,
+        randomizeItemsElement: !!randomizeItemsElement,
+        completionMessageElement: !!completionMessageElement,
+        finishButtonElement: !!finishButtonElement
+    });
+    
+    const config = {
+        enabled: masterToggle ? masterToggle.checked : false,
+        title: titleElement ? titleElement.value : 'Post-Interaction Survey',
+        settings: {
+            showProgress: showProgressElement ? showProgressElement.checked : true,
+            randomizeSections: randomizeSectionsElement ? randomizeSectionsElement.checked : false,
+            randomizeItems: randomizeItemsElement ? randomizeItemsElement.checked : false
+        },
+        completion_settings: {
+            completion_popup_message: completionMessageElement ? completionMessageElement.value : 'The study is now complete. Thank you for your participation. If required, your completion code is: xxxx',
+            finish_button_text: finishButtonElement ? finishButtonElement.value : 'Finish'
+        },
+        sections: {}
+    };
+    
+    console.log('Collected basic config:', config);
+    
+    // Collect configuration from all dynamic sections
+    const dynamicSections = document.querySelectorAll('#post-dynamic-sections-container .survey-section-config');
+    console.log('Found dynamic sections:', dynamicSections.length);
+    
+    dynamicSections.forEach(sectionElement => {
+        const sectionId = sectionElement.getAttribute('data-section');
+        const enableCheckbox = sectionElement.querySelector(`#enable-${sectionId}`);
+        
+        // Skip if section is not enabled
+        if (!enableCheckbox || !enableCheckbox.checked) {
+            console.log(`Skipping section ${sectionId} - not enabled`);
+            return;
+        }
+        
+        const sectionType = sectionId.split('-')[0];
+        const titleInput = sectionElement.querySelector('input[type="text"]');
+        
+        console.log(`Processing section ${sectionId} of type ${sectionType}`);
+        
+        // Basic demographics section collection
+        if (sectionType === 'demographics') {
+            const ageCheckbox = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="checkbox"]');
+            const genderCheckbox = sectionElement.querySelector('.demographics-fields .field-config:nth-child(2) input[type="checkbox"]');
+            const ageMinInput = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="number"]:first-of-type');
+            const ageMaxInput = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="number"]:last-of-type');
+            const genderOptionsInput = sectionElement.querySelector('.gender-options input[type="text"]');
+            
+            config.sections[sectionId] = {
+                type: 'demographics',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Demographics',
+                fields: {
+                    age: {
+                        enabled: ageCheckbox ? ageCheckbox.checked : false,
+                        min: ageMinInput ? ageMinInput.value : '18',
+                        max: ageMaxInput ? ageMaxInput.value : '99'
+                    },
+                    gender: {
+                        enabled: genderCheckbox ? genderCheckbox.checked : false,
+                        options: genderOptionsInput ? genderOptionsInput.value.split(',').map(s => s.trim()) : []
+                    }
+                }
+            };
+        } else if (sectionType === 'likert') {
+            const likertItems = [];
+            const scaleTypeSelect = sectionElement.querySelector('.likert-scale-type');
+            const scaleLabelsInput = sectionElement.querySelector('.scale-labels');
+            
+            sectionElement.querySelectorAll('.likert-items .likert-item input[type="text"]').forEach(input => {
+                if (input.value.trim()) {
+                    likertItems.push(input.value.trim());
+                }
+            });
+            
+            config.sections[sectionId] = {
+                type: 'likert',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Likert Scale Items',
+                scaleType: scaleTypeSelect ? scaleTypeSelect.value : '5-point-agreement',
+                scaleLabels: scaleLabelsInput ? scaleLabelsInput.value : '',
+                items: likertItems
+            };
+        } else if (sectionType === 'freetext') {
+            const freetextQuestions = [];
+            
+            sectionElement.querySelectorAll('.freetext-questions .freetext-question').forEach(questionDiv => {
+                const questionText = questionDiv.querySelector('input[type="text"]').value.trim();
+                const rows = questionDiv.querySelector('input[type="number"]').value;
+                if (questionText) {
+                    freetextQuestions.push({
+                        question: questionText,
+                        rows: parseInt(rows) || 4
+                    });
+                }
+            });
+            
+            config.sections[sectionId] = {
+                type: 'freetext',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Free Form Text',
+                questions: freetextQuestions
+            };
+        } else if (sectionType === 'custom') {
+            const customFields = [];
+            const descriptionTextarea = sectionElement.querySelector('textarea');
+            
+            sectionElement.querySelectorAll('.custom-fields .field-config').forEach(fieldDiv => {
+                const labelInput = fieldDiv.querySelector('input[type="text"]:first-of-type');
+                const typeSelect = fieldDiv.querySelector('select');
+                const optionsInput = fieldDiv.querySelector('input[type="text"]:last-of-type');
+                const requiredCheckbox = fieldDiv.querySelector('input[type="checkbox"]');
+                
+                if (labelInput && labelInput.value.trim()) {
+                    customFields.push({
+                        label: labelInput.value.trim(),
+                        type: typeSelect ? typeSelect.value : 'text',
+                        options: optionsInput ? optionsInput.value : '',
+                        required: requiredCheckbox ? requiredCheckbox.checked : false
+                    });
+                }
+            });
+            
+            config.sections[sectionId] = {
+                type: 'custom',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Custom Section',
+                description: descriptionTextarea ? descriptionTextarea.value : '',
+                fields: customFields
+            };
+        } else if (sectionType === 'checkbox') {
+            const options = [];
+            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; // Second text input is the question
+            
+            sectionElement.querySelectorAll('.checkbox-options .option-item input[type="text"]').forEach(input => {
+                if (input.value.trim()) {
+                    options.push(input.value.trim());
+                }
+            });
+            
+            config.sections[sectionId] = {
+                type: 'checkbox',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Multiple Choice Selection',
+                question: questionInput ? questionInput.value : 'Please select all that apply:',
+                options: options
+            };
+        } else if (sectionType === 'dropdown') {
+            const options = [];
+            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; // Second text input is the question
+            const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+            
+            sectionElement.querySelectorAll('.dropdown-options .option-item input[type="text"]').forEach(input => {
+                if (input.value.trim()) {
+                    options.push(input.value.trim());
+                }
+            });
+            
+            config.sections[sectionId] = {
+                type: 'dropdown',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Selection',
+                question: questionInput ? questionInput.value : 'Please select an option:',
+                required: requiredCheckbox ? requiredCheckbox.checked : false,
+                options: options
+            };
+        } else if (sectionType === 'slider') {
+            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; // Second text input is the question
+            const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+            const sliderTypeRadio = sectionElement.querySelector(`input[name="slider-type-${sectionId}"]:checked`);
+            const sliderType = sliderTypeRadio ? sliderTypeRadio.value : 'labels';
+            
+            let sliderConfig = {
+                type: 'slider',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Rating Scale',
+                question: questionInput ? questionInput.value : 'Please rate using the slider:',
+                required: requiredCheckbox ? requiredCheckbox.checked : false,
+                slider_type: sliderType
+            };
+            
+            if (sliderType === 'labels') {
+                const labelInputs = sectionElement.querySelectorAll('.label-config input[type="text"]');
+                const stepInput = sectionElement.querySelector('.label-config input[type="number"]:nth-of-type(1)');
+                const defaultInput = sectionElement.querySelector('.label-config input[type="number"]:nth-of-type(2)');
+                
+                sliderConfig.left_label = labelInputs[0] ? labelInputs[0].value : 'Strongly Disagree';
+                sliderConfig.right_label = labelInputs[1] ? labelInputs[1].value : 'Strongly Agree';
+                sliderConfig.steps = stepInput ? parseInt(stepInput.value) : 7;
+                sliderConfig.default_value = defaultInput ? parseInt(defaultInput.value) : 4;
+            } else {
+                const numericInputs = sectionElement.querySelectorAll('.numeric-config input[type="number"]');
+                
+                sliderConfig.min_value = numericInputs[0] ? parseInt(numericInputs[0].value) : 0;
+                sliderConfig.max_value = numericInputs[1] ? parseInt(numericInputs[1].value) : 100;
+                sliderConfig.default_value = numericInputs[2] ? parseInt(numericInputs[2].value) : 50;
+            }
+            
+            config.sections[sectionId] = sliderConfig;
+        } else if (sectionType === 'image') {
+            const descriptionTextarea = sectionElement.querySelector('textarea');
+            const fileInput = sectionElement.querySelector(`#image-upload-${sectionId}`);
+            const altTextInput = sectionElement.querySelector('.image-alt-text input[type="text"]');
+            const displaySizeSelect = sectionElement.querySelectorAll('select')[0];
+            const alignmentSelect = sectionElement.querySelectorAll('select')[1];
+            const requireResponseCheckbox = sectionElement.querySelector(`#require-response-${sectionId}`);
+            const responseTypeSelect = sectionElement.querySelector('.response-config select');
+            
+            config.sections[sectionId] = {
+                type: 'image',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Image Display',
+                description: descriptionTextarea ? descriptionTextarea.value : '',
+                file_path: fileInput && fileInput.files[0] ? `/static/uploads/${fileInput.files[0].name}` : '',
+                alt_text: altTextInput ? altTextInput.value : 'Image',
+                display_size: displaySizeSelect ? displaySizeSelect.value : 'medium',
+                alignment: alignmentSelect ? alignmentSelect.value : 'center',
+                require_response: requireResponseCheckbox ? requireResponseCheckbox.checked : false,
+                response_type: responseTypeSelect ? responseTypeSelect.value : 'rating'
+            };
+        } else if (sectionType === 'video') {
+            const descriptionTextarea = sectionElement.querySelector('textarea');
+            const fileInput = sectionElement.querySelector(`#video-upload-${sectionId}`);
+            const urlInput = sectionElement.querySelector('.video-url input[type="url"]');
+            const videoSizeSelect = sectionElement.querySelectorAll('select')[0];
+            const autoplayCheckbox = sectionElement.querySelector('.video-options input[type="checkbox"]:nth-of-type(1)');
+            const controlsCheckbox = sectionElement.querySelector('.video-options input[type="checkbox"]:nth-of-type(2)');
+            const loopCheckbox = sectionElement.querySelector('.video-options input[type="checkbox"]:nth-of-type(3)');
+            const requireResponseCheckbox = sectionElement.querySelector(`#require-response-${sectionId}`);
+            
+            config.sections[sectionId] = {
+                type: 'video',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'Video Display',
+                description: descriptionTextarea ? descriptionTextarea.value : '',
+                file_path: fileInput && fileInput.files[0] ? `/static/uploads/${fileInput.files[0].name}` : '',
+                video_url: urlInput ? urlInput.value : '',
+                video_size: videoSizeSelect ? videoSizeSelect.value : 'medium',
+                autoplay: autoplayCheckbox ? autoplayCheckbox.checked : false,
+                controls: controlsCheckbox ? controlsCheckbox.checked : true,
+                loop: loopCheckbox ? loopCheckbox.checked : false,
+                require_response: requireResponseCheckbox ? requireResponseCheckbox.checked : false
+            };
+        } else if (sectionType === 'pdf') {
+            const descriptionTextarea = sectionElement.querySelector('textarea');
+            const fileInput = sectionElement.querySelector(`#pdf-upload-${sectionId}`);
+            const urlInput = sectionElement.querySelector('.pdf-url input[type="url"]');
+            const displaySizeSelect = sectionElement.querySelector('select');
+            const requireResponseCheckbox = sectionElement.querySelector(`#require-response-${sectionId}`);
+            
+            config.sections[sectionId] = {
+                type: 'pdf',
+                enabled: true,
+                title: titleInput ? titleInput.value : 'PDF Display',
+                description: descriptionTextarea ? descriptionTextarea.value : '',
+                file_path: fileInput && fileInput.files[0] ? `/static/uploads/${fileInput.files[0].name}` : '',
+                pdf_url: urlInput ? urlInput.value : '',
+                display_size: displaySizeSelect ? displaySizeSelect.value : 'medium',
+                require_response: requireResponseCheckbox ? requireResponseCheckbox.checked : false
+            };
+        }
+        // Add more section types as needed following the same pattern as the main survey
+    });
+    
+    console.log('Final collected config:', config);
+    return config;
+}
+
+// Validation function for survey configurations
+function validateSurveyConfiguration(config) {
+    // Check if there are any enabled sections
+    const enabledSections = Object.values(config.sections || {}).filter(section => section.enabled);
+    
+    if (enabledSections.length === 0) {
+        return 'At least one survey section must be enabled and configured.';
+    }
+    
+    // Validate each enabled section
+    for (const [sectionId, section] of Object.entries(config.sections || {})) {
+        if (!section.enabled) continue;
+        
+        if (section.type === 'likert') {
+            // Validate Likert scale configuration
+            if (!section.scaleType || section.scaleType === '') {
+                return `Likert section "${section.title}" must have a scale type selected.`;
+            }
+            
+            if (!section.scaleLabels || section.scaleLabels.trim() === '') {
+                return `Likert section "${section.title}" must have scale labels defined.`;
+            }
+            
+            if (!section.items || section.items.length === 0) {
+                return `Likert section "${section.title}" must have at least one item/statement.`;
+            }
+        }
+        
+        if (section.type === 'slider') {
+            // Validate slider configuration
+            if (!section.slider_type) {
+                return `Slider section "${section.title}" must have a slider type selected (labels or numeric).`;
+            }
+            
+            if (section.slider_type === 'labels') {
+                if (!section.left_label || section.left_label.trim() === '') {
+                    return `Slider section "${section.title}" must have a left label defined.`;
+                }
+                if (!section.right_label || section.right_label.trim() === '') {
+                    return `Slider section "${section.title}" must have a right label defined.`;
+                }
+                if (!section.steps || section.steps < 2 || section.steps > 20) {
+                    return `Slider section "${section.title}" must have steps between 2 and 20.`;
+                }
+            } else if (section.slider_type === 'numeric') {
+                if (section.min_value === undefined || section.max_value === undefined) {
+                    return `Slider section "${section.title}" must have min and max values defined.`;
+                }
+                if (section.min_value >= section.max_value) {
+                    return `Slider section "${section.title}" min value must be less than max value.`;
+                }
+            }
+        }
+        
+        if (section.type === 'dropdown' || section.type === 'checkbox') {
+            // Validate dropdown/checkbox options
+            if (!section.options || section.options.length === 0) {
+                return `${section.type === 'dropdown' ? 'Dropdown' : 'Checkbox'} section "${section.title}" must have at least one option.`;
+            }
+        }
+        
+        if (section.type === 'freetext') {
+            // Validate freetext questions
+            if (!section.questions || section.questions.length === 0) {
+                return `Free text section "${section.title}" must have at least one question.`;
+            }
+        }
+        
+        if (section.type === 'demographics') {
+            // Validate demographics fields
+            const hasEnabledField = (section.fields?.age?.enabled) || (section.fields?.gender?.enabled);
+            if (!hasEnabledField) {
+                return `Demographics section "${section.title}" must have at least one field enabled.`;
+            }
+        }
+    }
+    
+    return null; // No validation errors
+}
+
+// Load Post-Survey Configuration
+function loadPostSurveyConfiguration(showFeedbackMessage = false) {
+    fetch('/get-survey-config')
+    .then(response => response.json())
+    .then(mainConfig => {
+        if (mainConfig && mainConfig.post_survey) {
+            populatePostSurveyForm(mainConfig.post_survey);
+            if (showFeedbackMessage) {
+                showFeedback('post-survey-feedback', 'Configuration loaded successfully!', 'success');
+            }
+        } else {
+            if (showFeedbackMessage) {
+                showFeedback('post-survey-feedback', 'No saved post-survey configuration found', 'info');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading post-survey configuration:', error);
+        if (showFeedbackMessage) {
+            showFeedback('post-survey-feedback', 'Error loading configuration', 'error');
+        }
+    });
+}
+
+// Populate Post-Survey Form
+function populatePostSurveyForm(config) {
+    document.getElementById('post-survey-title').value = config.title || 'Post-Interaction Survey';
+    
+    document.getElementById('post-show-progress').checked = config.settings?.showProgress !== false;
+    document.getElementById('post-randomize-sections').checked = config.settings?.randomizeSections === true;
+    document.getElementById('post-randomize-items').checked = config.settings?.randomizeItems === true;
+    
+    if (config.completion_settings) {
+        document.getElementById('completion-popup-message').value = config.completion_settings.completion_popup_message || 'The study is now complete. Thank you for your participation. If required, your completion code is: xxxx';
+        document.getElementById('finish-button-text').value = config.completion_settings.finish_button_text || 'Finish';
+    }
+    
+    document.getElementById('post-survey-master-toggle').checked = config.enabled !== false;
+    togglePostSurveyEnabled(config.enabled !== false);
+    
+    // Clear existing dynamic sections
+    const dynamicContainer = document.getElementById('post-dynamic-sections-container');
+    dynamicContainer.innerHTML = '';
+    
+    // Populate dynamic sections if they exist
+    if (config.sections) {
+        Object.keys(config.sections).forEach(sectionId => {
+            const sectionConfig = config.sections[sectionId];
+            if (!sectionConfig.enabled) return;
+            
+            // Create the section based on its type
+            let sectionHTML = '';
+            
+            switch (sectionConfig.type) {
+                case 'demographics':
+                    sectionHTML = createDemographicsSection(sectionId);
+                    break;
+                case 'likert':
+                    sectionHTML = createLikertSection(sectionId);
+                    break;
+                case 'freetext':
+                    sectionHTML = createFreetextSection(sectionId);
+                    break;
+                case 'checkbox':
+                    sectionHTML = createCheckboxSection(sectionId);
+                    break;
+                case 'dropdown':
+                    sectionHTML = createDropdownSection(sectionId);
+                    break;
+                case 'slider':
+                    sectionHTML = createSliderSection(sectionId);
+                    break;
+                case 'custom':
+                    sectionHTML = createCustomSection(sectionId);
+                    break;
+            }
+            
+            if (sectionHTML) {
+                const newSection = document.createElement('div');
+                newSection.className = 'survey-section-config';
+                newSection.setAttribute('data-section', sectionId);
+                newSection.innerHTML = sectionHTML;
+                dynamicContainer.appendChild(newSection);
+                
+                // Populate section-specific data
+                setTimeout(() => {
+                    populateSectionData(sectionId, sectionConfig);
+                }, 100);
+            }
+        });
+    }
+}
+
+// Preview Post-Survey
+function previewPostSurvey() {
+    console.log('Preview post-survey button clicked');
+    const config = collectPostSurveyConfiguration();
+    console.log('Collected post-survey config:', config);
+    
+    fetch('/preview-post-survey', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config)
+    })
+    .then(response => {
+        console.log('Preview response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
+    })
+    .then(html => {
+        console.log('Preview HTML received, length:', html.length);
+        const preview = document.getElementById('post-survey-preview');
+        const iframe = document.getElementById('post-survey-preview-iframe');
+        iframe.srcdoc = html;
+        preview.style.display = 'block';
+        preview.scrollIntoView({ behavior: 'smooth' });
+        showFeedback('post-survey-feedback', 'Preview generated successfully!', 'success');
+    })
+    .catch(error => {
+        console.error('Error generating post-survey preview:', error);
+        showFeedback('post-survey-feedback', 'Error generating preview: ' + error.message, 'error');
+    });
+}
+
+// Reset Post-Survey to Default
+function resetPostSurveyToDefault() {
+    if (confirm('Are you sure you want to reset the post-survey to default settings?')) {
+        document.getElementById('post-survey-title').value = 'Post-Interaction Survey';
+        document.getElementById('post-show-progress').checked = true;
+        document.getElementById('post-randomize-sections').checked = false;
+        document.getElementById('post-randomize-items').checked = false;
+        document.getElementById('completion-popup-message').value = 'The study is now complete. Thank you for your participation. If required, your completion code is: xxxx';
+        document.getElementById('finish-button-text').value = 'Finish';
+        
+        document.getElementById('post-dynamic-sections-container').innerHTML = '';
+        
+        showFeedback('post-survey-feedback', 'Post-survey configuration reset to defaults!', 'success');
+    }
+}
+
+// Branding Configuration Functions
+function loadBrandingSettings() {
+    fetch('/get-branding-settings')
+        .then(response => response.json())
+        .then(data => {
+            // Load login page settings
+            document.getElementById('login-title').value = data.login_title || 'Artificial Intelligence <br>Gateway';
+            document.getElementById('login-footer-line1').value = data.login_footer_line1 || 'chatPsych';
+            document.getElementById('login-footer-line2').value = data.login_footer_line2 || 'Powered by';
+            document.getElementById('login-footer-line3').value = data.login_footer_line3 || 'The Australian Institute for Machine Learning';
+            
+            // Load chat page settings
+            document.getElementById('chat-header-line1').value = data.chat_header_line1 || 'Australian Institute for Machine Learning';
+            document.getElementById('chat-header-line2').value = data.chat_header_line2 || 'chatPsych';
+            
+            // Update current values display
+            document.getElementById('current-login-title').textContent = data.login_title || 'Artificial Intelligence Gateway';
+            document.getElementById('current-login-footer').textContent = 
+                `${data.login_footer_line1 || 'chatPsych'} / ${data.login_footer_line2 || 'Powered by'} / ${data.login_footer_line3 || 'The Australian Institute for Machine Learning'}`;
+            document.getElementById('current-chat-header').textContent = 
+                `${data.chat_header_line1 || 'Australian Institute for Machine Learning'} / ${data.chat_header_line2 || 'chatPsych'}`;
+        })
+        .catch(error => {
+            console.error('Error loading branding settings:', error);
+            // Set defaults if loading fails
+            setDefaultBrandingSettings();
+        });
+}
+
+function setDefaultBrandingSettings() {
+    document.getElementById('login-title').value = 'Artificial Intelligence <br>Gateway';
+    document.getElementById('login-footer-line1').value = 'chatPsych';
+    document.getElementById('login-footer-line2').value = 'Powered by';
+    document.getElementById('login-footer-line3').value = 'The Australian Institute for Machine Learning';
+    document.getElementById('chat-header-line1').value = 'Australian Institute for Machine Learning';
+    document.getElementById('chat-header-line2').value = 'chatPsych';
+    
+    document.getElementById('current-login-title').textContent = 'Artificial Intelligence Gateway';
+    document.getElementById('current-login-footer').textContent = 'chatPsych / Powered by / The Australian Institute for Machine Learning';
+    document.getElementById('current-chat-header').textContent = 'Australian Institute for Machine Learning / chatPsych';
+}
+
+function updateBrandingSettings() {
+    const loginTitle = document.getElementById('login-title').value;
+    const loginFooterLine1 = document.getElementById('login-footer-line1').value;
+    const loginFooterLine2 = document.getElementById('login-footer-line2').value;
+    const loginFooterLine3 = document.getElementById('login-footer-line3').value;
+    const chatHeaderLine1 = document.getElementById('chat-header-line1').value;
+    const chatHeaderLine2 = document.getElementById('chat-header-line2').value;
+    
+    if (!loginTitle || !loginFooterLine1 || !loginFooterLine2 || !loginFooterLine3 || !chatHeaderLine1 || !chatHeaderLine2) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    const settings = {
+        login_title: loginTitle,
+        login_footer_line1: loginFooterLine1,
+        login_footer_line2: loginFooterLine2,
+        login_footer_line3: loginFooterLine3,
+        chat_header_line1: chatHeaderLine1,
+        chat_header_line2: chatHeaderLine2
+    };
+    
+    fetch('/update-branding-settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update current values display
+            document.getElementById('current-login-title').textContent = loginTitle.replace('<br>', ' ');
+            document.getElementById('current-login-footer').textContent = `${loginFooterLine1} / ${loginFooterLine2} / ${loginFooterLine3}`;
+            document.getElementById('current-chat-header').textContent = `${chatHeaderLine1} / ${chatHeaderLine2}`;
+            alert('Branding settings updated successfully!');
+        } else {
+            alert('Error updating branding settings: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error updating branding settings:', error);
+        alert('Error updating branding settings');
+    });
+}
+
+function resetBrandingSettings() {
+    if (confirm('Are you sure you want to reset all branding settings to default values?')) {
+        fetch('/reset-branding-settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reset form fields to defaults
+                setDefaultBrandingSettings();
+                alert('Branding settings reset to defaults!');
+            } else {
+                alert('Error resetting branding settings: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error resetting branding settings:', error);
+            alert('Error resetting branding settings');
+        });
+    }
+}
+
+// Post-Chat Popup Settings Functions
+function loadPostChatPopupSettings() {
+    fetch('/get-url-settings')
+        .then(response => response.json())
+        .then(data => {
+            // Load popup settings
+            document.getElementById('enable-post-chat-popup').checked = data.post_chat_popup_enabled || false;
+            document.getElementById('post-chat-popup-text').value = data.post_chat_popup_text || 'Please provide your feedback on the AI system:';
+            document.getElementById('post-chat-popup-button1-text').value = data.post_chat_popup_button1_text || 'Feedback to the AI that it is worthless --This system will then be permenantly deleted--';
+            document.getElementById('post-chat-popup-button2-text').value = data.post_chat_popup_button2_text || 'Feedback to the AI that it is useful --This system will then be permenantly deleted--';
+            
+            // Update current config display
+            document.getElementById('current-popup-status').textContent = data.post_chat_popup_enabled ? 'Enabled' : 'Disabled';
+            document.getElementById('current-popup-text').textContent = data.post_chat_popup_text || 'Please provide your feedback on the AI system:';
+            document.getElementById('current-button1-text').textContent = data.post_chat_popup_button1_text || 'Feedback to the AI that it is worthless --This system will then be permenantly deleted--';
+            document.getElementById('current-button2-text').textContent = data.post_chat_popup_button2_text || 'Feedback to the AI that it is useful --This system will then be permenantly deleted--';
+            
+            // Show/hide config section based on enabled state
+            togglePostChatPopupConfig();
+        })
+        .catch(error => {
+            console.error('Error loading post-chat popup settings:', error);
+            setDefaultPostChatPopupSettings();
+        });
+}
+
+function setDefaultPostChatPopupSettings() {
+    document.getElementById('enable-post-chat-popup').checked = false;
+    document.getElementById('post-chat-popup-text').value = 'Please provide your feedback on the AI system:';
+    document.getElementById('post-chat-popup-button1-text').value = 'Feedback to the AI that it is worthless --This system will then be permenantly deleted--';
+    document.getElementById('post-chat-popup-button2-text').value = 'Feedback to the AI that it is useful --This system will then be permenantly deleted--';
+    
+    document.getElementById('current-popup-status').textContent = 'Disabled';
+    document.getElementById('current-popup-text').textContent = 'Please provide your feedback on the AI system:';
+    document.getElementById('current-button1-text').textContent = 'Feedback to the AI that it is worthless --This system will then be permenantly deleted--';
+    document.getElementById('current-button2-text').textContent = 'Feedback to the AI that it is useful --This system will then be permenantly deleted--';
+    
+    togglePostChatPopupConfig();
+}
+
+function togglePostChatPopupConfig() {
+    const enabled = document.getElementById('enable-post-chat-popup').checked;
+    const configSection = document.getElementById('post-chat-popup-config');
+    
+    if (enabled) {
+        configSection.style.display = 'block';
+        configSection.classList.remove('disabled');
+    } else {
+        configSection.style.display = 'none';
+        configSection.classList.add('disabled');
+    }
+}
+
+function updatePostChatPopupSettings() {
+    const enabled = document.getElementById('enable-post-chat-popup').checked;
+    const text = document.getElementById('post-chat-popup-text').value;
+    const button1Text = document.getElementById('post-chat-popup-button1-text').value;
+    const button2Text = document.getElementById('post-chat-popup-button2-text').value;
+    
+    if (enabled && (!text || !button1Text || !button2Text)) {
+        alert('Please fill in all text fields when popup is enabled');
+        return;
+    }
+    
+    // Get current URL settings first, then add popup settings
+    fetch('/get-url-settings')
+        .then(response => response.json())
+        .then(currentData => {
+            const settings = {
+                // Include all existing URL settings
+                quit_url: currentData.quit_url,
+                redirect_url: currentData.redirect_url,
+                quit_button_text: currentData.quit_button_text,
+                redirect_button_text: currentData.redirect_button_text,
+                use_post_survey: currentData.use_post_survey,
+                trigger_type: currentData.trigger_type,
+                stage1_messages: currentData.stage1_messages,
+                stage2_messages: currentData.stage2_messages,
+                stage3_messages: currentData.stage3_messages,
+                stage1_time: currentData.stage1_time,
+                stage2_time: currentData.stage2_time,
+                stage3_time: currentData.stage3_time,
+                timer_duration_minutes: currentData.timer_duration_minutes,
+                // Add popup settings
+                post_chat_popup_enabled: enabled,
+                post_chat_popup_text: text,
+                post_chat_popup_button1_text: button1Text,
+                post_chat_popup_button2_text: button2Text
+            };
+            
+            return fetch('/update-url-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(settings)
+            });
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update current config display
+                document.getElementById('current-popup-status').textContent = enabled ? 'Enabled' : 'Disabled';
+                document.getElementById('current-popup-text').textContent = text;
+                document.getElementById('current-button1-text').textContent = button1Text;
+                document.getElementById('current-button2-text').textContent = button2Text;
+                alert('Post-chat popup settings updated successfully!');
+            } else {
+                alert('Error updating post-chat popup settings: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating post-chat popup settings:', error);
+            alert('Error updating post-chat popup settings');
+        });
+}
+
+function resetPostChatPopupSettings() {
+    if (confirm('Are you sure you want to reset post-chat popup settings to default values?')) {
+        // Get current URL settings first, then reset popup settings
+        fetch('/get-url-settings')
+            .then(response => response.json())
+            .then(currentData => {
+                const settings = {
+                    // Include all existing URL settings
+                    quit_url: currentData.quit_url,
+                    redirect_url: currentData.redirect_url,
+                    quit_button_text: currentData.quit_button_text,
+                    redirect_button_text: currentData.redirect_button_text,
+                    use_post_survey: currentData.use_post_survey,
+                    trigger_type: currentData.trigger_type,
+                    stage1_messages: currentData.stage1_messages,
+                    stage2_messages: currentData.stage2_messages,
+                    stage3_messages: currentData.stage3_messages,
+                    stage1_time: currentData.stage1_time,
+                    stage2_time: currentData.stage2_time,
+                    stage3_time: currentData.stage3_time,
+                    timer_duration_minutes: currentData.timer_duration_minutes,
+                    // Reset popup settings to defaults
+                    post_chat_popup_enabled: false,
+                    post_chat_popup_text: 'Please provide your feedback on the AI system:',
+                    post_chat_popup_button1_text: 'Feedback to the AI that it is worthless --This system will then be permenantly deleted--',
+                    post_chat_popup_button2_text: 'Feedback to the AI that it is useful --This system will then be permenantly deleted--'
+                };
+                
+                return fetch('/update-url-settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(settings)
+                });
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reset form fields to defaults
+                    setDefaultPostChatPopupSettings();
+                    alert('Post-chat popup settings reset to defaults!');
+                } else {
+                    alert('Error resetting post-chat popup settings: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error resetting post-chat popup settings:', error);
+                alert('Error resetting post-chat popup settings');
+            });
     }
 }

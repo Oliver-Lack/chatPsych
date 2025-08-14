@@ -1,0 +1,17 @@
+{
+    "survey_responses": [
+        {
+            "username": "test123",
+            "password": "castle",
+            "agent_name": "default",
+            "user_id": 1,
+            "survey_start_timestamp": "2025-08-14 10:44:55.636079",
+            "survey_end_timestamp": "2025-08-14 10:45:01.779559",
+            "survey_completed": "yes",
+            "interaction_type": "post_interaction_survey",
+            "post_likert_item_0": "3",
+            "post_likert_item_1": "5",
+            "post_timestamp": "2025-08-14 10:45:01.779559"
+        }
+    ]
+}

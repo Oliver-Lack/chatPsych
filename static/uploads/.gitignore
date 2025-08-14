@@ -1,3 +1,10 @@
-# Ignore all uploaded PDF files but keep the directory
 *.pdf
+*.jpg
+*.png
+*.gif
+*.mp4
+*.mp3
+*.wav
+*.html
+
 !.gitignore

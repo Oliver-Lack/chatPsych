@@ -1,0 +1,2 @@
+username,password,agent_name,user_id,survey_start_timestamp,survey_end_timestamp,survey_completed,interaction_type,post_likert_item_0,post_likert_item_1,post_timestamp
+test123,castle,default,1,2025-08-14 10:44:55.636079,2025-08-14 10:45:01.779559,yes,post_interaction_survey,3,5,2025-08-14 10:45:01.779559

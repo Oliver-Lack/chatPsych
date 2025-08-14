@@ -12,7 +12,7 @@
     <div class="container">
         <div class="login-form">
             <img src="{{ url_for('static', filename='images/sphere1.png') }}" alt="Website Logo" class="logo">
-            <h1>Artificial Intelligence <br>Gateway</h1>
+            <h1>{{ login_title|safe }}</h1>
             {% if get_flashed_messages()[0] != "" %}
                 <h5>{{get_flashed_messages()[0]}}</h5>
             {% endif %}
@@ -33,9 +33,9 @@
     </form>
 </div>
 <div class="bottom-left-corner">
-    chatPsych<br>
-    <span class="tiny-text">Powered by</span><br>
-    <span class="highlighted-text">The Australian Institute for Machine Learning</span>
+    {{ login_footer_line1 }}<br>
+    <span class="tiny-text">{{ login_footer_line2 }}</span><br>
+    <span class="highlighted-text">{{ login_footer_line3 }}</span>
 </div>
 <script>
     function toggleResearcherForm() {

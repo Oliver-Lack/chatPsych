@@ -12,20 +12,20 @@
     <header class="header">
         <img src="{{ url_for('static', filename='images/sphere2.gif') }}" alt="AI" class="sphere hidden">        
         <div class="website-name">
-            <h1>Australian Institute for Machine&nbsp;Learning<br>chatPsych</h1>
+            <h1>{{ chat_header_line1|safe }}<br>{{ chat_header_line2 }}</h1>
         </div>
     </header>
     <div class="main-container">
         <aside class="sidebar">
-           <button id="quit" class="quit-button" onclick="showQuitPrompt()">Quit Study</button>
-           <button class="finish-button" onclick="showFinishPrompt()">Have you finished the Interaction?</button>
-           <button id="redirection" onclick="redirectionReset(); redirectStudy();" class="redirection-button">NEXT<br>(exit to survey)</button>        
+           <button id="quit" class="quit-button">{{ quit_button_text }}</button>
+           <button class="finish-button">Have you finished the Interaction?</button>
+           <button id="redirection" class="redirection-button">{{ redirect_button_text }}</button>        
         <div class="progress">
             <svg>
                 <circle class="circle-bg" cx="110" cy="110" r="100"></circle>                <circle class="circle-progress" cx="110" cy="110" r="100"></circle>
               </svg>
-            <div id="timer" class="timer-display" data-duration="{{ timer_duration }}:00">
-                <h1 class="time">{{ timer_duration }}:00</h1>
+            <div id="timer" class="timer-display">
+                <h1 class="time">Loading...</h1>
             </div>
         </div>  
         </aside>
@@ -36,9 +36,6 @@
                     {% if message['role'] == "user" %}
                         <div class="chat-bubble user-message">
                             <span class="user-label">User</span>
-                            {% if show_popup %}
-                            <script>showAlert();</script>
-                            {% endif %}
                             {{ message['content']|safe }}
                         </div>
                     {% endif %}
@@ -62,13 +59,20 @@
     <div id="quit-prompt">
         <p>Are you sure you want to withdraw from the study?</p>
         <p>If so, you will not receive reimbursement for participation.</p>
-        <button onclick="quitStudy()">Yes, I want to withdraw</button>
-        <button onclick="hideQuitPrompt()">No, I want to continue</button>
+        <button id="quit-yes">Yes, I want to withdraw</button>
+        <button id="quit-no">No, I want to continue</button>
     </div>
     <div id="finish-prompt">
         <p>Have all 20 questions been asked in the Wordgame?</p>
-        <button id="reset" onclick="finishStudy()">Yes</button>
-        <button onclick="hideFinishPrompt()">No, the game hasn't finished yet</button>
+        <button id="finish-yes">Yes</button>
+        <button id="finish-no">No, the game hasn't finished yet</button>
+    </div>
+    <div id="post-chat-popup" style="display: none;">
+        <p id="post-chat-popup-text">Please provide your feedback on the AI system:</p>
+        <div class="popup-buttons">
+            <button id="post-chat-button1" class="popup-button">Feedback to the AI that it is worthless --This system will then be permenantly deleted--</button>
+            <button id="post-chat-button2" class="popup-button">Feedback to the AI that it is useful --This system will then be permenantly deleted--</button>
+        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js" charset="UTF-8"></script>
     <script src="{{ url_for('static', filename='js/chat.js') }}" charset="UTF-8"></script>

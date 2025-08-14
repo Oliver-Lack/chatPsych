@@ -18,11 +18,14 @@
         <aside class="researcher-sidebar">
             <a href="{{ url_for('login') }}" class="special-back-button researcher-sidebar-content">Back to Login</a>
             <button class="researcher-sidebar-content" onclick="showForm('about')">About</button>
+            <button class="researcher-sidebar-content" onclick="showForm('branding')">Branding</button>
+            <button class="researcher-sidebar-content" onclick="showForm('post-chat-popup')">Post-Chat Popup</button>
             <button class="researcher-sidebar-content" onclick="showForm('timer-settings')">Timer</button>
             <button class="researcher-sidebar-content" onclick="showForm('url-configuration')">Redirection Links</button>
-            <button class="researcher-sidebar-content" onclick="showForm('agent-creation')">Create Agent Condition</button>
+            <button class="researcher-sidebar-content" onclick="showForm('agent-creation')">Create Agent</button>
             <button class="researcher-sidebar-content" onclick="showForm('pre-interaction-survey')">Pre-Interaction Survey</button>
-            <button class="researcher-sidebar-content" onclick="showForm('review-passwords')">Review Conditions</button>
+            <button class="researcher-sidebar-content" onclick="showForm('post-interaction-survey')">Post-Interaction Survey</button>
+            <button class="researcher-sidebar-content" onclick="showForm('review-passwords')">Randomised Condition Assignment</button>
             <button class="researcher-sidebar-content" onclick="showForm('download-section')">Download Data</button>
         </aside>
         <div class="right-container">
@@ -35,6 +38,7 @@
                     <a href="https://github.com/Oliver-Lack/chatPsych" target="_blank">chatPsych</a><br>
                 <br>Prospective updates will include: <br>
                 -> Text-audio api integration and graphics <br>
+                -> RAG and CAG tools <br>
                 -> A Docker image to facilitate easier deployment<br><br>
                     <strong>For usage, questions or collaborations, please cite/acknowledge/contact: <br><br>
                         Oliver Lack.</strong><br>
@@ -44,8 +48,141 @@
                         <a href="https://www.oliverlack.com" target="_blank">www.oliverlack.com</a></strong>
             </p>
             </main>
+            <main id="branding" class="branding-section">
+                <h2>Branding Configuration</h2>
+                <div class="branding-container">
+                    <form id="branding-form" class="branding-form">
+                        <!-- Login Page Branding -->
+                        <div class="form-section">
+                            <h3>Login Page Branding</h3>
+                            
+                            <div class="setting-group">
+                                <label for="login-title">Main Title:</label>
+                                <input type="text" id="login-title" name="login_title" placeholder="Artificial Intelligence Gateway" maxlength="100" required>
+                                <small>This appears as the main heading on the login page</small>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="login-footer-line1">Footer Line 1:</label>
+                                <input type="text" id="login-footer-line1" name="login_footer_line1" placeholder="chatPsych" maxlength="50" required>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="login-footer-line2">Footer Line 2 (Small Text):</label>
+                                <input type="text" id="login-footer-line2" name="login_footer_line2" placeholder="Powered by" maxlength="50" required>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="login-footer-line3">Footer Line 3 (Highlighted):</label>
+                                <input type="text" id="login-footer-line3" name="login_footer_line3" placeholder="The Australian Institute for Machine Learning" maxlength="100" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Chat Page Branding -->
+                        <div class="form-section">
+                            <h3>Chat Page Branding</h3>
+                            
+                            <div class="setting-group">
+                                <label for="chat-header-line1">Header Line 1:</label>
+                                <input type="text" id="chat-header-line1" name="chat_header_line1" placeholder="Australian Institute for Machine Learning" maxlength="100" required>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="chat-header-line2">Header Line 2:</label>
+                                <input type="text" id="chat-header-line2" name="chat_header_line2" placeholder="chatPsych" maxlength="50" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Current Values Display -->
+                        <div class="form-section">
+                            <h3>Current Values</h3>
+                            <div class="current-branding-display">
+                                <div class="current-section">
+                                    <h4>Login Page</h4>
+                                    <div class="current-values">
+                                        <div>Title: <span id="current-login-title">Loading...</span></div>
+                                        <div>Footer: <span id="current-login-footer">Loading...</span></div>
+                                    </div>
+                                </div>
+                                <div class="current-section">
+                                    <h4>Chat Page</h4>
+                                    <div class="current-values">
+                                        <div>Header: <span id="current-chat-header">Loading...</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="branding-button" onclick="updateBrandingSettings()">Update Branding</button>
+                            <button type="button" class="branding-button secondary" onclick="resetBrandingSettings()">Reset to Defaults</button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+            
+            <!-- Post-Chat Popup Section -->
+            <main id="post-chat-popup" class="post-chat-popup-section">
+                <h2>Post-Chat Popup Configuration</h2>
+                <div class="post-chat-popup-container">
+                    <!-- Master Post-Chat Popup Toggle -->
+                    <div class="master-popup-toggle">
+                        <div class="toggle-container">
+                            <span class="toggle-label">Enable Post-Chat Popup</span>
+                            <label class="switch">
+                                <input type="checkbox" id="enable-post-chat-popup" onchange="togglePostChatPopupConfig()">
+                                <span class="slider-switch"></span>
+                            </label>
+                        </div>
+                        <p class="toggle-description">When disabled, users will go directly to the completion flow without seeing the feedback popup</p>
+                    </div>
+                    
+                    <!-- Post-Chat Popup Configuration Content -->
+                    <div class="popup-config-content" id="post-chat-popup-config" style="display: none;">
+                        <div class="form-section">
+                            <h3>Popup Configuration</h3>
+                            
+                            <div class="setting-group">
+                                <label for="post-chat-popup-text">Popup Text:</label>
+                                <textarea id="post-chat-popup-text" name="post_chat_popup_text" rows="3" placeholder="Enter the text that will appear in the popup...">Please provide your feedback on the AI system:</textarea>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="post-chat-popup-button1-text">Button 1 Text:</label>
+                                <textarea id="post-chat-popup-button1-text" name="post_chat_popup_button1_text" rows="2" placeholder="Enter the text for the first button...">Feedback to the AI that it is worthless --This system will then be permenantly deleted--</textarea>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label for="post-chat-popup-button2-text">Button 2 Text:</label>
+                                <textarea id="post-chat-popup-button2-text" name="post_chat_popup_button2_text" rows="2" placeholder="Enter the text for the second button...">Feedback to the AI that it is useful --This system will then be permenantly deleted--</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Current Values Display -->
+                        <div class="form-section">
+                            <h3>Current Configuration</h3>
+                            <div class="current-popup-display">
+                                <div class="current-section">
+                                    <h4>Popup Settings</h4>
+                                    <div class="current-values">
+                                        <div>Status: <span id="current-popup-status">Disabled</span></div>
+                                        <div>Popup Text: <span id="current-popup-text">Please provide your feedback on the AI system:</span></div>
+                                        <div>Button 1: <span id="current-button1-text">Feedback to the AI that it is worthless --This system will then be permenantly deleted--</span></div>
+                                        <div>Button 2: <span id="current-button2-text">Feedback to the AI that it is useful --This system will then be permenantly deleted--</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="branding-button" onclick="updatePostChatPopupSettings()">Update Post-Chat Popup</button>
+                            <button type="button" class="branding-button secondary" onclick="resetPostChatPopupSettings()">Reset to Defaults</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
             <main id="agent-creation" class="agent-creation-form">
-                <h2>Create Agent Condition</h2>
+                <h2>Create Agent</h2>
                 <form id="agent-form" class="agent-creation-form">
                     <div class="form-section">
                         <h3>Agent Configuration</h3>
@@ -55,7 +192,6 @@
                         
                         <label for="preprompt"><br>PrePrompt (System Message):<br></label><br>
                         <textarea id="preprompt" name="PrePrompt" placeholder="Enter the system prompt that will guide the AI's behavior..." required></textarea><br>
-                    </div>
 
                     <div class="form-section">
                         <h3>Model Selection</h3>
@@ -69,13 +205,9 @@
                             <h4>Quick Model Selection</h4>
                             <div class="provider-buttons">
                                 <button type="button" class="api-button" onclick="setAgentModel('gpt-4.1')">OpenAI GPT-4.1</button>
-                                <button type="button" class="api-button" onclick="setAgentModel('claude-sonnet-4-20250514')">Anthropic Claude 4</button>
-                                <button type="button" class="api-button" onclick="setAgentModel('gemini-1.5-pro')">Google Gemini Pro</button>
-                                <button type="button" class="api-button" onclick="setAgentModel('grok-2-latest')">XAI Grok 2</button>
-                                <button type="button" class="api-button" onclick="setAgentModel('groq-llama-3.1-70b')">Groq Llama 3.1</button>
-                                <button type="button" class="api-button" onclick="setAgentModel('perplexity-llama-3.1-sonar-large')">Perplexity</button>
-                                <button type="button" class="api-button" onclick="setAgentModel('mistral-large')">Mistral Large</button>
-                                <button type="button" class="api-button" onclick="setAgentModel('ollama-llama3.1')">Ollama (Local)</button>
+                                <button type="button" class="api-button" onclick="setAgentModel('claude-sonnet-4-20250514')">Anthropic Claude Sonnet 4</button>
+                                <button type="button" class="api-button" onclick="setAgentModel('gemini/gemini-2.5-pro')">Google Gemini 2.5 Pro</button>
+                                <button type="button" class="api-button" onclick="setAgentModel('xai/grok-4')">XAI Grok 4</button>
                             </div>
                         </div>
                     </div>
@@ -112,7 +244,7 @@
                         <label for="agent-password">Password for this Agent:</label>
                         <br><br>
                         <input type="text" id="agent-password" name="agent-password" placeholder="Enter a memorable password for participants" required>
-                        <small>Participants will use this password to access this specific agent condition</small>
+                        <small>Participants can use this password to access this specific agent condition</small>
                     </div>
 
                     <div class="form-actions">
@@ -126,6 +258,21 @@
             <!-- Pre-Interaction Survey Section -->
             <main id="pre-interaction-survey" class="pre-interaction-survey-form">
                 <h2>Pre-Interaction Survey Configuration</h2>
+                
+                <!-- Master Survey Toggle -->
+                <div class="master-survey-toggle">
+                    <div class="toggle-container">
+                        <span class="toggle-label">Enable Pre-Interaction Survey</span>
+                        <label class="switch">
+                            <input type="checkbox" id="survey-master-toggle" checked onchange="toggleSurveyEnabled(this.checked)">
+                            <span class="slider-switch"></span>
+                        </label>
+                    </div>
+                    <p class="toggle-description">When disabled, users will go directly to chat without seeing the survey</p>
+                </div>
+                
+                <!-- Survey Configuration Content -->
+                <div class="survey-config-content" id="survey-config-content">
                 
                 <!-- Information and Consent Forms Section -->
                 <div class="form-section">
@@ -170,7 +317,12 @@
                                     <option value="demographics">Demographics Section</option>
                                     <option value="likert">Likert Scale Section</option>
                                     <option value="freetext">Free Text Section</option>
-                                    <option value="custom">Custom Section</option>
+                                    <option value="checkbox">Multiple Choice Checkboxes</option>
+                                    <option value="dropdown">Dropdown Selection</option>
+                                    <option value="slider">Slider Scale</option>
+                                    <option value="image">Image Display Section</option>
+                                    <option value="video">Video Display Section</option>
+                                    <option value="pdf">PDF Display Section</option>
                                 </select>
                                 <button type="button" class="btn-add" onclick="addSurveySection()">+ Add Survey Section</button>
                             </div>
@@ -216,7 +368,7 @@
                     <button type="button" class="btn-primary" onclick="previewSurvey()">Preview Survey</button>
                     <button type="button" class="btn-primary" onclick="saveSurveyConfiguration()">Save Survey Configuration</button>
                     <button type="button" class="btn-secondary" onclick="resetSurveyToDefault()">Reset to Default</button>
-                    <button type="button" class="btn-secondary" onclick="loadSurveyConfiguration()">Load Saved Configuration</button>
+                    <button type="button" class="btn-secondary" onclick="loadSurveyConfiguration(true)">Load Saved Configuration</button>
                 </div>
                 
                 <div id="survey-feedback" class="creation-feedback"></div>
@@ -228,20 +380,157 @@
                         <iframe id="survey-preview-iframe" width="100%" height="600px" style="border: 1px solid #ccc;"></iframe>
                     </div>
                 </div>
+                
+                </div> <!-- Close survey-config-content -->
             </main>
             
-            <main id="review-passwords" class="password-inspection-palace">
-                <h2>Review Conditions</h2>
-                <table id="password-table">
-                    <thead>
-                        <tr>
-                            <th>Agent</th>
-                            <th>Password</th>
-                            <th>File Content</th>
-                        </tr>
-                    </thead>
-                    <tbody id="password-table-body"></tbody>
-                </table>
+            <!-- Post-Interaction Survey Section -->
+            <main id="post-interaction-survey" class="post-interaction-survey-form">
+                <h2>Post-Interaction Survey Configuration</h2>
+                
+                <!-- Master Post-Survey Toggle -->
+                <div class="master-post-survey-toggle">
+                    <div class="toggle-container">
+                        <span class="toggle-label">Enable Post-Interaction Survey</span>
+                        <label class="switch">
+                            <input type="checkbox" id="post-survey-master-toggle" checked onchange="togglePostSurveyEnabled(this.checked)">
+                            <span class="slider-switch"></span>
+                        </label>
+                    </div>
+                    <p class="toggle-description">When disabled, users will go directly to external URL after finishing chat</p>
+                </div>
+                
+                <!-- Post-Survey Configuration Content -->
+                <div class="post-survey-config-content" id="post-survey-config-content">
+                
+                <!-- Survey Sections Configuration -->
+                <div class="form-section">
+                    <h3>Survey Sections</h3>
+                    <div class="post-survey-sections-container" id="post-survey-sections-container">
+                        
+                        <!-- Add Survey Section Control -->
+                        <div class="add-section-control">
+                            <div class="section-type-selector">
+                                <label for="post-section-type-select">Select Section Type:</label>
+                                <select id="post-section-type-select">
+                                    <option value="demographics">Demographics Section</option>
+                                    <option value="likert">Likert Scale Section</option>
+                                    <option value="freetext">Free Text Section</option>
+                                    <option value="checkbox">Multiple Choice Checkboxes</option>
+                                    <option value="dropdown">Dropdown Selection</option>
+                                    <option value="slider">Slider Scale</option>
+                                    <option value="image">Image Display Section</option>
+                                    <option value="video">Video Display Section</option>
+                                    <option value="pdf">PDF Display Section</option>
+                                </select>
+                                <button type="button" class="btn-add" onclick="addPostSurveySection()">+ Add Survey Section</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Dynamic sections will be added here -->
+                        <div id="post-dynamic-sections-container"></div>
+                    </div>
+                </div>
+                
+                <!-- Survey Settings -->
+                <div class="form-section">
+                    <h3>Survey Settings</h3>
+                    
+                    <div class="setting-group">
+                        <label for="post-survey-title">Survey Page Title:</label>
+                        <input type="text" id="post-survey-title" value="Post-Interaction Survey" placeholder="Survey page title">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <input type="checkbox" id="post-show-progress" checked>
+                        <label for="post-show-progress">Show Progress Indicator</label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <input type="checkbox" id="post-randomize-sections">
+                        <label for="post-randomize-sections">Randomize Section Order</label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <input type="checkbox" id="post-randomize-items">
+                        <label for="post-randomize-items">Randomize Item Order (within Likert and Free Text sections)</label>
+                    </div>
+                </div>
+                
+                <!-- Final Completion Configuration -->
+                <div class="form-section">
+                    <h3>Final Completion Configuration</h3>
+                    
+                    <div class="setting-group">
+                        <label for="completion-popup-message">Final Completion Instructions:</label>
+                        <textarea id="completion-popup-message" rows="4" placeholder="Instructions shown in final popup">The study is now complete. Thank you for your participation. If required, your completion code is: xxxx</textarea>
+                        <small>Remember to put in Prolific/Mturk completion code manually and through the external URL redirection link</small>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="finish-button-text">Finish Button Text:</label>
+                        <input type="text" id="finish-button-text" value="Finish" placeholder="Button text" maxlength="30">
+                        <small>Text displayed on the final finish button</small>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="form-actions">
+                    <button type="button" class="btn-primary" onclick="previewPostSurvey()">Preview Survey</button>
+                    <button type="button" class="btn-primary" onclick="savePostSurveyConfiguration()">Save Survey Configuration</button>
+                    <button type="button" class="btn-secondary" onclick="resetPostSurveyToDefault()">Reset to Default</button>
+                    <button type="button" class="btn-secondary" onclick="loadPostSurveyConfiguration(true)">Load Saved Configuration</button>
+                </div>
+                
+                <div id="post-survey-feedback" class="creation-feedback"></div>
+                
+                <!-- Survey Preview -->
+                <div id="post-survey-preview" class="survey-preview" style="display: none;">
+                    <h3>Survey Preview</h3>
+                    <div class="preview-container">
+                        <iframe id="post-survey-preview-iframe" width="100%" height="600px" style="border: 1px solid #ccc;"></iframe>
+                    </div>
+                </div>
+                
+                </div> <!-- Close post-survey-config-content -->
+            </main>
+            
+            <main id="review-passwords" class="agent-review-section">
+                <h2>Randomised Condition Assignment</h2>
+                
+                <!-- Randomised Password Configuration -->
+                <div class="randomised-password-config">
+                    <h3>Randomised Agent Assignment Configuration</h3>
+                    <p class="config-description">
+                        Configure the password that participants use to get randomly assigned to an active agent. 
+                        Only agents marked as "Active" below will be included in the randomised assignment pool.
+                    </p>
+                    
+                    <div class="password-setting-group">
+                        <label for="randomised-password">Randomised Agent Password:</label>
+                        <input type="text" id="randomised-password" placeholder="Enter randomised password" maxlength="50" required>
+                        <button type="button" class="config-button" onclick="updateRandomisedPassword()">Update Password</button>
+                        <button type="button" class="config-button secondary" onclick="loadRandomisedPassword()">Refresh</button>
+                    </div>
+                    
+                    <div class="current-password-display">
+                        Current Randomised Password: <span id="current-randomised-password">Loading...</span>
+                    </div>
+                </div>
+                
+                <!-- Agent List with Active/Inactive Controls -->
+                <div class="agents-list-container">
+                    <h3>Agent Conditions & Active Status</h3>
+                    <p class="agents-description">
+                        Toggle agents as "Active" to include them in the randomised assignment pool. 
+                        Inactive agents can still be accessed via their specific passwords.<br>
+                        <strong>Delete agents</strong> using the red "Delete" button - this will permanently remove the agent configuration and password assignment.
+                    </p>
+                    
+                    <div id="agents-list" class="agents-list">
+                        <!-- Agents will be populated here by JavaScript -->
+                    </div>
+                </div>
             </main>
             <main id="download-section" class="data-download-section">
                 <h2>Download Data</h2>
@@ -260,21 +549,110 @@
                 <h2>URL Configuration</h2>
                 <div class="url-settings-container">
                     <form id="url-settings-form">
-                        <div class="setting-group">
-                            <h3>Quit Study URL</h3>
-                            <label for="quit-url">URL for Quit Study function:</label>
-                            <input type="url" id="quit-url" name="quit_url" placeholder="https://www.prolific.com/" required>
-                            <span class="setting-note">This URL is used when participants quit the study</span>
+                        <!-- Quit Study Configuration -->
+                        <div class="setting-group quit-study-config">
+                            <h3>Quit Study Configuration</h3>
+                            
+                            <div class="config-row url-button-row">
+                                <div class="config-column">
+                                    <label for="quit-url">URL for Quit Study function:</label>
+                                    <input type="url" id="quit-url" name="quit_url" placeholder="https://www.prolific.com/" required>
+                                </div>
+                                <div class="config-column">
+                                    <label for="quit-button-text">Quit Button Text:</label>
+                                    <input type="text" id="quit-button-text" name="quit_button_text" placeholder="Quit Study" maxlength="50" required>
+                                </div>
+                            </div>
+                            
+                            <span class="setting-note">This URL and button text are used when participants quit the study</span>
                             <div class="current-url-display">
                                 Current Quit URL: <span id="current-quit-url">Loading...</span>
                             </div>
                         </div>
                         
-                        <div class="setting-group">
-                            <h3>Redirect Study URL</h3>
-                            <label for="redirect-url">URL for Study Redirect function:</label>
-                            <input type="url" id="redirect-url" name="redirect_url" placeholder="https://adelaideuniwide.qualtrics.com/jfe/form/SV_cuyJvIsumG4zjMy" required>
-                            <span class="setting-note">This URL is used when participants are redirected to the survey</span>
+                        <!-- External Redirect Configuration -->
+                        <div class="setting-group external-redirect-config">
+                            <h3>External Redirect URL Configuration</h3>
+                            
+                            <div class="config-row url-button-row">
+                                <div class="config-column">
+                                    <label for="redirect-url">External Redirect URL:</label>
+                                    <input type="url" id="redirect-url" name="redirect_url" placeholder="https://www.prolific.com/" required>
+                                </div>
+                                <div class="config-column">
+                                    <label for="redirect-button-text">Next Button Text:</label>
+                                    <input type="text" id="redirect-button-text" name="redirect_button_text" placeholder="Continue to Survey" maxlength="50" required>
+                                </div>
+                            </div>
+                            
+                            <!-- Post-Interaction Survey Override -->
+                            <div class="config-row">
+                                <div class="config-toggle">
+                                    <div class="toggle-container">
+                                        <label for="use-post-survey">Override with Post-Interaction Survey</label>
+                                        <label class="post-survey-switch">
+                                            <input type="checkbox" id="use-post-survey" name="use_post_survey">
+                                            <span class="slider-switch"></span>
+                                        </label>
+                                    </div>
+                                    <span class="toggle-note">When enabled, sends participants to post-interaction survey instead of external URL</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Button Trigger Conditions -->
+                            <div class="trigger-conditions">
+                                <h4>Button Popup Trigger</h4>
+                                <div class="trigger-type-selector">
+                                    <label>
+                                        <input type="radio" name="trigger_type" value="messages" checked>
+                                        Trigger after number of user messages
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="trigger_type" value="time">
+                                        Trigger after time elapsed
+                                    </label>
+                                </div>
+                                
+                                <!-- Message-based triggers -->
+                                <div class="trigger-config message-triggers">
+                                    <h5>Message-Based Triggers</h5>
+                                    <div class="trigger-stages">
+                                        <div class="stage-config">
+                                            <label for="stage1-messages">Dark Button Stage (messages):</label>
+                                            <input type="number" id="stage1-messages" name="stage1_messages" min="1" value="5" required>
+                                        </div>
+                                        <div class="stage-config">
+                                            <label for="stage2-messages">Orange Button Stage (messages):</label>
+                                            <input type="number" id="stage2-messages" name="stage2_messages" min="1" value="10" required>
+                                        </div>
+                                        <div class="stage-config">
+                                            <label for="stage3-messages">Bouncing Button Stage (messages):</label>
+                                            <input type="number" id="stage3-messages" name="stage3_messages" min="1" value="15" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Time-based triggers -->
+                                <div class="trigger-config time-triggers" style="display: none;">
+                                    <h5>Time-Based Triggers</h5>
+                                    <div class="trigger-stages">
+                                        <div class="stage-config">
+                                            <label for="stage1-time">Dark Button Stage (minutes):</label>
+                                            <input type="number" id="stage1-time" name="stage1_time" min="1" value="2" step="0.5" required>
+                                        </div>
+                                        <div class="stage-config">
+                                            <label for="stage2-time">Orange Button Stage (minutes):</label>
+                                            <input type="number" id="stage2-time" name="stage2_time" min="1" value="5" step="0.5" required>
+                                        </div>
+                                        <div class="stage-config">
+                                            <label for="stage3-time">Bouncing Button Stage (minutes):</label>
+                                            <input type="number" id="stage3-time" name="stage3_time" min="1" value="8" step="0.5" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <span class="setting-note">External redirect URL and button behavior for when participants complete the chat interaction</span>
                             <div class="current-url-display">
                                 Current Redirect URL: <span id="current-redirect-url">Loading...</span>
                             </div>

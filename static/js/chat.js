@@ -1,7 +1,14 @@
-// sudo message display changes for end of interaction 2
-document.getElementById('chat-form').addEventListener('submit', function() {
+// Consolidated form submission handler
+document.getElementById('chat-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    
     const inputField = document.getElementById('chat-input');
-    if (inputField.value.includes('$sudo')) {
+    const message = inputField.value.trim();
+    
+    if (!message) return; // Don't submit empty messages
+    
+    // Handle $sudo command
+    if (message.includes('$sudo')) {
         setTimeout(() => {
             document.getElementById('command-instructions').style.display = 'none';
             document.getElementById('command-prompt').style.display = 'none';
@@ -9,23 +16,119 @@ document.getElementById('chat-form').addEventListener('submit', function() {
             document.getElementById('redirection').style.display = 'block';
         }, 10);
     }
+    
+    // Increment message count for trigger system
+    messageCount++;
+    console.log(`Message submitted. Count: ${messageCount}`);
+    
+    // Check triggers based on configuration
+    if (triggerSettings) {
+        console.log(`Using configured triggers. Type: ${triggerSettings.trigger_type}`);
+        if (triggerSettings.trigger_type === 'messages') {
+            checkMessageTriggers();
+        }
+    } else {
+        console.log('Using fallback triggers');
+        checkFallbackTriggers();
+    }
+    
+    // Append user message to chat
+    appendUserMessage();
+    
+    // Scroll to bottom after a short delay
+    setTimeout(() => {
+        const chatContainer = document.getElementById('chat-messages-container');
+        chatContainer.scrollTo({
+            top: chatContainer.scrollHeight,
+            behavior: 'smooth'
+        });
+    }, 300);
 });
 
 // Focus on the chat input field when the page loads
 document.getElementById('chat-input').focus();
 
-// Scroll bottom on refresh
+// Scroll bottom on refresh and initialize trigger system
 document.addEventListener('DOMContentLoaded', function() {
     const chatContainer = document.getElementById('chat-messages-container');
     chatContainer.scrollTo({
         top: chatContainer.scrollHeight,
         behavior: 'smooth'
     });
+    
+    // Initialize trigger system when page loads
+    initializeTriggerSystem();
+    
+    // Setup button event listeners
+    setupButtonEventListeners();
+    
+    // Initialize timer
+    initializeTimer();
+    
+    // Check for alert trigger
+    const alertTrigger = document.querySelector('.alert-trigger[data-show-alert="true"]');
+    if (alertTrigger) {
+        showAlert();
+    }
 });
 
 // Environment variable alert
 function showAlert() {
     alert("Warning: The specified environment variable was not found!");
+}
+
+// Setup all button event listeners
+function setupButtonEventListeners() {
+    // Quit button
+    const quitButton = document.getElementById('quit');
+    if (quitButton) {
+        quitButton.addEventListener('click', showQuitPrompt);
+    }
+    
+    // Finish button
+    const finishButton = document.querySelector('.finish-button');
+    if (finishButton) {
+        finishButton.addEventListener('click', showFinishPrompt);
+    }
+    
+    // Redirection button
+    const redirectionButton = document.getElementById('redirection');
+    if (redirectionButton) {
+        redirectionButton.addEventListener('click', function() {
+            redirectionReset();
+            redirectStudy();
+        });
+    }
+    
+    // Quit prompt buttons
+    const quitYesButton = document.getElementById('quit-yes');
+    const quitNoButton = document.getElementById('quit-no');
+    if (quitYesButton) {
+        quitYesButton.addEventListener('click', quitStudy);
+    }
+    if (quitNoButton) {
+        quitNoButton.addEventListener('click', hideQuitPrompt);
+    }
+    
+    // Finish prompt buttons
+    const finishYesButton = document.getElementById('finish-yes');
+    const finishNoButton = document.getElementById('finish-no');
+    if (finishYesButton) {
+        finishYesButton.addEventListener('click', handleFinishYes);
+    }
+    if (finishNoButton) {
+        finishNoButton.addEventListener('click', hideFinishPrompt);
+    }
+    
+    // Post-chat popup buttons
+    const postChatButton1 = document.getElementById('post-chat-button1');
+    const postChatButton2 = document.getElementById('post-chat-button2');
+    if (postChatButton1) {
+        postChatButton1.addEventListener('click', () => handlePostChatSelection(postChatButton1.textContent));
+    }
+    if (postChatButton2) {
+        postChatButton2.addEventListener('click', () => handlePostChatSelection(postChatButton2.textContent));
+    }
 }
 
 // Quit study popup functions
@@ -61,17 +164,24 @@ function quitStudy() {
 }
 
 function redirectStudy() {
-    // Fetch the current redirect URL from the backend
+    // Fetch the current redirect URL and post-survey settings from the backend
     fetch('/get-redirect-urls')
         .then(response => response.json())
         .then(data => {
-            // Redirect to the dynamically configured URL
-            window.location.href = data.redirect_url;
-            
-            // Close the current window after a short delay to ensure the redirect happens
-            setTimeout(() => {
-                window.open('', '_self').close();
-            }, 1000); // Adjust the delay as needed
+            // Check if post-survey override is enabled
+            if (data.use_post_survey) {
+                console.log('Post-survey override enabled, redirecting to post-survey');
+                window.location.href = '/post-survey';
+            } else {
+                console.log('Redirecting to external URL:', data.redirect_url);
+                // Redirect to the dynamically configured URL
+                window.location.href = data.redirect_url;
+                
+                // Close the current window after a short delay to ensure the redirect happens
+                setTimeout(() => {
+                    window.open('', '_self').close();
+                }, 1000); // Adjust the delay as needed
+            }
         })
         .catch(error => {
             console.error('Error fetching redirect URL, using default:', error);
@@ -93,8 +203,75 @@ function hideFinishPrompt() {
 }
 
 function finishStudy() {
+    // Hide the timer when user confirms they want to finish
+    document.querySelector(".progress").style.display = "none";
     document.getElementById('redirection').style.display = 'block';
     document.getElementById('finish-prompt').style.display = 'none';
+}
+
+// New function to handle the "Yes" button in the finish prompt
+function handleFinishYes() {
+    // Check if post-chat popup is enabled
+    fetch('/get-url-settings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.post_chat_popup_enabled) {
+                // Show post-chat popup instead of finishing directly
+                showPostChatPopup(data);
+            } else {
+                // Log that popup was not active and finish normally
+                logPostChatPopupSelection('Not_Active');
+                finishStudy();
+            }
+        })
+        .catch(error => {
+            console.error('Error checking post-chat popup settings:', error);
+            // If there's an error, finish normally
+            logPostChatPopupSelection('Not_Active');
+            finishStudy();
+        });
+}
+
+function showPostChatPopup(settings) {
+    // Update popup content with settings from backend
+    document.getElementById('post-chat-popup-text').textContent = settings.post_chat_popup_text;
+    document.getElementById('post-chat-button1').textContent = settings.post_chat_popup_button1_text;
+    document.getElementById('post-chat-button2').textContent = settings.post_chat_popup_button2_text;
+    
+    // Hide finish prompt and show post-chat popup
+    document.getElementById('finish-prompt').style.display = 'none';
+    document.getElementById('post-chat-popup').style.display = 'block';
+}
+
+function handlePostChatSelection(buttonText) {
+    // Log the selection
+    logPostChatPopupSelection(buttonText);
+    
+    // Hide popup and proceed to finish
+    document.getElementById('post-chat-popup').style.display = 'none';
+    finishStudy();
+}
+
+function logPostChatPopupSelection(buttonText) {
+    // Send the selection to backend for logging
+    fetch('/log-post-chat-popup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            button_text: buttonText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error('Error logging post-chat popup selection:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error logging post-chat popup selection:', error);
+    });
 }
 
 function redirectionReset() {
@@ -137,19 +314,7 @@ function appendMessage(message, role, callback) {
     appendWord();
 }
 
-// Scroll to bottom on submit 
-document.getElementById('chat-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-    appendUserMessage();
-    setTimeout(() => {
-        const chatContainer = document.getElementById('chat-messages-container');
-        chatContainer.scrollTo({
-            top: chatContainer.scrollHeight,
-            behavior: 'smooth'
-        });
-    }, 300); 
-});
-
+// Auto-scroll to bottom on manual submit 
 function appendUserMessage() {
     const inputField = document.getElementById('chat-input');
     const userMessage = inputField.value;
@@ -247,13 +412,188 @@ function insertLoaderPlaceholder() {
     return gifPlaceholder;
 }
 
-// Retrieve the submit count from localStorage or initialize it to 0
-// Review this... not sure if i need anymore. 
-let submitCount = localStorage.getItem('submitCount') ? parseInt(localStorage.getItem('submitCount')) : 0;
-const finishButton = document.querySelector('.finish-button');
-const chatForm = document.getElementById('chat-form');
-const resetButton = document.getElementById('reset');
-const chatMessagesContainer = document.getElementById('chat-messages-container');
+// Trigger settings and state
+let triggerSettings = null;
+let sessionStartTime = null;
+let messageCount = 0;
+let currentButtonStage = 0; // 0 = hidden, 1 = dark, 2 = orange, 3 = bouncing
+
+// Initialize trigger system
+async function initializeTriggerSystem() {
+    try {
+        // Count existing user messages in the chat
+        const existingUserMessages = document.querySelectorAll('.user-message').length;
+        messageCount = existingUserMessages;
+        currentButtonStage = 0;
+        sessionStartTime = Date.now();
+        
+        console.log(`Initializing trigger system. Found ${existingUserMessages} existing user messages.`);
+        console.log('Fetching trigger settings...');
+        
+        // Fetch trigger settings from backend
+        const response = await fetch('/get-trigger-settings');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        triggerSettings = await response.json();
+        
+        console.log('Trigger settings loaded successfully:', triggerSettings);
+        
+        // Reset finish button state
+        const finishButton = document.querySelector('.finish-button');
+        if (finishButton) {
+            finishButton.style.display = 'none';
+            finishButton.style.backgroundColor = 'transparent';
+            finishButton.classList.remove('bounce');
+        }
+        
+        // Start trigger monitoring
+        if (triggerSettings.trigger_type === 'time') {
+            startTimeBasedTriggers();
+            console.log('Started time-based trigger monitoring');
+        } else {
+            console.log('Using message-based triggers');
+            // Check if existing messages already meet trigger criteria
+            checkMessageTriggers();
+        }
+        
+    } catch (error) {
+        console.error('Error initializing trigger system:', error);
+        // Fall back to original hardcoded system if fetch fails
+        triggerSettings = null;
+        initializeFallbackTriggerSystem();
+    }
+}
+
+// Time-based trigger monitoring
+function startTimeBasedTriggers() {
+    if (!triggerSettings || triggerSettings.trigger_type !== 'time') {
+        return;
+    }
+    
+    const checkInterval = 30000; // Check every 30 seconds
+    
+    setInterval(() => {
+        if (!sessionStartTime) return;
+        
+        const elapsedMinutes = (Date.now() - sessionStartTime) / (1000 * 60);
+        
+        // Check for stage transitions
+        if (currentButtonStage < 3 && elapsedMinutes >= triggerSettings.stage3_time) {
+            updateButtonStage(3);
+        } else if (currentButtonStage < 2 && elapsedMinutes >= triggerSettings.stage2_time) {
+            updateButtonStage(2);
+        } else if (currentButtonStage < 1 && elapsedMinutes >= triggerSettings.stage1_time) {
+            updateButtonStage(1);
+        }
+    }, checkInterval);
+}
+
+// Message-based trigger checking
+function checkMessageTriggers() {
+    if (!triggerSettings || triggerSettings.trigger_type !== 'messages') {
+        console.log('Not checking message triggers: settings not loaded or wrong type');
+        return;
+    }
+    
+    console.log(`Checking message triggers. Current count: ${messageCount}`);
+    console.log(`Trigger thresholds: Stage 1: ${triggerSettings.stage1_messages}, Stage 2: ${triggerSettings.stage2_messages}, Stage 3: ${triggerSettings.stage3_messages}`);
+    console.log(`Current button stage: ${currentButtonStage}`);
+    
+    // Check for stage transitions based on message count
+    if (currentButtonStage < 3 && messageCount >= triggerSettings.stage3_messages) {
+        console.log(`Triggering stage 3 at ${messageCount} messages`);
+        updateButtonStage(3);
+    } else if (currentButtonStage < 2 && messageCount >= triggerSettings.stage2_messages) {
+        console.log(`Triggering stage 2 at ${messageCount} messages`);
+        updateButtonStage(2);
+    } else if (currentButtonStage < 1 && messageCount >= triggerSettings.stage1_messages) {
+        console.log(`Triggering stage 1 at ${messageCount} messages`);
+        updateButtonStage(1);
+    } else {
+        console.log(`No trigger activated. Count: ${messageCount}, Stage: ${currentButtonStage}`);
+    }
+}
+
+// Update button appearance based on stage
+function updateButtonStage(stage) {
+    const finishButton = document.querySelector('.finish-button');
+    if (!finishButton) {
+        console.error('Finish button not found!');
+        return;
+    }
+    
+    console.log(`Updating button to stage ${stage}`);
+    currentButtonStage = stage;
+    
+    switch (stage) {
+        case 1: // Dark button stage
+            console.log('Setting button to stage 1: dark button');
+            finishButton.style.display = 'block';
+            finishButton.style.backgroundColor = '#222';
+            finishButton.classList.remove('bounce');
+            break;
+        case 2: // Orange button stage  
+            console.log('Setting button to stage 2: orange button');
+            finishButton.style.display = 'block';
+            finishButton.style.backgroundColor = '#FF8266';
+            finishButton.classList.remove('bounce');
+            break;
+        case 3: // Bouncing button stage
+            console.log('Setting button to stage 3: bouncing orange button');
+            finishButton.style.display = 'block';
+            finishButton.style.backgroundColor = '#FF8266';
+            finishButton.classList.add('bounce');
+            break;
+        default:
+            console.log('Setting button to default: hidden');
+            finishButton.style.display = 'none';
+            finishButton.style.backgroundColor = 'transparent';
+            finishButton.classList.remove('bounce');
+    }
+    
+    console.log(`Button stage updated to: ${stage}. Display: ${finishButton.style.display}, Background: ${finishButton.style.backgroundColor}`);
+}
+
+// Original hardcoded fallback system (for compatibility)
+function initializeFallbackTriggerSystem() {
+    console.log('Using fallback trigger system');
+    
+    // Count existing user messages
+    const existingUserMessages = document.querySelectorAll('.user-message').length;
+    messageCount = existingUserMessages;
+    currentButtonStage = 0;
+    
+    console.log(`Fallback system: Found ${existingUserMessages} existing user messages.`);
+    
+    const finishButton = document.querySelector('.finish-button');
+    if (finishButton) {
+        finishButton.style.display = 'none';
+        finishButton.style.backgroundColor = 'transparent';
+        finishButton.classList.remove('bounce');
+    }
+}
+
+function checkFallbackTriggers() {
+    const finishButton = document.querySelector('.finish-button');
+    if (!finishButton) return;
+    
+    // Original hardcoded logic
+    if (messageCount >= 18) {
+        finishButton.classList.add('bounce');
+        finishButton.style.backgroundColor = '#FF8266';
+        finishButton.style.display = 'block';
+    } else if (messageCount >= 13) {
+        finishButton.style.backgroundColor = '#FF8266';
+        finishButton.style.display = 'block';
+    } else if (messageCount >= 8) {
+        finishButton.style.backgroundColor = '#222';
+        finishButton.style.display = 'block';
+    } else if (messageCount >= 4) {
+        finishButton.style.display = 'block';
+    }
+}
 
 
 // Setting functions for the cookies for the reset of redirection button so that the moral action prompt arises
@@ -278,10 +618,15 @@ function deleteCookie(name) {
 let resetCount = getCookie('resetCount') ? parseInt(getCookie('resetCount')) : 0;
 
 resetButton.addEventListener('click', function () {
-    submitCount = 0;
-    localStorage.setItem('submitCount', submitCount); // This remains unchanged
+    // Reset trigger system state
+    messageCount = 0;
+    currentButtonStage = 0;
+    sessionStartTime = Date.now(); // Reset session start time
+    
+    // Reset finish button appearance
     finishButton.style.display = 'none';
     finishButton.style.backgroundColor = 'transparent';
+    finishButton.classList.remove('bounce');
 
     // Increment resetCount and update the cookie
     resetCount++;
@@ -331,31 +676,14 @@ resetButton.addEventListener('click', function () {
     }
 });
 
-// Submit count for finish button
-document.getElementById('chat-form').addEventListener('submit', function(event) {
+// Initialize variables
+const finishButton = document.querySelector('.finish-button');
+const chatForm = document.getElementById('chat-form');
+const resetButton = document.getElementById('reset');
+const chatMessagesContainer = document.getElementById('chat-messages-container');
 
-    // Submit count logic
-    submitCount++;
-    localStorage.setItem('submitCount', submitCount); // Store the updated submit count
-
-    // UI changes based on submit count
-    if (submitCount >= 4) {
-        finishButton.style.display = 'block';
-    }
-    if (submitCount >= 8) {
-        finishButton.style.backgroundColor = '#222';
-    }
-    if (submitCount >= 13) {
-        finishButton.style.backgroundColor = '#FF8266';
-    }
-    if (submitCount >= 18) {
-        finishButton.classList.add('bounce');
-    }
-});
-
-// Progress Timer
-
-window.addEventListener("DOMContentLoaded", () => {
+// Progress Timer initialization
+function initializeTimer() {
     let timer = document.getElementById("timer");
     
     // Fetch timer settings from server
@@ -395,7 +723,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
             hideAll();
             timer.closest('.progress').style.display = "flex"; // Show parent container
-            startTimer(timer);
+            const timerDisplay = timer.querySelector('.time');
+            timerDisplay.textContent = `${durationMinutes}:00`; // Set initial display
+            startTimer(timerDisplay);
         })
         .catch(error => {
             console.error('Error fetching timer settings, using defaults:', error);
@@ -431,10 +761,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
             hideAll();
             timer.closest('.progress').style.display = "flex"; // Show parent container
-            startTimer(timer);
+            const timerDisplay = timer.querySelector('.time');
+            timerDisplay.textContent = "10:00"; // Set initial fallback display
+            startTimer(timerDisplay);
         });
-});
-
-document.getElementById("finish-prompt").addEventListener("click", () => {
-    document.querySelector(".progress").style.display = "none";
-});
+}

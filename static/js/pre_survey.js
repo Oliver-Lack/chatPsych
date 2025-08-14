@@ -84,11 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // Next button functionality
-    const nextBtn = document.getElementById('next-btn');
-    const nextDisclaimer = document.getElementById('next-disclaimer');
-
-    // Function to check if all form sections are completed dynamically
+    // Function to check if all form sections are completed
     function checkFormCompletion() {
         if (!consentGiven) return false;
 
@@ -117,35 +113,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
 
-    // Function to show/hide next button
-    function updateNextButton() {
-        if (checkFormCompletion()) {
-            nextBtn.classList.remove('survey-hidden');
-            nextDisclaimer.style.display = 'none';
-        } else {
-            nextBtn.classList.add('survey-hidden');
-            nextDisclaimer.style.display = 'block';
-        }
-    }
-
-    // Add event listeners to all form inputs for dynamic validation
-    function addFormListeners() {
-        const form = document.getElementById('survey-form');
-        const inputs = form.querySelectorAll('input, select, textarea');
-        
-        inputs.forEach(input => {
-            if (input.type === 'radio' || input.type === 'checkbox') {
-                input.addEventListener('change', updateNextButton);
-            } else {
-                input.addEventListener('input', updateNextButton);
-                input.addEventListener('change', updateNextButton);
-            }
-        });
-    }
-
-    // Initialize form listeners
-    addFormListeners();
-
     // Form submission handling
     document.getElementById('survey-form').onsubmit = function(e) {
         e.preventDefault();
@@ -173,6 +140,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function submitSurvey() {
         const formData = new FormData(document.getElementById('survey-form'));
         
+        // Show submission modal
+        showSubmissionModal("Submitting survey...", "Please wait while we process your responses.");
+        
         // Submit form data via AJAX
         fetch('/survey', {
             method: 'POST',
@@ -181,18 +151,38 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert("Survey completed! Redirecting to chat...");
-                window.location.href = data.redirect_url;
+                showSubmissionModal("Survey submitted successfully!", "You will now be connected to the AI system.");
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 2000);
             } else {
+                hideSubmissionModal();
                 alert("Error submitting survey: " + (data.error || "Unknown error"));
             }
         })
         .catch(error => {
             console.error('Error:', error);
+            hideSubmissionModal();
             alert("Error submitting survey. Please try again.");
         });
     }
 
-    // Initial button state update
-    updateNextButton();
+    function showSubmissionModal(message, detail) {
+        const modal = document.getElementById('submission-modal');
+        const messageElement = document.getElementById('submission-message');
+        const detailElement = document.getElementById('submission-detail');
+        
+        if (modal && messageElement && detailElement) {
+            messageElement.textContent = message;
+            detailElement.textContent = detail;
+            modal.classList.remove('survey-hidden');
+        }
+    }
+
+    function hideSubmissionModal() {
+        const modal = document.getElementById('submission-modal');
+        if (modal) {
+            modal.classList.add('survey-hidden');
+        }
+    }
 });

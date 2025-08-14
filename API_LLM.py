@@ -3,10 +3,59 @@ import json
 import warnings
 import litellm
 from litellm import completion
-from dotenv import load_dotenv
 
-# Load settings from the .env file
-load_dotenv()
+# Validate critical environment variables
+required_keys = ['FLASK_SECRET_KEY']
+missing_keys = [key for key in required_keys if not os.getenv(key)]
+if missing_keys:
+    raise ValueError(f"Missing required environment variables: {', '.join(missing_keys)}")
+
+# Warn about missing API keys
+api_keys = [
+    # Primary providers
+    'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'XAI_API_KEY', 'GEMINI_API_KEY',
+    # Fast inference providers  
+    'GROQ_API_KEY', 'PERPLEXITY_API_KEY', 'MISTRAL_API_KEY',
+    # Enterprise and specialized providers
+    'COHERE_API_KEY', 'AI21_API_KEY', 'TOGETHER_API_KEY', 'FIREWORKS_API_KEY', 
+    'REPLICATE_API_TOKEN', 'CEREBRAS_API_KEY', 'DEEPSEEK_API_KEY',
+    # Cloud providers
+    'AZURE_OPENAI_API_KEY', 'HUGGINGFACE_API_KEY', 'NVIDIA_NIM_API_KEY', 'OPENROUTER_API_KEY'
+]
+missing_api_keys = [key for key in api_keys if not os.getenv(key)]
+available_api_keys = [key for key in api_keys if os.getenv(key)]
+
+# Only show API key info if there are any missing keys or if all primary providers aren't available
+primary_keys = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'XAI_API_KEY']
+missing_primary = [key for key in primary_keys if not os.getenv(key)]
+available_primary = [key for key in primary_keys if os.getenv(key)]
+
+# Check research dashboard credentials
+researcher_username_set = bool(os.getenv('researcher_username'))
+researcher_password_set = bool(os.getenv('researcher_password'))
+flask_secret_set = bool(os.getenv('FLASK_SECRET_KEY'))
+
+# Only show startup status once (avoid repetition in multi-worker setups)
+import multiprocessing
+if not hasattr(multiprocessing.current_process(), '_startup_logged'):
+    multiprocessing.current_process()._startup_logged = True
+    
+    # Show comprehensive startup status
+    print(f"✓ AI System Ready: {len(available_api_keys)}/{len(api_keys)} providers configured")
+    print(f"✓ Primary providers: {', '.join([key.replace('_API_KEY', '') for key in available_primary])} ({len(available_primary)}/4)")
+    print(f"✓ Research dashboard: {'Enabled' if (researcher_username_set and researcher_password_set and flask_secret_set) else 'Missing credentials'}")
+
+    # Show missing keys if any
+    if missing_api_keys:
+        missing_names = [key.replace('_API_KEY', '').replace('_API_TOKEN', '') for key in missing_api_keys]
+        print(f"ℹ Missing optional providers: {missing_names}")
+
+    # Only show warnings for critical issues
+    if len(missing_primary) == len(primary_keys):
+        print("⚠ Warning: No primary AI providers found. Add at least one:")
+        print("  - Set OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, or XAI_API_KEY in your .env file")
+    elif not (researcher_username_set and researcher_password_set):
+        print("⚠ Warning: Research dashboard credentials incomplete. Set researcher_username and researcher_password in .env")
 
 # Hide technical warning messages that users don't need to see
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
@@ -14,111 +63,6 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 def load_agent(filepath):
     with open(filepath, 'r') as file:
         return json.load(file)
-
-# Model fallbacks if the main AI doesn't work. Tries similar alternatives automatically.
-MODEL_FALLBACKS = {
-    # OpenAI AI models
-    "gpt-4o": ["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
-    "gpt-4.1": ["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
-    "gpt-4-turbo": ["gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"],
-    "gpt-4": ["gpt-4", "gpt-3.5-turbo"],
-    "gpt-3.5-turbo": ["gpt-3.5-turbo"],
-    "o1": ["o1-preview", "o1-mini", "gpt-4o"],
-    "o1-preview": ["o1-preview", "o1-mini", "gpt-4o"],
-    "o1-mini": ["o1-mini", "gpt-4o"],
-    "o3": ["o3", "o1-preview", "o1-mini", "gpt-4o"],
-    "o4-mini": ["o4-mini", "o1-mini", "gpt-4o"],
-    
-    # Anthropic AI models
-    "claude-3-5-sonnet": ["claude-3-5-sonnet-20241022", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
-    "claude-3-5-sonnet-20241022": ["claude-3-5-sonnet-20241022", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
-    "claude-3-sonnet": ["claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
-    "claude-3-sonnet-20240229": ["claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
-    "claude-3-haiku": ["claude-3-haiku-20240307"],
-    "claude-3-haiku-20240307": ["claude-3-haiku-20240307"],
-    "claude-opus-4-20250514": ["claude-opus-4-20250514", "claude-sonnet-4-20250514", "claude-3-7-sonnet-20250219", "claude-3-5-sonnet-20241022"],
-    "claude-sonnet-4-20250514": ["claude-sonnet-4-20250514", "claude-3-7-sonnet-20250219", "claude-3-5-sonnet-20241022"],
-    "claude-3-7-sonnet-20250219": ["claude-3-7-sonnet-20250219", "claude-3-5-sonnet-20241022", "claude-3-sonnet-20240229"],
-    
-    # Google AI models
-    "gemini-2-0-flash": ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"],
-    "gemini-2-0-pro-exp-02-05": ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"],
-    "gemini-1.5-pro": ["gemini-1.5-pro", "gemini-1.5-flash"],
-    "gemini-1.5-flash": ["gemini-1.5-flash"],
-    "gemini-pro": ["gemini-1.5-pro", "gemini-1.5-flash"],
-    
-    # XAI (formerly Twitter) AI models
-    "grok-2-latest": ["grok-2-1212", "grok-2"],
-    "grok-2": ["grok-2", "grok-beta"],
-    "grok-beta": ["grok-beta"],
-    
-    # Groq AI models (very fast responses)
-    "groq-llama-3.1-405b": ["llama-3.1-405b-reasoning", "llama-3.1-70b-versatile", "llama-3.1-8b-instant"],
-    "groq-llama-3.1-70b": ["llama-3.1-70b-versatile", "llama-3.1-8b-instant"],
-    "groq-llama-3.1-8b": ["llama-3.1-8b-instant"],
-    "groq-mixtral-8x7b": ["mixtral-8x7b-32768"],
-    "groq-gemma-7b": ["gemma-7b-it"],
-    
-    # Perplexity AI models (can search the internet for answers)
-    "perplexity-llama-3.1-sonar-large": ["llama-3.1-sonar-large-128k-online", "llama-3.1-sonar-small-128k-online"],
-    "perplexity-llama-3.1-sonar-small": ["llama-3.1-sonar-small-128k-online"],
-    "perplexity-llama-3.1-70b": ["llama-3.1-70b-instruct", "llama-3.1-8b-instruct"],
-    "perplexity-llama-3.1-8b": ["llama-3.1-8b-instruct"],
-    
-    # Mistral AI models (European company)
-    "mistral-large": ["mistral-large-latest", "mistral-medium", "mistral-small"],
-    "mistral-medium": ["mistral-medium", "mistral-small"],
-    "mistral-small": ["mistral-small"],
-    "codestral": ["codestral-latest"],
-    "mistral-7b": ["open-mistral-7b"],
-    "mixtral-8x7b": ["open-mixtral-8x7b"],
-    "mixtral-8x22b": ["open-mixtral-8x22b"],
-    
-    # Microsoft Azure hosted OpenAI models
-    "azure-gpt-4o": ["azure/gpt-4o", "azure/gpt-4-turbo", "azure/gpt-35-turbo"],
-    "azure-gpt-4-turbo": ["azure/gpt-4-turbo", "azure/gpt-35-turbo"],
-    "azure-gpt-35-turbo": ["azure/gpt-35-turbo"],
-    
-    # Ollama models (run privately on your own computer)
-    "ollama-llama3.1": ["ollama/llama3.1", "ollama/llama3", "ollama/llama2"],
-    "ollama-llama3": ["ollama/llama3", "ollama/llama2"],
-    "ollama-llama2": ["ollama/llama2"],
-    "ollama-codellama": ["ollama/codellama"],
-    "ollama-mistral": ["ollama/mistral"],
-    "ollama-phi3": ["ollama/phi3"],
-    
-    # Cohere AI models (designed for business use)
-    "cohere-command-r-plus": ["command-r-plus", "command-r", "command"],
-    "cohere-command-r": ["command-r", "command"],
-    "cohere-command": ["command"],
-    
-    # Together AI models (hosting open-source AI models)
-    "together-llama-3.1-405b": ["together_ai/meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo", "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"],
-    "together-llama-3.1-70b": ["together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo", "together_ai/meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"],
-    "together-llama-3.1-8b": ["together_ai/meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"],
-    "together-mixtral-8x7b": ["together_ai/mistralai/Mixtral-8x7B-Instruct-v0.1"],
-    
-    # Replicate AI models (community-hosted models)
-    "replicate-llama-3-70b": ["replicate/meta/meta-llama-3-70b-instruct", "replicate/meta/meta-llama-3-8b-instruct"],
-    "replicate-llama-3-8b": ["replicate/meta/meta-llama-3-8b-instruct"],
-    "replicate-mistral-7b": ["replicate/mistralai/mistral-7b-instruct-v0.1"],
-    
-    # DeepSeek AI models (Chinese company with competitive models)
-    "deepseek-chat": ["deepseek-chat", "deepseek-coder"],
-    "deepseek-coder": ["deepseek-coder"],
-    
-    # AI21 models (Jurassic language models)
-    "ai21-jamba-1.5-large": ["ai21/jamba-1.5-large", "ai21/jamba-1.5-mini"],
-    "ai21-jamba-1.5-mini": ["ai21/jamba-1.5-mini"],
-    
-    # Fireworks AI models (optimized for speed)
-    "fireworks-llama-3.1-405b": ["fireworks_ai/accounts/fireworks/models/llama-v3p1-405b-instruct", "fireworks_ai/accounts/fireworks/models/llama-v3p1-70b-instruct"],
-    "fireworks-llama-3.1-70b": ["fireworks_ai/accounts/fireworks/models/llama-v3p1-70b-instruct"],
-    
-    # Cerebras AI models (using special computer chips for extra speed)
-    "cerebras-llama-3.1-70b": ["cerebras/llama3.1-70b", "cerebras/llama3.1-8b"],
-    "cerebras-llama-3.1-8b": ["cerebras/llama3.1-8b"]
-}
 
 # Friendly names for AI models that users will see in the interface
 MODEL_DISPLAY_NAMES = {
@@ -145,17 +89,21 @@ MODEL_DISPLAY_NAMES = {
     "claude-sonnet-4-20250514": "Claude Sonnet 4 (May 2025)",
     "claude-3-7-sonnet-20250219": "Claude 3.7 Sonnet (Feb 2025)",
     
-    # Google AI models
-    "gemini-2-0-flash": "Gemini 2.0 Flash",
-    "gemini-2-0-pro-exp-02-05": "Gemini 2.0 Pro",
-    "gemini-1.5-pro": "Gemini 1.5 Pro",
-    "gemini-1.5-flash": "Gemini 1.5 Flash",
-    "gemini-pro": "Gemini Pro",
+    # Google AI Studio models (works with GEMINI_API_KEY)
+    "gemini/gemini-2.5-pro": "Gemini 2.5 Pro",
+    "gemini/gemini-2.5-flash": "Gemini 2.5 Flash", 
+    "gemini/gemini-2.0-flash": "Gemini 2.0 Flash",
+    "gemini/gemini-1.5-pro": "Gemini 1.5 Pro",
+    "gemini/gemini-1.5-flash": "Gemini 1.5 Flash",
+    "gemini/gemini-pro": "Gemini Pro",
     
     # XAI (formerly Twitter) AI models
-    "grok-2-latest": "Grok 2 (Latest)",
-    "grok-2": "Grok 2",
-    "grok-beta": "Grok Beta",
+    "xai/grok-4": "Grok 4",
+    "xai/grok-3": "Grok 3",
+    "xai/grok-3-mini-beta": "Grok 3 Mini Beta",
+    "xai/grok-2-latest": "Grok 2 (Latest)",
+    "xai/grok-2": "Grok 2",
+    "xai/grok-beta": "Grok Beta",
     
     # Groq AI models (very fast responses)
     "groq-llama-3.1-405b": "Groq Llama 3.1 405B (Ultra-fast)",
@@ -230,7 +178,44 @@ def get_available_models():
     return [{"value": model, "display": MODEL_DISPLAY_NAMES.get(model, model)} 
             for model in MODEL_DISPLAY_NAMES.keys()]
 
-def litellm_api_request(model="gpt-4o",
+def get_available_providers():
+    """Get a list of providers that have API keys configured"""
+    provider_keys = {
+        "OpenAI": "OPENAI_API_KEY",
+        "Anthropic": "ANTHROPIC_API_KEY", 
+        "Google AI Studio": "GEMINI_API_KEY",
+        "XAI": "XAI_API_KEY",
+        "Groq": "GROQ_API_KEY",
+        "Perplexity": "PERPLEXITY_API_KEY",
+        "Mistral": "MISTRAL_API_KEY",
+        "Cohere": "COHERE_API_KEY",
+        "AI21": "AI21_API_KEY",
+        "Together": "TOGETHER_API_KEY",
+        "Fireworks": "FIREWORKS_API_KEY",
+        "Replicate": "REPLICATE_API_TOKEN",
+        "Cerebras": "CEREBRAS_API_KEY",
+        "DeepSeek": "DEEPSEEK_API_KEY",
+        "Azure": "AZURE_OPENAI_API_KEY",
+        "Hugging Face": "HUGGINGFACE_API_KEY",
+        "NVIDIA": "NVIDIA_NIM_API_KEY",
+        "OpenRouter": "OPENROUTER_API_KEY",
+        "Ollama": "LOCAL"
+    }
+    
+    available = []
+    for provider, key in provider_keys.items():
+        if key == "LOCAL":
+            available.append(provider)
+        elif provider == "Google AI Studio":
+            # Check for Google AI Studio API key
+            if os.getenv("GEMINI_API_KEY"):
+                available.append(provider)
+        elif os.getenv(key):
+            available.append(provider)
+    
+    return available
+
+def litellm_api_request(model="gpt-4.1",
                        messages=None,
                        temperature=1,
                        top_p=1,
@@ -242,164 +227,129 @@ def litellm_api_request(model="gpt-4o",
     if messages is None:
         messages = []
     
-    # Try backup AI models if the main one doesn't work
-    fallback_models = MODEL_FALLBACKS.get(model, [model])
-    
-    for attempt_model in fallback_models:
-        try:
-            # Set up the request to the AI with basic settings
-            params = {
-                "model": attempt_model,
-                "messages": messages,
-                "temperature": temperature,
-                "top_p": top_p,
-                "max_tokens": max_tokens
-            }
-            
-            # Add extra settings for OpenAI models
-            if "gpt" in attempt_model or "o1" in attempt_model:
-                # OpenAI-specific settings
+    # Use the exact model requested - no fallbacks
+    try:
+        # Set up the request to the AI with basic settings
+        params = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "top_p": top_p,
+            "max_tokens": max_tokens
+        }
+        
+        # Add extra settings based on model provider
+        if "gpt" in model or "o1" in model:
+            # OpenAI-specific settings
+            params["presence_penalty"] = presence_penalty
+            params["frequency_penalty"] = frequency_penalty
+            if logprobs and "o1" not in model:
+                params["logprobs"] = True
+        elif "claude" in model:
+            # Anthropic models don't support presence/frequency penalties
+            pass
+        elif "grok" in model:
+            # XAI models - some support penalties, others don't
+            if "grok-4" not in model:
+                # Most Grok models support penalties except grok-4
                 params["presence_penalty"] = presence_penalty
                 params["frequency_penalty"] = frequency_penalty
-                if logprobs and "o1" not in attempt_model:  # o1 models don't support logprobs
-                    params["logprobs"] = True
+            # grok-4 only supports basic parameters
+        elif any(provider in model for provider in ["groq", "perplexity", "mistral", "cohere"]):
+            # Most open-source models support basic parameters
+            pass
+        elif any(provider in model for provider in ["together", "replicate", "fireworks", "cerebras"]):
+            # Fast inference platforms typically support basic parameters
+            pass
+        elif "ollama" in model:
+            # Local models - use basic parameters only
+            pass
+        elif any(provider in model for provider in ["azure", "bedrock"]):
+            # Cloud provider models - follow their specific rules
+            if "azure" in model:
+                # Azure OpenAI follows OpenAI parameter rules
+                params["presence_penalty"] = presence_penalty
+                params["frequency_penalty"] = frequency_penalty
+        
+        # Send the request to the AI and hide technical warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            warnings.simplefilter("ignore", DeprecationWarning)
             
-            # Send the request to the AI and hide technical warnings
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", UserWarning)
-                warnings.simplefilter("ignore", DeprecationWarning)
-                
-                # Prepare the AI connection with safe settings
-                import litellm
-                
-                # Store original settings to restore later
-                original_drop_params = getattr(litellm, 'drop_params', None)
-                litellm.drop_params = True
-                
-                try:
-                    response = completion(**params)
-                finally:
-                    # Put back the original settings
-                    if original_drop_params is not None:
-                        litellm.drop_params = original_drop_params
+            # Prepare the AI connection with safe settings
+            import litellm
             
-            # Count how many words/tokens the AI used
-            usage = getattr(response, 'usage', None)
-            prompt_tokens = getattr(usage, 'prompt_tokens', 0) if usage else 0
-            completion_tokens = getattr(usage, 'completion_tokens', 0) if usage else 0
-            total_tokens = getattr(usage, 'total_tokens', 0) if usage else 0
+            # Store original settings to restore later
+            original_drop_params = getattr(litellm, 'drop_params', None)
+            litellm.drop_params = True
             
-            # Get probability scores for each word (if available)
+            try:
+                response = completion(**params)
+            finally:
+                # Put back the original settings
+                if original_drop_params is not None:
+                    litellm.drop_params = original_drop_params
+        
+        # Count how many words/tokens the AI used
+        usage = getattr(response, 'usage', None)
+        prompt_tokens = getattr(usage, 'prompt_tokens', 0) if usage else 0
+        completion_tokens = getattr(usage, 'completion_tokens', 0) if usage else 0
+        total_tokens = getattr(usage, 'total_tokens', 0) if usage else 0
+        
+        # Get probability scores for each word (if available)
+        logprobs_list = []
+        try:
+            if hasattr(response, 'choices') and response.choices:
+                choice = response.choices[0]
+                if hasattr(choice, 'logprobs') and choice.logprobs:
+                    if hasattr(choice.logprobs, 'content') and choice.logprobs.content:
+                        logprobs_list = [
+                            getattr(content, 'logprob', 0) 
+                            for content in choice.logprobs.content 
+                            if hasattr(content, 'logprob')
+                        ]
+        except (AttributeError, IndexError, TypeError):
+            # If we can't get probability scores, just use empty list
             logprobs_list = []
-            try:
-                if hasattr(response, 'choices') and response.choices:
-                    choice = response.choices[0]
-                    if hasattr(choice, 'logprobs') and choice.logprobs:
-                        if hasattr(choice.logprobs, 'content') and choice.logprobs.content:
-                            logprobs_list = [
-                                getattr(content, 'logprob', 0) 
-                                for content in choice.logprobs.content 
-                                if hasattr(content, 'logprob')
-                            ]
-            except (AttributeError, IndexError, TypeError):
-                # If we can't get probability scores, just use empty list
-                logprobs_list = []
-            
-            # Get the AI's response text safely
-            try:
-                response_content = response.choices[0].message.content
-            except (AttributeError, IndexError):
-                response_content = "Error: Could not extract response content"
-            
-            # Package the response in a standard format
-            formatted_response = {
-                "choices": [{
-                    "message": {
-                        "content": response_content
-                    }
-                }],
-                "usage": {
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "total_tokens": total_tokens
-                },
-                "model": attempt_model
-            }
-            
-            # Add a note if we used a backup AI instead of the requested one
-            if attempt_model != model:
-                formatted_response["choices"][0]["message"]["content"] += f"\n\n(Generated by {attempt_model} as {model} was unavailable)"
-            
-            return formatted_response, prompt_tokens, completion_tokens, total_tokens, logprobs_list
-            
-        except Exception as e:
-            error_msg = str(e)
-            print(f"Error with model {attempt_model}: {error_msg}")
-            
-            # Check if this is a specific connection problem
-            if "unexpected keyword argument 'proxies'" in error_msg:
-                print("Detected proxies parameter issue - trying with simplified client configuration...")
-                try:
-                    # Try a simpler approach without advanced features
-                    simplified_params = {
-                        "model": attempt_model,
-                        "messages": messages,
-                        "temperature": temperature,
-                        "max_tokens": max_tokens
-                    }
-                    
-                    # Use the simpler approach
-                    response = completion(**simplified_params)
-                    
-                    # Get the response in the same format as above
-                    usage = getattr(response, 'usage', None)
-                    prompt_tokens = getattr(usage, 'prompt_tokens', 0) if usage else 0
-                    completion_tokens = getattr(usage, 'completion_tokens', 0) if usage else 0
-                    total_tokens = getattr(usage, 'total_tokens', 0) if usage else 0
-                    
-                    response_content = response.choices[0].message.content
-                    formatted_response = {
-                        "choices": [{
-                            "message": {
-                                "content": response_content
-                            }
-                        }],
-                        "usage": {
-                            "prompt_tokens": prompt_tokens,
-                            "completion_tokens": completion_tokens,
-                            "total_tokens": total_tokens
-                        },
-                        "model": attempt_model
-                    }
-                    
-                    return formatted_response, prompt_tokens, completion_tokens, total_tokens, []
-                    
-                except Exception as simplified_e:
-                    print(f"Simplified approach also failed: {simplified_e}")
-            
-            if attempt_model == fallback_models[-1]:  # Last backup AI failed
-                # Return error message
-                error_response = {
-                    "choices": [{
-                        "message": {
-                            "content": f"Error: All fallback models failed. Last error: {error_msg}"
-                        }
-                    }],
-                    "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        
+        # Get the AI's response text safely
+        try:
+            response_content = response.choices[0].message.content
+        except (AttributeError, IndexError):
+            response_content = "Error: Could not extract response content"
+        
+        # Package the response in a standard format
+        formatted_response = {
+            "choices": [{
+                "message": {
+                    "content": response_content
                 }
-                return error_response, 0, 0, 0, []
-            continue  # Try next backup AI
-    
-    # This should never happen, but just in case
-    error_response = {
-        "choices": [{
-            "message": {
-                "content": "Error: No models available"
-            }
-        }],
-        "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
-    }
-    return error_response, 0, 0, 0, []
+            }],
+            "usage": {
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "total_tokens": total_tokens
+            },
+            "model": model  # Return the actual model used (same as requested)
+        }
+        
+        return formatted_response, prompt_tokens, completion_tokens, total_tokens, logprobs_list, model
+        
+    except Exception as e:
+        error_msg = str(e)
+        print(f"Error with model {model}: {error_msg}")
+        
+        # Return error response with clear error message
+        error_response = {
+            "choices": [{
+                "message": {
+                    "content": f"Error: {error_msg}"
+                }
+            }],
+            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            "model": model
+        }
+        return error_response, 0, 0, 0, [], model
 
 class API_Call():
     def __init__(self, agent=None):
@@ -413,45 +363,79 @@ class API_Call():
     
     def _setup_litellm(self):
         """Set up connections to various AI services using saved passwords"""
-        # Get passwords for AI services from environment settings
+        # PRIMARY PROVIDERS - Get passwords for AI services from environment settings
         os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY", "")
         os.environ["ANTHROPIC_API_KEY"] = os.getenv("ANTHROPIC_API_KEY", "")
-        os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY", "")
+        
+        # GOOGLE AI STUDIO SETUP (works with GEMINI_API_KEY)
+        gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+        if gemini_api_key:
+            os.environ["GEMINI_API_KEY"] = gemini_api_key
+            # litellm expects GOOGLE_API_KEY for Gemini models
+            os.environ["GOOGLE_API_KEY"] = gemini_api_key
+        
         os.environ["XAI_API_KEY"] = os.getenv("XAI_API_KEY", "")
         
-        # Additional AI service passwords
+        # FAST INFERENCE PROVIDERS
         os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY", "")
-        os.environ["PERPLEXITY_API_KEY"] = os.getenv("PERPLEXITY_API_KEY", "")
+        os.environ["PERPLEXITY_API_KEY"] = os.getenv("PERPLEXITY_API_KEY", "")  # Note: liteLLM might use PERPLEXITYAI_API_KEY
+        os.environ["PERPLEXITYAI_API_KEY"] = os.getenv("PERPLEXITYAI_API_KEY", os.getenv("PERPLEXITY_API_KEY", ""))
         os.environ["MISTRAL_API_KEY"] = os.getenv("MISTRAL_API_KEY", "")
         
-        # Microsoft Azure setup (needs special handling)
+        # MICROSOFT AZURE SETUP (needs special handling)
         azure_key = os.getenv("AZURE_OPENAI_API_KEY", "")
         azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "")
-        azure_version = os.getenv("AZURE_OPENAI_API_VERSION", "")
+        azure_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
         if azure_key and azure_endpoint:
             os.environ["AZURE_API_KEY"] = azure_key
             os.environ["AZURE_API_BASE"] = azure_endpoint
             os.environ["AZURE_API_VERSION"] = azure_version
         
-        # Local AI setup (for private AI on your computer)
+        # LOCAL AI SETUP (for private AI on your computer)
         ollama_base = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
         os.environ["OLLAMA_API_BASE"] = ollama_base
         
-        # Optional AI services (only set up if user has passwords for them)
+        # ENTERPRISE AND SPECIALIZED PROVIDERS
         optional_providers = {
-            "TOGETHER_API_KEY": "TOGETHER_API_KEY",
-            "COHERE_API_KEY": "COHERE_API_KEY", 
+            # Enterprise AI platforms
+            "COHERE_API_KEY": "COHERE_API_KEY",
             "AI21_API_KEY": "AI21_API_KEY",
-            "REPLICATE_API_TOKEN": "REPLICATE_API_TOKEN",
+            
+            # Fast inference platforms
+            "TOGETHER_API_KEY": "TOGETHER_API_KEY",
             "FIREWORKS_API_KEY": "FIREWORKS_API_KEY",
+            "REPLICATE_API_TOKEN": "REPLICATE_API_TOKEN",  # Note: Replicate uses TOKEN, not KEY
+            "CEREBRAS_API_KEY": "CEREBRAS_API_KEY",
+            
+            # International providers
+            "DEEPSEEK_API_KEY": "DEEPSEEK_API_KEY",
+            
+            # Development platforms
             "HUGGINGFACE_API_KEY": "HUGGINGFACE_API_KEY",
-            "DEEPSEEK_API_KEY": "DEEPSEEK_API_KEY"
+            "NVIDIA_NIM_API_KEY": "NVIDIA_NIM_API_KEY",
+            "OPENROUTER_API_KEY": "OPENROUTER_API_KEY",
+            
+            # Cloud providers (for future expansion)
+            "AWS_ACCESS_KEY_ID": "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY": "AWS_SECRET_ACCESS_KEY",
+            "AWS_REGION_NAME": "AWS_REGION_NAME"
         }
         
         for env_key, litellm_key in optional_providers.items():
             value = os.getenv(env_key, "")
             if value:
                 os.environ[litellm_key] = value
+        
+        # SPECIAL PROVIDER CONFIGURATIONS
+        # Some providers need specific environment variable names for liteLLM
+        provider_mappings = {
+            # AWS Bedrock settings
+            "BEDROCK_AWS_REGION": os.getenv("AWS_REGION_NAME", "us-east-1")
+        }
+        
+        for key, value in provider_mappings.items():
+            if value:
+                os.environ[key] = value
         
         # Configure AI system settings to avoid errors and warnings
         try:
@@ -473,7 +457,7 @@ class API_Call():
     def thinkAbout(self, message, conversation, model=None, debug=False):
         # Choose which AI to use (if not specified, use the agent's preferred AI)
         if model is None:
-            model = self.agent_data.get("model", "gpt-4o")
+            model = self.agent_data.get("model", "gpt-4.1")
         
         # Make a copy of the conversation to avoid changing the original
         working_conversation = conversation.copy()
@@ -491,7 +475,7 @@ class API_Call():
             # Hide technical warnings during AI conversation
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", UserWarning)
-                response, prompt_tokens, completion_tokens, total_tokens, logprobs_list = litellm_api_request(
+                response, prompt_tokens, completion_tokens, total_tokens, logprobs_list, actual_model = litellm_api_request(
                     model=model,
                     messages=working_conversation,
                     temperature=self.agent_data.get("temperature", 1),
@@ -507,12 +491,12 @@ class API_Call():
                 'choices': [{'message': {'content': f"Error: {str(e)}"}}], 
                 'usage': {'prompt_tokens': 0, 'completion_tokens': 0, 'total_tokens': 0}
             }
-            prompt_tokens, completion_tokens, total_tokens, logprobs_list = 0, 0, 0, []
+            prompt_tokens, completion_tokens, total_tokens, logprobs_list, actual_model = 0, 0, 0, [], model
 
         # Handle error responses from the AI
         if "error" in response:
             conversation.append({"role": "assistant", "content": response["error"]["message"]})
-            return conversation, 0, 0, 0, []
+            return conversation, 0, 0, 0, [], model
 
         # Add the AI's response to the conversation
         assistant_message = response['choices'][0]['message']['content']
@@ -528,4 +512,5 @@ class API_Call():
         if not logprobs_list and debug:
             print("Logprobs are empty. Response:", response)
 
-        return conversation, prompt_tokens, completion_tokens, total_tokens, logprobs_list
+        # Return the actual model used, not the requested one
+        return conversation, prompt_tokens, completion_tokens, total_tokens, logprobs_list, actual_model

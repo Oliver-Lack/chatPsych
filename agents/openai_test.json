@@ -1,6 +1,6 @@
 {
-  "filename": "default",
-  "PrePrompt": "",
+  "filename": "openai_test",
+  "PrePrompt": "Say \"--This is a test condition with an OpenaAI agent --\" at the end of every response.",
   "model": "gpt-4.1",
   "temperature": 1,
   "top_p": 1,

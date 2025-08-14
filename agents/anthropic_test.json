@@ -1,6 +1,6 @@
 {
-  "filename": "Trial1",
-  "PrePrompt": "Only say numbers",
+  "filename": "anthropic_test",
+  "PrePrompt": "Say \"--This is a test condition with a anthropic agent --\" at the end of every response.",
   "model": "claude-sonnet-4-20250514",
   "temperature": 1,
   "top_p": 1,
