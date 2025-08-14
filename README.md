@@ -1,8 +1,8 @@
 # chatPsych <img src="static/images/sphere1.png" alt="alt text" width="40"/>
 
-<img src="static/images/Demo/login.png" alt="alt text" width="150"/>
+<img src="static/images/Demo/login.png" alt="alt text" width="1000"/>
 <br>
-<img src="static/images/Demo/chat.png" alt="alt text" width="150"/>
+<img src="static/images/Demo/chat.png" alt="alt text" width="1000"/>
   
 chatPsych is an open-source Artificial Intelligence (AI) interface web app for Human-AI interaction research. 
 For more information: www.chatPsych.org
