@@ -380,7 +380,7 @@ h1 {
   font-size: 12px;
   font-weight: normal;
   margin-top: 20px;
-  margin-right: 5%;
+  margin-right: 10%;
   text-align: right;
 }
 
@@ -514,7 +514,7 @@ button:active {
   position: fixed;
   left: 400px; /* 350px sidebar + 50px spacing */
   top: calc(10vh + 50px); /* header height + 50px spacing */
-  right: 50px; /* 50px spacing from right edge */
+  right: 600px; /* 50px spacing from right edge */
   width: auto;
   margin: 0;
   font-size: 16px;
@@ -2068,7 +2068,7 @@ select option:checked {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 500px;
+  max-width: 400px;
   background-color: #FF8266;
   color: white;
 }
@@ -2110,6 +2110,22 @@ select option:checked {
   background-color: #2196F3;
   color: white;
   border-left: 5px solid #1565C0;
+}
+
+.sphere_research_dashboard {
+  position: fixed;
+  height: 350px;
+  border-radius: 10px;
+  width: auto;
+  top: 30%;
+  left: 75%;
+  overflow: hidden;
+}
+
+.sphere_research_dashboard:hover {
+    filter: grayscale(100%);
+    transform: scale(1.01);
+    cursor: pointer;
 }
 
 /* Survey page styling */

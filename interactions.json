@@ -422,6 +422,37 @@
                     "relativeInteractionJointLogProbability": -24.713691969714418
                 }
             ]
+        },
+        "hferfljk": {
+            "user_id": 3,
+            "interactions": [
+                {
+                    "interaction_type": "message",
+                    "message": "hello",
+                    "response": "Hello! How can I help you today?",
+                    "model": "gpt-4.1",
+                    "temperature": 1,
+                    "prompt_tokens": 8,
+                    "completion_tokens": 9,
+                    "total_tokens": 17,
+                    "logprobs": [
+                        -1.676292231422849e-05,
+                        -4.246537173457909e-06,
+                        -0.0009134899592027068,
+                        0.0,
+                        0.0,
+                        -0.10020667314529419,
+                        0.0,
+                        0.0,
+                        -3.128163257315464e-07
+                    ],
+                    "timestamp": "2025-08-14 22:15:27.131581",
+                    "password": "castle",
+                    "agent_name": "default",
+                    "relativeSequenceJointLogProbability": -0.10114148538031031,
+                    "relativeInteractionJointLogProbability": -0.10114148538031031
+                }
+            ]
         }
     }
 }

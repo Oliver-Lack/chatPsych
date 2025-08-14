@@ -7,6 +7,13 @@ Ensure you have Python 3.8+ installed:
 python3 --version
 ```
 
+## Python virtual environment setup
+
+```bash
+python3.10 -m venv venv
+source venv/bin/activate
+```
+
 ## Install Dependencies
 
 Navigate to the chatPsych directory and install requirements:
@@ -14,6 +21,8 @@ Navigate to the chatPsych directory and install requirements:
 cd /Users/a1809024/Desktop/PMC/AI_Interface/chatPsych
 pip install -r requirements.txt
 ```
+
+Running into errors? Make sure LiteLLM is latest version and Python is below V3.13.
 
 ## Setup Environment Variables
 
@@ -26,9 +35,8 @@ Edit the `.env` file with your actual values:
 ### Local Deployment:
 
 ```bash
-gunicorn -w 4 -b 0.0.0.0:8888 chatPsych:app
+gunicorn -w 4 -b 0.0.0.0:8000 chatPsych:app
 ```
-
 
 ## Login Information
 
