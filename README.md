@@ -1,4 +1,4 @@
-# chatPsych <img src="static/images/sphere1.png" alt="alt text" width="40"/>
+# chatPsych
 
 <img src="static/images/Demo/login.png" alt="alt text" width="800"/>
 <br>
@@ -105,6 +105,8 @@ Prospective updates will include:
 - Please contact [me](https://oliverlack.com) if you want to collaborate/adapt the system for your purpose. Happy to help. 
 - Instances cannot yet run multiple API scripts simultaneously. Make sure the API_Call() in chatPsych.py is set to the correct API script. If agent models do not correspond to the select API_Call(), they will not load. 
 - Before deploying the app, if you want to set the passwords and conditions for your experiments manually, change the static_passwords vector in chatPsych.py.
+
+<img src="static/images/sphere.gif" alt="alt text" width="200"/>
 
 
 **Extra info**
