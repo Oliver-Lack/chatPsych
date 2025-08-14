@@ -1,11 +1,11 @@
 # chatPsych
+  
+chatPsych is an open-source Artificial Intelligence (AI) interface web app for Human-AI interaction research. 
+For more information: www.chatPsych.org
 
 <img src="static/images/Demo/login.png" alt="alt text" width="800"/>
 <br>
 <img src="static/images/Demo/chat.png" alt="alt text" width="800"/>
-  
-chatPsych is an open-source Artificial Intelligence (AI) interface web app for Human-AI interaction research. 
-For more information: www.chatPsych.org
 
 For usage, questions or collaborations, please cite/acknowledge/contact:
 Oliver Lack
