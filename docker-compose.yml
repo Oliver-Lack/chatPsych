@@ -41,8 +41,9 @@ services:
       - LETSENCRYPT_EMAIL=youremail@example.com     # CHANGE THIS for your email
     expose:
       - "8000"
+    volumes:
       - /srv/chatpsych/data:/app/data:rw
-
+      
 # optional: use named volume for internal docker-only data (commented out here since you use host mount)
 # volumes:
 #   data:
