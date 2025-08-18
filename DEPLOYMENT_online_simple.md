@@ -12,8 +12,11 @@ First, Open a terminal in your machine.
 ## 2. Clone and Configure
 
 ```bash
-git clone https://github.com/Oliver-Lack/chatPsych.git
-cd chatPsych
+sudo apt update
+sudo mkdir -p /srv/chatpsych
+sudo chown $USER:$USER /srv/chatpsych
+git clone https://github.com/Oliver-Lack/chatPsych.git /srv/chatpsych
+cd /srv/chatpsych
 cp .env.example .env
 sudo nano .env   # fill in your API keys & secrets then control+O, enter, then control+X
 ```

@@ -37,7 +37,7 @@ services:
     expose:
       - "8000"
     volumes:
-      - data:/app/data
+      - /srv/chatpsych/data:/app/data
 
 volumes:
   data:
