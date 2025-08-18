@@ -35,6 +35,7 @@ services:
     build: .
     env_file:
       - .env
+    restart: always
     environment:
       - VIRTUAL_HOST=chatpsych-playground.org       # CHANGE THIS for your domain
       - LETSENCRYPT_HOST=chatpsych-playground.org   # CHANGE THIS for your domain
