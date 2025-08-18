@@ -13,6 +13,8 @@ First, Open a terminal in your machine.
 
 ```bash
 sudo apt update
+sudo apt install docker.io
+sudo apt install docker-compose
 sudo mkdir -p /srv/chatpsych
 sudo chown $USER:$USER /srv/chatpsych
 git clone https://github.com/Oliver-Lack/chatPsych.git /srv/chatpsych
@@ -29,32 +31,29 @@ Most of the other settings can remain as default.
 
 ```
 sudo nano Dockerfile
-sudo nano .dockerignore
+sudo nano .dockerIgnore
 sudo nano docker-compose.yml
 ```
 
 ## 5. Deploy!
 
 ```bash
-docker compose up --build -d
+sudo docker-compose up --build -d
 ```
-Done. Visit: https://chatpsych-playground.org  
-SSL certs are automatic.
-
-## 7. Backup/Export Data
-
-```bash
-docker compose exec app bash
-# or:
-docker cp chatpsych_app_1:/app/data ./data-copy
-# This copies the data directory from the app to a directory outside the container but in the instance/machine called data-copy
-```
+Done. Visit your machines IP address or set custom domain that you connected.  
 
 ---
 
 Ready to go.
 
 ---
+
+## Want to check the Docker container is up and running?
+
+```bash
+sudo docker-compose ps
+sudo docker-compose logs
+```
 
 ## For extra security...
 While connected to your machine, consider setting up a firewall and fail2ban to protect your services. Also, setting up some swap space can help prevent memory issues.
@@ -82,4 +81,11 @@ sudo nano /etc/fail2ban/jail.local
 sudo systemctl restart fail2ban
 sudo fail2ban-client status
 sudo fail2ban-client status sshd
+```
+
+## Want to Backup/Export Data into new directory called `data-copy`?
+
+```bash
+docker cp chatpsych_app_1:/app/data ./data-copy
+# This copies the data directory from the app to a directory outside the container but in the instance/machine called data-copy
 ```
