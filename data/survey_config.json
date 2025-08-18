@@ -1,0 +1,75 @@
+{
+    "consent": {
+        "content": "Enter consent form content..."
+    },
+    "information": {
+        "content": "Enter the information sheet content that participants will see...",
+        "title": "Enter title for information sheet..."
+    },
+    "sections": {
+        "demographics-1755505621680": {
+            "enabled": true,
+            "fields": {
+                "age": {
+                    "enabled": true,
+                    "max": "99",
+                    "min": "18"
+                },
+                "gender": {
+                    "enabled": true,
+                    "options": [
+                        "Female",
+                        "Male",
+                        "Other",
+                        "Prefer not to say"
+                    ]
+                }
+            },
+            "title": "Demographics",
+            "type": "demographics"
+        }
+    },
+    "settings": {
+        "completionMessage": "Survey completed! Redirecting to chat...",
+        "randomizeItems": false,
+        "randomizeSections": false,
+        "showProgress": true
+    },
+    "title": "Survey Form",
+    "post_survey": {
+        "enabled": true,
+        "title": "Post-Interaction Survey",
+        "settings": {
+            "showProgress": true,
+            "randomizeSections": false,
+            "randomizeItems": false
+        },
+        "completion_settings": {
+            "completion_popup_message": "The study is now complete. Thank you for your participation. If required, your completion code is: xxxx",
+            "finish_button_text": "Finish"
+        },
+        "sections": {
+            "demographics-1755505630791": {
+                "type": "demographics",
+                "enabled": true,
+                "title": "Demographics",
+                "fields": {
+                    "age": {
+                        "enabled": true,
+                        "min": "18",
+                        "max": "99"
+                    },
+                    "gender": {
+                        "enabled": true,
+                        "options": [
+                            "Female",
+                            "Male",
+                            "Other",
+                            "Prefer not to say"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}

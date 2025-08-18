@@ -215,6 +215,82 @@ def get_available_providers():
     
     return available
 
+def get_provider_status():
+    """Get detailed status of each provider (configured or not) - SECURE VERSION
+    
+    Returns a dictionary with provider names as keys and their configuration status.
+    This function is designed to be secure and NEVER exposes actual API keys.
+    """
+    provider_keys = {
+        "OpenAI": "OPENAI_API_KEY",
+        "Anthropic": "ANTHROPIC_API_KEY", 
+        "Google AI Studio": "GEMINI_API_KEY",
+        "XAI": "XAI_API_KEY",
+        "Groq": "GROQ_API_KEY",
+        "Perplexity": "PERPLEXITY_API_KEY",
+        "Mistral": "MISTRAL_API_KEY",
+        "Cohere": "COHERE_API_KEY",
+        "AI21": "AI21_API_KEY",
+        "Together": "TOGETHER_API_KEY",
+        "Fireworks": "FIREWORKS_API_KEY",
+        "Replicate": "REPLICATE_API_TOKEN",
+        "Cerebras": "CEREBRAS_API_KEY",
+        "DeepSeek": "DEEPSEEK_API_KEY",
+        "Azure": "AZURE_OPENAI_API_KEY",
+        "Hugging Face": "HUGGINGFACE_API_KEY",
+        "NVIDIA": "NVIDIA_NIM_API_KEY",
+        "OpenRouter": "OPENROUTER_API_KEY",
+        "Ollama": "LOCAL"
+    }
+    
+    provider_status = {}
+    
+    for provider, env_key in provider_keys.items():
+        if env_key == "LOCAL":
+            # Ollama is always available as it's local
+            provider_status[provider] = {
+                "configured": True,
+                "status": "Available (Local)",
+                "category": "Local AI"
+            }
+        else:
+            # Check if environment variable exists and has a value
+            api_key = os.getenv(env_key)
+            is_configured = bool(api_key and api_key.strip())
+            
+            provider_status[provider] = {
+                "configured": is_configured,
+                "status": "Configured" if is_configured else "Not Configured",
+                "category": get_provider_category(provider)
+            }
+    
+    return provider_status
+
+def get_provider_category(provider_name):
+    """Categorize providers for better organization"""
+    categories = {
+        "OpenAI": "Primary Provider",
+        "Anthropic": "Primary Provider", 
+        "Google AI Studio": "Primary Provider",
+        "XAI": "Primary Provider",
+        "Groq": "Other",
+        "Perplexity": "Other",
+        "Mistral": "Other",
+        "Cohere": "Other",
+        "AI21": "Other",
+        "Together": "Other",
+        "Fireworks": "Other",
+        "Replicate": "Other",
+        "Cerebras": "Other",
+        "DeepSeek": "Other",
+        "Azure": "Other",
+        "Hugging Face": "Other",
+        "NVIDIA": "Other",
+        "OpenRouter": "Other",
+        "Ollama": "Local"
+    }
+    return categories.get(provider_name, "Other")
+
 def litellm_api_request(model="gpt-4.1",
                        messages=None,
                        temperature=1,

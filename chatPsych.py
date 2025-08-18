@@ -15,6 +15,14 @@ load_dotenv(override=True)
 # Import API_LLM after loading environment variables to ensure .env is loaded first
 from API_LLM import API_Call, get_available_models, get_available_providers
 
+# Ensure data directory exists
+def ensure_data_directory():
+    """Create data directory if it doesn't exist"""
+    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+    return data_dir
+
 # Validate critical environment variables
 def validate_env_variables():
     """Validate that critical environment variables are loaded"""
@@ -70,6 +78,18 @@ def get_providers():
     """Return list of providers with configured API keys"""
     providers = get_available_providers()
     return jsonify({'providers': providers}), 200
+
+@app.route('/get-configured-providers', methods=['GET'])
+def get_configured_providers():
+    """Return list of providers with API keys configured (secure - no actual keys exposed)"""
+    try:
+        # Import the function from API_LLM to get provider status
+        from API_LLM import get_provider_status
+        provider_status = get_provider_status()
+        return jsonify({'provider_status': provider_status}), 200
+    except Exception as e:
+        app.logger.error(f"Error getting provider status: {e}")
+        return jsonify({'error': 'Could not retrieve provider status'}), 500
 
 # Legacy API selection for backward compatibility
 @app.route('/select-api', methods=['POST'])
@@ -329,9 +349,11 @@ def calculate_joint_log_probability(logprobs):
 
 # For logging interactions.json, interactions_backup.csv
 def log_user_data(data):
+    data_dir = ensure_data_directory()
+    interactions_json_path = os.path.join(data_dir, 'interactions.json')
 
     try:
-        with open('interactions.json', 'r') as f:
+        with open(interactions_json_path, 'r') as f:
             file_content = f.read().strip()
             interactions = json.loads(file_content) if file_content else {"users": {}}
     except (FileNotFoundError, json.JSONDecodeError):
@@ -357,7 +379,7 @@ def log_user_data(data):
 
     interactions["users"][username]["interactions"].append(interaction_content)
 
-    with open('interactions.json', 'w') as f:
+    with open(interactions_json_path, 'w') as f:
         json.dump(interactions, f, indent=4)
 
     csv_headers = [
@@ -378,7 +400,7 @@ def log_user_data(data):
         data.get('logprobs', [])
     ]
 
-    csv_file = 'interactions_backup.csv'
+    csv_file = os.path.join(data_dir, 'interactions_backup.csv')
     write_headers = not os.path.exists(csv_file)
 
     with open(csv_file, 'a', newline='') as csvfile:
@@ -687,13 +709,66 @@ def log_post_survey_start(username, password, user_id):
     except Exception as e:
         app.logger.error(f"Error logging post-survey start: {e}")
 
+# Function to log popup data to dedicated popup files
+def log_popup_data(data):
+    """Log popup selections to dedicated popup JSON and CSV files"""
+    try:
+        data_dir = ensure_data_directory()
+        popup_json_path = os.path.join(data_dir, 'popup.json')
+        
+        # Load existing popup data
+        try:
+            with open(popup_json_path, 'r') as f:
+                file_content = f.read().strip()
+                popup_data = json.loads(file_content) if file_content else {"popup_responses": []}
+        except (FileNotFoundError, json.JSONDecodeError):
+            popup_data = {"popup_responses": []}
+
+        # Add to popup responses list
+        popup_data["popup_responses"].append(data)
+
+        # Save to popup JSON
+        with open(popup_json_path, 'w') as f:
+            json.dump(popup_data, f, indent=4)
+
+        # Create CSV headers for popup data
+        csv_headers = [
+            "timestamp", "username", "password", "agent_name", "user_id", 
+            "interaction_type", "button_selected"
+        ]
+        
+        csv_data = [
+            data.get('timestamp', ''),
+            data.get('username', ''),
+            data.get('password', ''),
+            data.get('agent_name', ''),
+            data.get('user_id', ''),
+            data.get('interaction_type', ''),
+            data.get('button_selected', '')
+        ]
+
+        csv_file = os.path.join(data_dir, 'popup.csv')
+        write_headers = not os.path.exists(csv_file)
+
+        with open(csv_file, 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            if write_headers:
+                writer.writerow(csv_headers)
+            writer.writerow(csv_data)
+            
+    except Exception as e:
+        app.logger.error(f"Error logging popup data: {e}")
+
 # Function to log survey data to dedicated survey files
 def log_survey_data(data):
     """Log survey responses to dedicated survey JSON and CSV files"""
     try:
+        data_dir = ensure_data_directory()
+        survey_json_path = os.path.join(data_dir, 'survey.json')
+        
         # Load existing survey data
         try:
-            with open('survey.json', 'r') as f:
+            with open(survey_json_path, 'r') as f:
                 file_content = f.read().strip()
                 survey_data = json.loads(file_content) if file_content else {"survey_responses": []}
         except (FileNotFoundError, json.JSONDecodeError):
@@ -740,7 +815,8 @@ def log_survey_data(data):
         survey_data["survey_responses"].append(survey_entry)
 
         # Save to survey JSON
-        with open('survey.json', 'w') as f:
+        survey_json_path = os.path.join(ensure_data_directory(), 'survey.json')
+        with open(survey_json_path, 'w') as f:
             json.dump(survey_data, f, indent=4)
 
         # Create standardized CSV headers
@@ -765,7 +841,7 @@ def log_survey_data(data):
                 csv_headers.append(key)
                 csv_data.append(value)
 
-        csv_file = 'survey.csv'
+        csv_file = os.path.join(ensure_data_directory(), 'survey.csv')
         write_headers = not os.path.exists(csv_file)
 
         with open(csv_file, 'a', newline='') as csvfile:
@@ -800,7 +876,8 @@ def log_survey_start(username, password, user_id):
 def load_survey_config():
     """Load survey configuration from file, return None if not found"""
     try:
-        with open('survey_config.json', 'r') as f:
+        survey_config_path = os.path.join(ensure_data_directory(), 'survey_config.json')
+        with open(survey_config_path, 'r') as f:
             return json.load(f)
     except FileNotFoundError:
         return None
@@ -1213,11 +1290,14 @@ def download_file(filename):
         "client_ip": request.remote_addr
     }
 
-    if not os.path.exists('download_log.json'):
-        with open('download_log.json', 'w') as log_file:
+    data_dir = ensure_data_directory()
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
             log_file.write('')
 
-    with open('download_log.json', 'a') as log_file:
+    with open(download_log_path, 'a') as log_file:
         log_file.write(json.dumps(log_entry) + '\n')
 
     return send_from_directory(directory, filename, as_attachment=True)
@@ -1227,9 +1307,9 @@ def download_file(filename):
 def download_survey_json():
     """Download survey.json file"""
     filename = 'survey.json'
-    directory = '.'
-
-    if not os.path.exists(os.path.join(directory, filename)):
+    data_dir = ensure_data_directory()
+    
+    if not os.path.exists(os.path.join(data_dir, filename)):
         abort(404)
 
     log_entry = {
@@ -1238,22 +1318,24 @@ def download_survey_json():
         "client_ip": request.remote_addr
     }
 
-    if not os.path.exists('download_log.json'):
-        with open('download_log.json', 'w') as log_file:
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
             log_file.write('')
 
-    with open('download_log.json', 'a') as log_file:
+    with open(download_log_path, 'a') as log_file:
         log_file.write(json.dumps(log_entry) + '\n')
 
-    return send_from_directory(directory, filename, as_attachment=True)
+    return send_from_directory(data_dir, filename, as_attachment=True)
 
 @app.route('/download-survey-csv')
 def download_survey_csv():
     """Download survey.csv file"""
     filename = 'survey.csv'
-    directory = '.'
+    data_dir = ensure_data_directory()
 
-    if not os.path.exists(os.path.join(directory, filename)):
+    if not os.path.exists(os.path.join(data_dir, filename)):
         abort(404)
 
     log_entry = {
@@ -1262,14 +1344,69 @@ def download_survey_csv():
         "client_ip": request.remote_addr
     }
 
-    if not os.path.exists('download_log.json'):
-        with open('download_log.json', 'w') as log_file:
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
             log_file.write('')
 
-    with open('download_log.json', 'a') as log_file:
+    with open(download_log_path, 'a') as log_file:
         log_file.write(json.dumps(log_entry) + '\n')
 
-    return send_from_directory(directory, filename, as_attachment=True)
+    return send_from_directory(data_dir, filename, as_attachment=True)
+
+# Popup data download routes
+@app.route('/download-popup-json')
+def download_popup_json():
+    """Download popup.json file"""
+    filename = 'popup.json'
+    data_dir = ensure_data_directory()
+
+    if not os.path.exists(os.path.join(data_dir, filename)):
+        abort(404)
+
+    log_entry = {
+        "filename": filename,
+        "timestamp": datetime.now().isoformat(),
+        "client_ip": request.remote_addr
+    }
+
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
+            log_file.write('')
+
+    with open(download_log_path, 'a') as log_file:
+        log_file.write(json.dumps(log_entry) + '\n')
+
+    return send_from_directory(data_dir, filename, as_attachment=True)
+
+@app.route('/download-popup-csv')
+def download_popup_csv():
+    """Download popup.csv file"""
+    filename = 'popup.csv'
+    data_dir = ensure_data_directory()
+
+    if not os.path.exists(os.path.join(data_dir, filename)):
+        abort(404)
+
+    log_entry = {
+        "filename": filename,
+        "timestamp": datetime.now().isoformat(),
+        "client_ip": request.remote_addr
+    }
+
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
+            log_file.write('')
+
+    with open(download_log_path, 'a') as log_file:
+        log_file.write(json.dumps(log_entry) + '\n')
+
+    return send_from_directory(data_dir, filename, as_attachment=True)
 
 # Timer settings routes
 @app.route('/get-timer-settings', methods=['GET'])
@@ -1546,21 +1683,19 @@ def log_post_chat_popup():
         password = flask_session.get('password', 'Unknown')
         agent_name = flask_session.get('agent', 'Unknown')
         
-        # Prepare survey data for logging
-        survey_data = {
+        # Prepare popup data for logging
+        popup_data = {
+            'timestamp': str(datetime.now()),
             'username': username,
             'password': password,
             'agent_name': agent_name,
             'user_id': user_id,
-            'survey_start_timestamp': '',
-            'survey_end_timestamp': str(datetime.now()),
-            'survey_completed': 'yes',
             'interaction_type': 'post_chat_popup_selection',
-            'post-chat-popup': button_text
+            'button_selected': button_text
         }
         
-        # Log to survey files
-        log_survey_data(survey_data)
+        # Log to popup files
+        log_popup_data(popup_data)
         
         return jsonify({'success': True, 'message': 'Post-chat popup selection logged successfully'})
         
@@ -1581,7 +1716,8 @@ def save_survey_config():
             return jsonify({'success': False, 'error': validation_error}), 400
         
         # Save configuration to JSON file
-        with open('survey_config.json', 'w') as f:
+        survey_config_path = os.path.join(ensure_data_directory(), 'survey_config.json')
+        with open(survey_config_path, 'w') as f:
             json.dump(config, f, indent=4)
         
         # Generate updated pre_survey.html based on configuration
@@ -1648,7 +1784,8 @@ def validate_survey_config(config):
 def get_survey_config():
     """Get current survey configuration"""
     try:
-        with open('survey_config.json', 'r') as f:
+        survey_config_path = os.path.join(ensure_data_directory(), 'survey_config.json')
+        with open(survey_config_path, 'r') as f:
             config = json.load(f)
         return jsonify(config)
     except FileNotFoundError:
@@ -1662,8 +1799,9 @@ def reset_survey_config():
     """Reset survey to default configuration"""
     try:
         # Remove custom configuration file
-        if os.path.exists('survey_config.json'):
-            os.remove('survey_config.json')
+        survey_config_path = os.path.join(ensure_data_directory(), 'survey_config.json')
+        if os.path.exists(survey_config_path):
+            os.remove(survey_config_path)
         
         # Remove custom uploaded files
         upload_dir = 'static/uploads'
@@ -1739,8 +1877,11 @@ def upload_survey_media():
 def survey_system_status():
     """Get status of survey system for debugging"""
     try:
+        data_dir = ensure_data_directory()
+        survey_config_path = os.path.join(data_dir, 'survey_config.json')
+        
         status = {
-            'has_custom_config': os.path.exists('survey_config.json'),
+            'has_custom_config': os.path.exists(survey_config_path),
             'config_readable': False,
             'uploaded_files': {},
             'static_template_exists': os.path.exists('templates/pre_survey.html'),
@@ -1750,7 +1891,7 @@ def survey_system_status():
         # Check if config is readable
         if status['has_custom_config']:
             try:
-                with open('survey_config.json', 'r') as f:
+                with open(survey_config_path, 'r') as f:
                     config = json.load(f)
                 status['config_readable'] = True
                 status['config_sections'] = list(config.get('sections', {}).keys())

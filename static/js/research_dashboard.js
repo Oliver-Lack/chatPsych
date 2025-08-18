@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
     loadRandomisedPassword(); // Add this new function call
     checkUploadedFiles(); // Check for existing uploaded files on page load
     
+    // Load provider status when page is ready
+    console.log('DOM loaded, scheduling provider status load...');
+    setTimeout(() => {
+        console.log('Attempting to load provider status on page load...');
+        loadProviderStatus();
+    }, 500);
+    
     // Update preview when duration changes
     const durationInput = document.getElementById('timer-duration');
     if (durationInput) {
@@ -69,8 +76,203 @@ function loadAvailableModels() {
                     agentModelDropdown.value = 'gpt-4.1';
                 }
             }
+            
+            // Load provider status after models are loaded
+            loadProviderStatus();
         })
         .catch(error => console.error('Error loading models:', error));
+}
+
+function loadProviderStatus() {
+    console.log('loadProviderStatus called');
+    fetch('/get-configured-providers')
+        .then(response => {
+            console.log('Provider status response:', response);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Provider status data:', data);
+            displayProviderStatus(data.provider_status);
+        })
+        .catch(error => {
+            console.error('Error loading provider status:', error);
+            // Display fallback message if provider status can't be loaded
+            displayProviderStatusError();
+        });
+}
+
+function displayProviderStatus(providerStatus) {
+    console.log('displayProviderStatus called with:', providerStatus);
+    
+    // Find the specific model selection section in the agent creation form
+    const modelSections = document.querySelectorAll('#agent-creation .form-section h3');
+    let modelSection = null;
+    
+    // Find the section with "Model Selection" text
+    for (const section of modelSections) {
+        if (section.textContent.trim() === 'Model Selection') {
+            modelSection = section;
+            break;
+        }
+    }
+    
+    if (!modelSection) {
+        console.error('Model Selection section not found');
+        return;
+    }
+    
+    console.log('Found Model Selection section:', modelSection);
+    
+    // Look for existing provider status display and remove it
+    const existingStatus = document.getElementById('provider-status-display');
+    if (existingStatus) {
+        existingStatus.remove();
+    }
+    
+    // Create provider status display
+    const statusContainer = document.createElement('div');
+    statusContainer.id = 'provider-status-display';
+    statusContainer.className = 'provider-status-container';
+    statusContainer.style.backgroundColor = '#333';
+    statusContainer.style.border = 'none';
+
+    // Create header
+    const header = document.createElement('h4');
+    header.textContent = 'Available AI Providers';
+    header.style.marginTop = '20px';
+    header.style.marginBottom = '10px';
+    header.style.color = '#dbd8d8ff';
+    statusContainer.appendChild(header);
+    
+    // Group providers by category
+    const groupedProviders = {};
+    Object.entries(providerStatus).forEach(([provider, status]) => {
+        const category = status.category;
+        if (!groupedProviders[category]) {
+            groupedProviders[category] = [];
+        }
+        groupedProviders[category].push({ provider, ...status });
+    });
+    
+    console.log('Grouped providers:', groupedProviders);
+    
+    // Display providers by category
+    Object.entries(groupedProviders).forEach(([category, providers]) => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'provider-category';
+        categoryDiv.style.marginBottom = '15px';
+        
+        const categoryHeader = document.createElement('h5');
+        categoryHeader.textContent = category;
+        categoryHeader.style.fontSize = '0.9em';
+        categoryHeader.style.fontWeight = 'bold';
+        categoryHeader.style.color = '#dbd8d8ff';
+        categoryHeader.style.marginBottom = '5px';
+        categoryDiv.appendChild(categoryHeader);
+        
+        const providerList = document.createElement('div');
+        providerList.className = 'provider-list';
+        providerList.style.display = 'flex';
+        providerList.style.flexWrap = 'wrap';
+        providerList.style.gap = '8px';
+        
+        providers.forEach(({ provider, configured, status }) => {
+            const badge = document.createElement('span');
+            badge.className = configured ? 'provider-badge configured' : 'provider-badge not-configured';
+            badge.textContent = provider;
+            badge.title = `Status: ${status}`;
+            
+            // Styling
+            badge.style.padding = '4px 8px';
+            badge.style.borderRadius = '12px';
+            badge.style.fontSize = '0.8em';
+            badge.style.fontWeight = '500';
+            
+            if (configured) {
+                badge.style.backgroundColor = '#d4edda';
+                badge.style.color = '#155724';
+                badge.style.border = '1px solid #c3e6cb';
+            } else {
+                badge.style.backgroundColor = '#f8d7da';
+                badge.style.color = '#721c24';
+                badge.style.border = '1px solid #f5c6cb';
+            }
+            
+            providerList.appendChild(badge);
+        });
+        
+        categoryDiv.appendChild(providerList);
+        statusContainer.appendChild(categoryDiv);
+    });
+    
+    // Add a final note about security
+    const securityNote = document.createElement('p');
+    securityNote.innerHTML = '<em style="color: #ffffffff; font-size: 0.8em;">You must setup your API keys in the .env file of the server. This is because they should be securely stored in the server Venv and never exposed in the interface. Green = key set</em>';
+    securityNote.style.marginTop = '15px';
+    securityNote.style.borderTop = '1px solid #eee';
+    securityNote.style.paddingTop = '10px';
+    statusContainer.appendChild(securityNote);
+    
+    // Insert the status display after the model selection section
+    const modelSelectSection = modelSection.parentElement;
+    const quickSelectDiv = modelSelectSection.querySelector('.model-quick-select');
+    if (quickSelectDiv) {
+        console.log('Inserting before quick select');
+        modelSelectSection.insertBefore(statusContainer, quickSelectDiv);
+    } else {
+        console.log('Appending to model section');
+        modelSelectSection.appendChild(statusContainer);
+    }
+    
+    console.log('Provider status display added successfully');
+}
+
+function displayProviderStatusError() {
+    console.log('displayProviderStatusError called');
+    
+    // Find the specific model selection section in the agent creation form
+    const modelSections = document.querySelectorAll('#agent-creation .form-section h3');
+    let modelSection = null;
+    
+    // Find the section with "Model Selection" text
+    for (const section of modelSections) {
+        if (section.textContent.trim() === 'Model Selection') {
+            modelSection = section;
+            break;
+        }
+    }
+    
+    if (!modelSection) {
+        console.error('Model Selection section not found for error display');
+        return;
+    }
+    
+    // Look for existing provider status display and remove it
+    const existingStatus = document.getElementById('provider-status-display');
+    if (existingStatus) {
+        existingStatus.remove();
+    }
+    
+    // Create error message
+    const errorContainer = document.createElement('div');
+    errorContainer.id = 'provider-status-display';
+    errorContainer.style.marginTop = '20px';
+    errorContainer.style.padding = '10px';
+    errorContainer.style.backgroundColor = '#fff3cd';
+    errorContainer.style.border = '1px solid #ffeaa7';
+    errorContainer.style.borderRadius = '4px';
+    
+    const errorMessage = document.createElement('p');
+    errorMessage.innerHTML = '<em>⚠️ Could not load provider status. Please check that the server is running properly.</em>';
+    errorMessage.style.margin = '0';
+    errorMessage.style.color = '#856404';
+    errorContainer.appendChild(errorMessage);
+    
+    // Insert after the model selection section
+    const modelSelectSection = modelSection.parentElement;
+    modelSelectSection.appendChild(errorContainer);
+    
+    console.log('Error message displayed');
 }
 
 // ...existing code...
@@ -152,6 +354,12 @@ function showForm(formId) {
     } else if (formId === 'post-interaction-survey') {
         // Auto-load post-survey configuration
         loadPostSurveyConfiguration();
+    } else if (formId === 'agent-creation') {
+        // Load provider status when showing agent creation form
+        console.log('Agent creation form shown, loading provider status...');
+        setTimeout(() => {
+            loadProviderStatus();
+        }, 100); // Small delay to ensure DOM is ready
     }
 }
 
@@ -459,6 +667,14 @@ function downloadSurveyFile(filename) {
         window.location.href = '/download-survey-json';
     } else if (filename === 'survey.csv') {
         window.location.href = '/download-survey-csv';
+    }
+}
+
+function downloadPopupFile(filename) {
+    if (filename === 'popup.json') {
+        window.location.href = '/download-popup-json';
+    } else if (filename === 'popup.csv') {
+        window.location.href = '/download-popup-csv';
     }
 }
 

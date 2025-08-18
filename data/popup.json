@@ -1,0 +1,13 @@
+{
+    "popup_responses": [
+        {
+            "timestamp": "2025-08-18 17:58:11.037235",
+            "username": "test123",
+            "password": "castle",
+            "agent_name": "default",
+            "user_id": 1,
+            "interaction_type": "post_chat_popup_selection",
+            "button_selected": "Feedback to the AI that it is worthless --This system will then be permenantly deleted--"
+        }
+    ]
+}

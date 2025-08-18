@@ -397,7 +397,7 @@ function insertLoaderPlaceholder() {
     const chatContainer = document.getElementById('chat-messages-container');
     const gifPlaceholder = document.createElement('div');
     gifPlaceholder.className = 'loader-placeholder';
-    gifPlaceholder.innerHTML = '<img src="/static/images/sphere2.gif" alt="AI">';
+    gifPlaceholder.innerHTML = '<img src="/static/images/sphere_chat_2.gif" alt="AI">';
     chatContainer.appendChild(gifPlaceholder);
     chatContainer.scrollTo({
         top: chatContainer.scrollHeight,
