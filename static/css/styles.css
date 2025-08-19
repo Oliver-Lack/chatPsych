@@ -2099,7 +2099,7 @@ select option:checked {
   border-radius: 20px;
   font-size: 0.85em;
   font-weight: 500;
-  cursor: help;
+  cursor: default;
   transition: all 0.2s ease;
   display: inline-block;
 }

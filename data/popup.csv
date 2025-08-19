@@ -1,2 +1,3 @@
 timestamp,username,password,agent_name,user_id,interaction_type,button_selected
 2025-08-18 17:58:11.037235,test123,castle,default,1,post_chat_popup_selection,Feedback to the AI that it is worthless --This system will then be permenantly deleted--
+2025-08-19 16:50:28.272678,test123456,castle,default,2,post_chat_popup_selection,Feedback to the AI that it is useful --This system will then be permenantly deleted--

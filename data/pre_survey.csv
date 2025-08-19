@@ -1,0 +1,2 @@
+username,password,agent_name,user_id,survey_start_timestamp,survey_end_timestamp,survey_completed,interaction_type,pre_age,pre_gender
+test33,castle,default,3,2025-08-19 16:51:50.361546,2025-08-19 16:52:04.276383,yes,pre_interaction_survey,23,male
