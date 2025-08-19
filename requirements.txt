@@ -2,7 +2,7 @@ Flask==3.0.0
 Werkzeug==3.0.1
 PyWebview
 pyinstaller
-openai>=1.88.0
+openai
 requests==2.31.0
 py2app
 gunicorn==21.2.0
