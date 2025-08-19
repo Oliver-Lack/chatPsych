@@ -2,7 +2,7 @@ Flask==3.0.0
 Werkzeug==3.0.1
 PyWebview
 pyinstaller
-openai
+openai==1.3.7
 requests==2.31.0
 py2app
 gunicorn==21.2.0
@@ -11,7 +11,7 @@ flask-bootstrap
 awscli
 anthropic==0.34.2
 google-generativeai==0.8.3
-litellm
+litellm==1.47.1
 python-dotenv==1.0.0
 # Additional dependencies for expanded provider support
 httpx==0.25.2
