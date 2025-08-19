@@ -105,6 +105,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!isChecked) return false;
             } else if (field.type === 'checkbox') {
                 if (!field.checked) return false;
+            } else if (field.type === 'range') {
+                // For slider (range) inputs, check if user has interacted with them
+                const hasInteracted = field.getAttribute('data-slider-interacted') === 'true';
+                if (!hasInteracted) return false;
             } else {
                 if (!field.value.trim()) return false;
             }
@@ -112,6 +116,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return true;
     }
+
+    // Function to update the next button state (called when sliders change)
+    function updateNextButton() {
+        // This function is called by slider interactions to re-check form completion
+        // The actual button state will be checked when user tries to submit
+    }
+
+    // Make updateNextButton available globally for slider interactions
+    window.updateNextButton = updateNextButton;
 
     // Form submission handling
     document.getElementById('survey-form').onsubmit = function(e) {
@@ -124,17 +137,6 @@ document.addEventListener('DOMContentLoaded', function() {
             alert("Please complete all sections of the form before submitting.");
         }
     };
-
-    // Next button click handler
-    if (nextBtn) {
-        nextBtn.onclick = function() {
-            if (checkFormCompletion()) {
-                submitSurvey();
-            } else {
-                alert("Please complete all sections of the form before proceeding.");
-            }
-        };
-    }
 
     // Survey submission function
     function submitSurvey() {

@@ -24,9 +24,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check required fields
         const requiredInputs = form.querySelectorAll('[required]');
         for (let input of requiredInputs) {
-            if (!input.value || (input.type === 'checkbox' && !input.checked)) {
-                console.log('Required field not completed:', input);
-                return false;
+            if (input.type === 'range') {
+                // For slider (range) inputs, check if user has interacted with them
+                const hasInteracted = input.getAttribute('data-slider-interacted') === 'true';
+                if (!hasInteracted) {
+                    console.log('Required slider not interacted with:', input);
+                    return false;
+                }
+            } else if (input.type === 'checkbox') {
+                if (!input.checked) {
+                    console.log('Required checkbox not completed:', input);
+                    return false;
+                }
+            } else {
+                if (!input.value || input.value.trim() === '') {
+                    console.log('Required field not completed:', input);
+                    return false;
+                }
             }
         }
 
@@ -42,6 +56,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return true;
     }
+
+    // Function to update the next button state (called when sliders change)
+    function updateNextButton() {
+        // This function is called by slider interactions to re-check form completion
+        // The actual button state will be checked when user tries to submit
+    }
+
+    // Make updateNextButton available globally for slider interactions
+    window.updateNextButton = updateNextButton;
 
     // Initialize survey functionality
     function initializeSurvey() {

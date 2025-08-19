@@ -759,67 +759,48 @@ def log_popup_data(data):
     except Exception as e:
         app.logger.error(f"Error logging popup data: {e}")
 
-# Function to log survey data to dedicated survey files
-def log_survey_data(data):
-    """Log survey responses to dedicated survey JSON and CSV files"""
+# Function to log pre-survey data to dedicated pre-survey files
+def log_pre_survey_data(data):
+    """Log pre-survey responses to dedicated pre-survey JSON and CSV files"""
     try:
         data_dir = ensure_data_directory()
-        survey_json_path = os.path.join(data_dir, 'survey.json')
+        survey_json_path = os.path.join(data_dir, 'pre_survey.json')
         
-        # Load existing survey data
+        # Load existing pre-survey data
         try:
             with open(survey_json_path, 'r') as f:
                 file_content = f.read().strip()
-                survey_data = json.loads(file_content) if file_content else {"survey_responses": []}
+                survey_data = json.loads(file_content) if file_content else {"pre_survey_responses": []}
         except (FileNotFoundError, json.JSONDecodeError):
-            survey_data = {"survey_responses": []}
+            survey_data = {"pre_survey_responses": []}
 
-        # Determine if this is pre or post survey based on data keys
-        is_post_survey = any(key.startswith('post_') for key in data.keys())
+        # Create pre-survey entry with standardized structure
+        survey_entry = {
+            'username': data.get('pre_username', data.get('username', '')),
+            'password': data.get('pre_password', data.get('password', '')),
+            'agent_name': data.get('pre_agent_name', data.get('agent_name', '')),
+            'user_id': data.get('pre_user_id', data.get('user_id', '')),
+            'survey_start_timestamp': data.get('pre_survey_start_timestamp', data.get('survey_start_timestamp', '')),
+            'survey_end_timestamp': data.get('pre_survey_end_timestamp', data.get('survey_end_timestamp', '')),
+            'survey_completed': data.get('pre_survey_completed', data.get('survey_completed', 'no')),
+            'interaction_type': data.get('pre_interaction_type', 'pre_interaction_survey')
+        }
         
-        # Create survey entry with standardized structure
-        if is_post_survey:
-            # Post-survey data structure
-            survey_entry = {
-                'username': data.get('post_username', ''),
-                'password': data.get('post_password', ''),
-                'agent_name': data.get('post_agent_name', ''),
-                'user_id': data.get('post_user_id', ''),
-                'survey_start_timestamp': data.get('post_survey_start_timestamp', ''),
-                'survey_end_timestamp': data.get('post_survey_end_timestamp', ''),
-                'survey_completed': data.get('post_survey_completed', 'no'),
-                'interaction_type': data.get('post_interaction_type', 'post_interaction_survey')
-            }
-        else:
-            # Pre-survey data structure (with legacy support)
-            survey_entry = {
-                'username': data.get('pre_username', data.get('username', '')),
-                'password': data.get('pre_password', data.get('password', '')),
-                'agent_name': data.get('pre_agent_name', data.get('agent_name', '')),
-                'user_id': data.get('pre_user_id', data.get('user_id', '')),
-                'survey_start_timestamp': data.get('pre_survey_start_timestamp', data.get('survey_start_timestamp', '')),
-                'survey_end_timestamp': data.get('pre_survey_end_timestamp', data.get('survey_end_timestamp', '')),
-                'survey_completed': data.get('pre_survey_completed', data.get('survey_completed', 'no')),
-                'interaction_type': data.get('pre_interaction_type', 'pre_interaction_survey')
-            }
-        
-        # Add all other survey fields dynamically
+        # Add all other survey fields dynamically (excluding system fields)
         for key, value in data.items():
             if key not in ['username', 'password', 'agent_name', 'user_id', 'survey_start_timestamp', 'survey_end_timestamp', 'survey_completed', 
                           'pre_username', 'pre_password', 'pre_agent_name', 'pre_user_id', 'pre_survey_start_timestamp', 'pre_survey_end_timestamp', 'pre_survey_completed',
-                          'post_username', 'post_password', 'post_agent_name', 'post_user_id', 'post_survey_start_timestamp', 'post_survey_end_timestamp', 'post_survey_completed',
-                          'pre_interaction_type', 'post_interaction_type']:
+                          'pre_interaction_type', 'pre_timestamp']:
                 survey_entry[key] = value
 
         # Add to survey responses list
-        survey_data["survey_responses"].append(survey_entry)
+        survey_data["pre_survey_responses"].append(survey_entry)
 
-        # Save to survey JSON
-        survey_json_path = os.path.join(ensure_data_directory(), 'survey.json')
+        # Save to pre-survey JSON
         with open(survey_json_path, 'w') as f:
             json.dump(survey_data, f, indent=4)
 
-        # Create standardized CSV headers
+        # Create standardized CSV headers for pre-survey
         csv_headers = [
             "username", "password", "agent_name", "user_id", "survey_start_timestamp", 
             "survey_end_timestamp", "survey_completed", "interaction_type"
@@ -832,7 +813,7 @@ def log_survey_data(data):
             survey_entry.get('survey_start_timestamp', ''),
             survey_entry.get('survey_end_timestamp', ''),
             survey_entry.get('survey_completed', ''),
-            survey_entry.get('interaction_type', 'survey')
+            survey_entry.get('interaction_type', 'pre_survey')
         ]
         
         # Add all other survey fields dynamically to headers and data
@@ -841,7 +822,7 @@ def log_survey_data(data):
                 csv_headers.append(key)
                 csv_data.append(value)
 
-        csv_file = os.path.join(ensure_data_directory(), 'survey.csv')
+        csv_file = os.path.join(ensure_data_directory(), 'pre_survey.csv')
         write_headers = not os.path.exists(csv_file)
 
         with open(csv_file, 'a', newline='') as csvfile:
@@ -851,7 +832,96 @@ def log_survey_data(data):
             writer.writerow(csv_data)
             
     except Exception as e:
-        app.logger.error(f"Error logging survey data: {e}")
+        app.logger.error(f"Error logging pre-survey data: {e}")
+
+# Function to log post-survey data to dedicated post-survey files
+def log_post_survey_data(data):
+    """Log post-survey responses to dedicated post-survey JSON and CSV files"""
+    try:
+        data_dir = ensure_data_directory()
+        survey_json_path = os.path.join(data_dir, 'post_survey.json')
+        
+        # Load existing post-survey data
+        try:
+            with open(survey_json_path, 'r') as f:
+                file_content = f.read().strip()
+                survey_data = json.loads(file_content) if file_content else {"post_survey_responses": []}
+        except (FileNotFoundError, json.JSONDecodeError):
+            survey_data = {"post_survey_responses": []}
+
+        # Create post-survey entry with standardized structure
+        survey_entry = {
+            'username': data.get('post_username', ''),
+            'password': data.get('post_password', ''),
+            'agent_name': data.get('post_agent_name', ''),
+            'user_id': data.get('post_user_id', ''),
+            'survey_start_timestamp': data.get('post_survey_start_timestamp', ''),
+            'survey_end_timestamp': data.get('post_survey_end_timestamp', ''),
+            'survey_completed': data.get('post_survey_completed', 'no'),
+            'interaction_type': data.get('post_interaction_type', 'post_interaction_survey')
+        }
+        
+        # Add all other survey fields dynamically (excluding system fields)
+        for key, value in data.items():
+            if key not in ['post_username', 'post_password', 'post_agent_name', 'post_user_id', 'post_survey_start_timestamp', 'post_survey_end_timestamp', 'post_survey_completed',
+                          'post_interaction_type', 'post_timestamp']:
+                survey_entry[key] = value
+
+        # Add to survey responses list
+        survey_data["post_survey_responses"].append(survey_entry)
+
+        # Save to post-survey JSON
+        with open(survey_json_path, 'w') as f:
+            json.dump(survey_data, f, indent=4)
+
+        # Create standardized CSV headers for post-survey
+        csv_headers = [
+            "username", "password", "agent_name", "user_id", "survey_start_timestamp", 
+            "survey_end_timestamp", "survey_completed", "interaction_type"
+        ]
+        csv_data = [
+            survey_entry.get('username', ''),
+            survey_entry.get('password', ''),
+            survey_entry.get('agent_name', ''),
+            survey_entry.get('user_id', ''),
+            survey_entry.get('survey_start_timestamp', ''),
+            survey_entry.get('survey_end_timestamp', ''),
+            survey_entry.get('survey_completed', ''),
+            survey_entry.get('interaction_type', 'post_survey')
+        ]
+        
+        # Add all other survey fields dynamically to headers and data
+        for key, value in survey_entry.items():
+            if key not in csv_headers:
+                csv_headers.append(key)
+                csv_data.append(value)
+
+        csv_file = os.path.join(ensure_data_directory(), 'post_survey.csv')
+        write_headers = not os.path.exists(csv_file)
+
+        with open(csv_file, 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            if write_headers:
+                writer.writerow(csv_headers)
+            writer.writerow(csv_data)
+            
+    except Exception as e:
+        app.logger.error(f"Error logging post-survey data: {e}")
+
+# Legacy function to log survey data (kept for backward compatibility)
+def log_survey_data(data):
+    """Legacy function - now routes to appropriate specific logging function based on data type"""
+    try:
+        # Determine if this is pre or post survey based on data keys
+        is_post_survey = any(key.startswith('post_') for key in data.keys())
+        
+        if is_post_survey:
+            log_post_survey_data(data)
+        else:
+            log_pre_survey_data(data)
+            
+    except Exception as e:
+        app.logger.error(f"Error routing survey data: {e}")
 
 # Function to log survey start
 def log_survey_start(username, password, user_id):
@@ -1302,10 +1372,10 @@ def download_file(filename):
 
     return send_from_directory(directory, filename, as_attachment=True)
 
-# Survey data download routes
+# Survey data download routes (legacy - for backward compatibility)
 @app.route('/download-survey-json')
 def download_survey_json():
-    """Download survey.json file"""
+    """Download survey.json file (legacy - contains mixed pre/post survey data)"""
     filename = 'survey.json'
     data_dir = ensure_data_directory()
     
@@ -1331,8 +1401,114 @@ def download_survey_json():
 
 @app.route('/download-survey-csv')
 def download_survey_csv():
-    """Download survey.csv file"""
+    """Download survey.csv file (legacy - contains mixed pre/post survey data)"""
     filename = 'survey.csv'
+    data_dir = ensure_data_directory()
+
+    if not os.path.exists(os.path.join(data_dir, filename)):
+        abort(404)
+
+    log_entry = {
+        "filename": filename,
+        "timestamp": datetime.now().isoformat(),
+        "client_ip": request.remote_addr
+    }
+
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
+            log_file.write('')
+
+    with open(download_log_path, 'a') as log_file:
+        log_file.write(json.dumps(log_entry) + '\n')
+
+    return send_from_directory(data_dir, filename, as_attachment=True)
+
+# Pre-survey data download routes
+@app.route('/download-pre-survey-json')
+def download_pre_survey_json():
+    """Download pre_survey.json file"""
+    filename = 'pre_survey.json'
+    data_dir = ensure_data_directory()
+    
+    if not os.path.exists(os.path.join(data_dir, filename)):
+        abort(404)
+
+    log_entry = {
+        "filename": filename,
+        "timestamp": datetime.now().isoformat(),
+        "client_ip": request.remote_addr
+    }
+
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
+            log_file.write('')
+
+    with open(download_log_path, 'a') as log_file:
+        log_file.write(json.dumps(log_entry) + '\n')
+
+    return send_from_directory(data_dir, filename, as_attachment=True)
+
+@app.route('/download-pre-survey-csv')
+def download_pre_survey_csv():
+    """Download pre_survey.csv file"""
+    filename = 'pre_survey.csv'
+    data_dir = ensure_data_directory()
+
+    if not os.path.exists(os.path.join(data_dir, filename)):
+        abort(404)
+
+    log_entry = {
+        "filename": filename,
+        "timestamp": datetime.now().isoformat(),
+        "client_ip": request.remote_addr
+    }
+
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
+            log_file.write('')
+
+    with open(download_log_path, 'a') as log_file:
+        log_file.write(json.dumps(log_entry) + '\n')
+
+    return send_from_directory(data_dir, filename, as_attachment=True)
+
+# Post-survey data download routes
+@app.route('/download-post-survey-json')
+def download_post_survey_json():
+    """Download post_survey.json file"""
+    filename = 'post_survey.json'
+    data_dir = ensure_data_directory()
+    
+    if not os.path.exists(os.path.join(data_dir, filename)):
+        abort(404)
+
+    log_entry = {
+        "filename": filename,
+        "timestamp": datetime.now().isoformat(),
+        "client_ip": request.remote_addr
+    }
+
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
+            log_file.write('')
+
+    with open(download_log_path, 'a') as log_file:
+        log_file.write(json.dumps(log_entry) + '\n')
+
+    return send_from_directory(data_dir, filename, as_attachment=True)
+
+@app.route('/download-post-survey-csv')
+def download_post_survey_csv():
+    """Download post_survey.csv file"""
+    filename = 'post_survey.csv'
     data_dir = ensure_data_directory()
 
     if not os.path.exists(os.path.join(data_dir, filename)):
@@ -1386,6 +1562,59 @@ def download_popup_json():
 def download_popup_csv():
     """Download popup.csv file"""
     filename = 'popup.csv'
+    data_dir = ensure_data_directory()
+
+    if not os.path.exists(os.path.join(data_dir, filename)):
+        abort(404)
+
+    log_entry = {
+        "filename": filename,
+        "timestamp": datetime.now().isoformat(),
+        "client_ip": request.remote_addr
+    }
+
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
+            log_file.write('')
+
+    with open(download_log_path, 'a') as log_file:
+        log_file.write(json.dumps(log_entry) + '\n')
+
+    return send_from_directory(data_dir, filename, as_attachment=True)
+
+# Interactions data download routes
+@app.route('/download-interactions-json')
+def download_interactions_json():
+    """Download interactions.json file"""
+    filename = 'interactions.json'
+    data_dir = ensure_data_directory()
+
+    if not os.path.exists(os.path.join(data_dir, filename)):
+        abort(404)
+
+    log_entry = {
+        "filename": filename,
+        "timestamp": datetime.now().isoformat(),
+        "client_ip": request.remote_addr
+    }
+
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
+            log_file.write('')
+
+    with open(download_log_path, 'a') as log_file:
+        log_file.write(json.dumps(log_entry) + '\n')
+
+    return send_from_directory(data_dir, filename, as_attachment=True)
+
+@app.route('/download-interactions-csv')
+def download_interactions_csv():
+    """Download interactions_backup.csv file"""
+    filename = 'interactions_backup.csv'
     data_dir = ensure_data_directory()
 
     if not os.path.exists(os.path.join(data_dir, filename)):
@@ -2577,13 +2806,15 @@ def generate_slider_section(config, section_id):
                 </div>
                 <input type="range" id="{section_id}_slider" name="{section_id}_response" 
                        min="{min_val}" max="{max_val}" value="{default_val}" 
-                       class="survey-slider" {required_attr}>
+                       class="survey-slider" {required_attr} data-slider-interacted="false">
                 <div class="slider-value-display">
                     <span id="{section_id}_value">{default_val}</span>
                 </div>
                 <script>
                     document.getElementById('{section_id}_slider').oninput = function() {{
                         document.getElementById('{section_id}_value').textContent = this.value;
+                        this.setAttribute('data-slider-interacted', 'true');
+                        updateNextButton();
                     }}
                 </script>
 '''
@@ -2600,13 +2831,15 @@ def generate_slider_section(config, section_id):
                 </div>
                 <input type="range" id="{section_id}_slider" name="{section_id}_response" 
                        min="1" max="{steps}" value="{default_val}" 
-                       class="survey-slider" {required_attr}>
+                       class="survey-slider" {required_attr} data-slider-interacted="false">
                 <div class="slider-value-display">
                     <span id="{section_id}_value">{default_val}</span>
                 </div>
                 <script>
                     document.getElementById('{section_id}_slider').oninput = function() {{
                         document.getElementById('{section_id}_value').textContent = this.value;
+                        this.setAttribute('data-slider-interacted', 'true');
+                        updateNextButton();
                     }}
                 </script>
 '''

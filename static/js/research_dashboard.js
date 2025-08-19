@@ -667,6 +667,14 @@ function downloadSurveyFile(filename) {
         window.location.href = '/download-survey-json';
     } else if (filename === 'survey.csv') {
         window.location.href = '/download-survey-csv';
+    } else if (filename === 'pre_survey.json') {
+        window.location.href = '/download-pre-survey-json';
+    } else if (filename === 'pre_survey.csv') {
+        window.location.href = '/download-pre-survey-csv';
+    } else if (filename === 'post_survey.json') {
+        window.location.href = '/download-post-survey-json';
+    } else if (filename === 'post_survey.csv') {
+        window.location.href = '/download-post-survey-csv';
     }
 }
 
@@ -675,6 +683,14 @@ function downloadPopupFile(filename) {
         window.location.href = '/download-popup-json';
     } else if (filename === 'popup.csv') {
         window.location.href = '/download-popup-csv';
+    }
+}
+
+function downloadInteractionsFile(filename) {
+    if (filename === 'interactions.json') {
+        window.location.href = '/download-interactions-json';
+    } else if (filename === 'interactions_backup.csv') {
+        window.location.href = '/download-interactions-csv';
     }
 }
 
@@ -2749,7 +2765,15 @@ function handleImageUpload(sectionId) {
         const fileName = file.name;
         const fileSize = (file.size / 1024 / 1024).toFixed(2);
         
-        if (file.type.startsWith('image/')) {
+        // Validate file type using both MIME type and file extension
+        const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        const validImageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+        const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
+        
+        const isValidMimeType = file.type && validImageTypes.includes(file.type.toLowerCase());
+        const isValidExtension = validImageExtensions.includes(fileExtension);
+        
+        if (isValidMimeType || isValidExtension) {
             statusDiv.innerHTML = `<span class="file-uploading">⏳ Uploading ${fileName} (${fileSize} MB)...</span>`;
             statusDiv.className = 'file-status uploading';
             
@@ -2777,12 +2801,13 @@ function handleImageUpload(sectionId) {
                 }
             })
             .catch(error => {
+                console.error('Upload error:', error);
                 statusDiv.innerHTML = `<span class="file-error">✗ Upload failed - please try again</span>`;
                 statusDiv.className = 'file-status error';
                 fileInput.value = '';
             });
         } else {
-            statusDiv.innerHTML = `<span class="file-error">✗ Invalid file type. Please select an image file.</span>`;
+            statusDiv.innerHTML = `<span class="file-error">✗ Invalid file type. Please select an image file (.jpg, .jpeg, .png, .gif, .webp).</span>`;
             statusDiv.className = 'file-status error';
             fileInput.value = '';
         }
@@ -2801,7 +2826,15 @@ function handleVideoUpload(sectionId) {
         const fileName = file.name;
         const fileSize = (file.size / 1024 / 1024).toFixed(2);
         
-        if (file.type.startsWith('video/')) {
+        // Validate file type using both MIME type and file extension
+        const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov', 'video/quicktime'];
+        const validVideoExtensions = ['.mp4', '.webm', '.ogg', '.avi', '.mov'];
+        const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
+        
+        const isValidMimeType = file.type && validVideoTypes.includes(file.type.toLowerCase());
+        const isValidExtension = validVideoExtensions.includes(fileExtension);
+        
+        if (isValidMimeType || isValidExtension) {
             statusDiv.innerHTML = `<span class="file-uploading">⏳ Uploading ${fileName} (${fileSize} MB)...</span>`;
             statusDiv.className = 'file-status uploading';
             
@@ -2829,12 +2862,13 @@ function handleVideoUpload(sectionId) {
                 }
             })
             .catch(error => {
+                console.error('Upload error:', error);
                 statusDiv.innerHTML = `<span class="file-error">✗ Upload failed - please try again</span>`;
                 statusDiv.className = 'file-status error';
                 fileInput.value = '';
             });
         } else {
-            statusDiv.innerHTML = `<span class="file-error">✗ Invalid file type. Please select a video file.</span>`;
+            statusDiv.innerHTML = `<span class="file-error">✗ Invalid file type. Please select a video file (.mp4, .webm, .ogg, .avi, .mov).</span>`;
             statusDiv.className = 'file-status error';
             fileInput.value = '';
         }
@@ -3017,8 +3051,8 @@ function togglePDFResponseType(sectionId, responseType) {
 // Master Survey Toggle Function
 function toggleSurveyEnabled(isEnabled) {
     const configContent = document.getElementById('survey-config-content');
-    const toggleLabel = document.querySelector('.toggle-label');
-    const toggleDescription = document.querySelector('.toggle-description');
+    const toggleLabel = document.querySelector('.master-survey-toggle .toggle-label');
+    const toggleDescription = document.querySelector('.master-survey-toggle .toggle-description');
     
     if (isEnabled) {
         configContent.classList.remove('disabled');
@@ -3979,13 +4013,19 @@ function setDefaultPostChatPopupSettings() {
 function togglePostChatPopupConfig() {
     const enabled = document.getElementById('enable-post-chat-popup').checked;
     const configSection = document.getElementById('post-chat-popup-config');
+    const toggleLabel = document.querySelector('.master-popup-toggle .toggle-label');
+    const toggleDescription = document.querySelector('.master-popup-toggle .toggle-description');
     
     if (enabled) {
         configSection.style.display = 'block';
         configSection.classList.remove('disabled');
+        toggleLabel.textContent = 'Enable Post-Chat Popup';
+        toggleDescription.textContent = 'When disabled, users will go directly to the completion flow without seeing the feedback popup';
     } else {
         configSection.style.display = 'none';
         configSection.classList.add('disabled');
+        toggleLabel.textContent = 'Enable Post-Chat Popup';
+        toggleDescription.textContent = 'Post-chat popup is currently DISABLED - users will go directly to completion flow';
     }
 }
 

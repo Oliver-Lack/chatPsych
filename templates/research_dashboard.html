@@ -40,8 +40,8 @@
                     <a href="https://chatpsych.org" target="_blank">chatPsych.org</a><br>
                 <br>Prospective updates will include: <br>
                 -> Text-audio api integration and graphics <br>
-                -> RAG and CAG tools <br>
-                -> A Docker image to facilitate easier deployment<br><br>
+                -> MCP integration (e.g., RAG, CAG, and web-search) <br>
+                -> Image output integration for multi-modal models<br><br>
                     For usage, questions or collaborations, please cite/acknowledge/contact: <br><br>
                         <Strong>Oliver Lack</Strong><br>
                     Australian Institute for Machine Learning (AIML) | School of Psychology <br>
@@ -540,12 +540,20 @@
             <main id="download-section" class="data-download-section">
                 <h2>Download Data</h2>
                 <h3>Chat Interaction Data</h3>
-                <button class="download-button" onclick="downloadFile('interactions.json')">Download interactions.json</button>
-                <button class="download-button" onclick="downloadFile('interactions_backup.csv')">Download interactions_backup.csv</button>
+                <button class="download-button" onclick="downloadInteractionsFile('interactions.json')">Download interactions.json</button>
+                <button class="download-button" onclick="downloadInteractionsFile('interactions_backup.csv')">Download interactions_backup.csv</button>
                 
-                <h3>Survey Data</h3>
-                <button class="download-button" onclick="downloadSurveyFile('survey.json')">Download survey.json</button>
-                <button class="download-button" onclick="downloadSurveyFile('survey.csv')">Download survey.csv</button>
+                <h3>Pre-Survey Data</h3>
+                <button class="download-button" onclick="downloadSurveyFile('pre_survey.json')">Download pre_survey.json</button>
+                <button class="download-button" onclick="downloadSurveyFile('pre_survey.csv')">Download pre_survey.csv</button>
+                
+                <h3>Post-Survey Data</h3>
+                <button class="download-button" onclick="downloadSurveyFile('post_survey.json')">Download post_survey.json</button>
+                <button class="download-button" onclick="downloadSurveyFile('post_survey.csv')">Download post_survey.csv</button>
+                
+                <h3>Legacy Survey Data (Mixed Pre/Post)</h3>
+                <button class="download-button" onclick="downloadSurveyFile('survey.json')">Download survey.json (legacy)</button>
+                <button class="download-button" onclick="downloadSurveyFile('survey.csv')">Download survey.csv (legacy)</button>
                 
                 <h3>Post-Chat Popup Data</h3>
                 <button class="download-button" onclick="downloadPopupFile('popup.json')">Download popup.json</button>

@@ -55,7 +55,17 @@ sudo docker-compose ps
 sudo docker-compose logs
 ```
 
-## For extra security...
+## Having problems with DNS connection?
+Setting up domain connected to instance may require double checking that you have an A record in your DNS pointing to the machines public IP.
+Also, it may take a while (potentially hours) for DNS settings to propagate. Just do some web troubleshooting to make sure the machine has the correct 
+open ports, and the Lets encrypt SSL certificate sometimes is delayed (some browsers don't like http at all. Lets encrypt makes it https).
+To reset the container, incase you change DNS or instance settings after making the container:
+```bash
+sudo docker-compose down
+sudo docker-compose up -d
+```
+
+## For extra security and backup...
 While connected to your machine, consider setting up a firewall and fail2ban to protect your services. Also, setting up some swap space can help prevent memory issues.
 Here is some example commands you can put into the terminal outside of the Docker container:
 ```bash
