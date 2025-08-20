@@ -1637,6 +1637,33 @@ def download_interactions_csv():
 
     return send_from_directory(data_dir, filename, as_attachment=True)
 
+# Download log route
+@app.route('/download-download-log')
+def download_download_log():
+    """Download download_log.json file"""
+    filename = 'download_log.json'
+    data_dir = ensure_data_directory()
+
+    if not os.path.exists(os.path.join(data_dir, filename)):
+        abort(404)
+
+    log_entry = {
+        "filename": filename,
+        "timestamp": datetime.now().isoformat(),
+        "client_ip": request.remote_addr
+    }
+
+    download_log_path = os.path.join(data_dir, 'download_log.json')
+    
+    if not os.path.exists(download_log_path):
+        with open(download_log_path, 'w') as log_file:
+            log_file.write('')
+
+    with open(download_log_path, 'a') as log_file:
+        log_file.write(json.dumps(log_entry) + '\n')
+
+    return send_from_directory(data_dir, filename, as_attachment=True)
+
 # Timer settings routes
 @app.route('/get-timer-settings', methods=['GET'])
 def get_timer_settings():

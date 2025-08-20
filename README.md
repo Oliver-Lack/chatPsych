@@ -111,6 +111,6 @@ Prospective updates will include:
 
 
 **Extra info**
-- An instance with Wordie will total 3.7gb of volume storage before any data is logged. 
+- An instance with Wordie will total around 5gb of volume storage before any data is logged. 
 
 

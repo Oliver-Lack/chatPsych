@@ -694,6 +694,12 @@ function downloadInteractionsFile(filename) {
     }
 }
 
+function downloadLogFile(filename) {
+    if (filename === 'download_log.json') {
+        window.location.href = '/download-download-log';
+    }
+}
+
 document.getElementById('model').addEventListener('change', function() {
     document.getElementById('custom-model').style.display = this.value === 'custom' ? 'block' : 'none';
   });
