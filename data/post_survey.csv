@@ -1,2 +1,0 @@
-username,password,agent_name,user_id,survey_start_timestamp,survey_end_timestamp,survey_completed,interaction_type,post_age,post_gender
-test123456,castle,default,2,2025-08-19 16:50:29.859327,2025-08-19 16:50:41.731915,yes,post_interaction_survey,66,other

@@ -1,7 +1,7 @@
 # chatPsych
   
 chatPsych is an open-source Artificial Intelligence (AI) interface web app for Human-AI interaction research. 
-<br> For more information: www.chatPsych.org or https://chatpsych.github.io/
+<br> For more information: www.chatPsych.org
 
 <img src="static/images/Demo/login.png" alt="alt text" width="800"/>
 <br>
@@ -22,6 +22,7 @@ chatPsych is an AI interface designed for experimental research. It collects a p
 
 The code is adaptable for various experimental manipulations. For example, see "Wordie-AI" (https://wordie.xyz/). The interface offers opportunity for experimental manipulations that use prompt engineering, API call parameters, AI model selection, communication modalities (audio/text), custom vector store retrieval, hardcoded experimental AI responses/prompts, and more.
    
+<img src="static/images/sphere.gif" alt="alt text" width="180"/>
 
 ## Core features of chatPsych:  
   
@@ -106,11 +107,8 @@ Prospective updates will include:
 - Please contact [me](https://oliverlack.com) if you want to collaborate/adapt the system for your purpose. Happy to help. 
 - Instances cannot yet run multiple API scripts simultaneously. Make sure the API_Call() in chatPsych.py is set to the correct API script. If agent models do not correspond to the select API_Call(), they will not load. 
 - Before deploying the app, if you want to set the passwords and conditions for your experiments manually, change the static_passwords vector in chatPsych.py.
-
-<img src="static/images/sphere.gif" alt="alt text" width="200"/>
-
-
-**Extra info**
 - An instance with Wordie will total around 5gb of volume storage before any data is logged. 
+- IMPORTANT: The survey data files will be messed up if you run multiple different surveys per deployment. 
+To save errors in column names in your data files, make sure to only setup one survey configuration per deployment. 
 
 
