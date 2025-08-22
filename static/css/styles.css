@@ -332,7 +332,7 @@ h1 {
   background-color: #222;
   color: #ffffff;
   position: flex;
-  border: 10px solid #de222c;
+  border: 2px solid #de222c;
   padding: 130px 20px;
   cursor: pointer;
   text-transform: none;

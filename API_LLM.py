@@ -105,27 +105,27 @@ MODEL_DISPLAY_NAMES = {
     "xai/grok-2": "Grok 2",
     "xai/grok-beta": "Grok Beta",
     
-    # Groq AI models (very fast responses)
-    "groq-llama-3.1-405b": "Groq Llama 3.1 405B (Ultra-fast)",
-    "groq-llama-3.1-70b": "Groq Llama 3.1 70B (Fast)",
-    "groq-llama-3.1-8b": "Groq Llama 3.1 8B (Instant)",
-    "groq-mixtral-8x7b": "Groq Mixtral 8x7B (Fast)",
-    "groq-gemma-7b": "Groq Gemma 7B (Fast)",
+    # Groq AI models (very fast responses) - CORRECTED PREFIXES
+    "groq/llama-3.1-405b-reasoning": "Groq Llama 3.1 405B (Ultra-fast)",
+    "groq/llama-3.1-70b-versatile": "Groq Llama 3.1 70B (Fast)",  
+    "groq/llama-3.1-8b-instant": "Groq Llama 3.1 8B (Instant)",
+    "groq/mixtral-8x7b-32768": "Groq Mixtral 8x7B (Fast)",
+    "groq/gemma-7b-it": "Groq Gemma 7B (Fast)",
     
-    # Perplexity AI models (can search the internet for answers)
-    "perplexity-llama-3.1-sonar-large": "Perplexity Sonar Large (Online)",
-    "perplexity-llama-3.1-sonar-small": "Perplexity Sonar Small (Online)",
-    "perplexity-llama-3.1-70b": "Perplexity Llama 3.1 70B",
-    "perplexity-llama-3.1-8b": "Perplexity Llama 3.1 8B",
+    # Perplexity AI models (can search the internet for answers) - CORRECTED PREFIXES
+    "perplexity/sonar-pro": "Perplexity Sonar Pro (Online)",
+    "perplexity/sonar": "Perplexity Sonar (Online)",
+    "perplexity/sonar-reasoning": "Perplexity Sonar Reasoning (Online)",
+    "perplexity/r1-1776": "Perplexity R1-1776",
     
-    # Mistral AI models (European company)
-    "mistral-large": "Mistral Large (Latest)",
-    "mistral-medium": "Mistral Medium",
-    "mistral-small": "Mistral Small",
-    "codestral": "Codestral (Code Specialist)",
-    "mistral-7b": "Mistral 7B (Open)",
-    "mixtral-8x7b": "Mixtral 8x7B (Open)",
-    "mixtral-8x22b": "Mixtral 8x22B (Open)",
+    # Mistral AI models (European company) - CORRECTED PREFIXES
+    "mistral/mistral-large-latest": "Mistral Large (Latest)",
+    "mistral/mistral-medium-latest": "Mistral Medium",
+    "mistral/mistral-small-latest": "Mistral Small",
+    "mistral/codestral-latest": "Codestral (Code Specialist)",
+    "mistral/open-mistral-7b": "Mistral 7B (Open)",
+    "mistral/open-mixtral-8x7b": "Mixtral 8x7B (Open)",
+    "mistral/open-mixtral-8x22b": "Mixtral 8x22B (Open)",
     
     # Microsoft Azure hosted OpenAI models
     "azure-gpt-4o": "Azure GPT-4o",
@@ -140,37 +140,38 @@ MODEL_DISPLAY_NAMES = {
     "ollama-mistral": "Ollama Mistral (Local)",
     "ollama-phi3": "Ollama Phi-3 (Local)",
     
-    # Cohere AI models (designed for business use)
-    "cohere-command-r-plus": "Cohere Command R+ (Enterprise)",
-    "cohere-command-r": "Cohere Command R (Enterprise)",
-    "cohere-command": "Cohere Command (Enterprise)",
+    # Cohere AI models (designed for business use) - CORRECTED PREFIXES
+    "command-r-plus": "Cohere Command R+ (Enterprise)",
+    "command-r": "Cohere Command R (Enterprise)", 
+    "command-a-03-2025": "Cohere Command A (Mar 2025)",
     
-    # Together AI models (hosting open-source AI models)
-    "together-llama-3.1-405b": "Together AI Llama 3.1 405B",
-    "together-llama-3.1-70b": "Together AI Llama 3.1 70B",
-    "together-llama-3.1-8b": "Together AI Llama 3.1 8B",
-    "together-mixtral-8x7b": "Together AI Mixtral 8x7B",
+    # Together AI models (hosting open-source AI models) - CORRECTED PREFIXES
+    "together_ai/meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo": "Together AI Llama 3.1 405B",
+    "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo": "Together AI Llama 3.1 70B",
+    "together_ai/meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo": "Together AI Llama 3.1 8B",
+    "together_ai/mistralai/Mixtral-8x7B-Instruct-v0.1": "Together AI Mixtral 8x7B",
     
-    # Replicate AI models (community-hosted models)
-    "replicate-llama-3-70b": "Replicate Llama 3 70B",
-    "replicate-llama-3-8b": "Replicate Llama 3 8B",
-    "replicate-mistral-7b": "Replicate Mistral 7B",
+    # Replicate AI models (community-hosted models) - CORRECTED PREFIXES
+    "replicate/meta/meta-llama-3-70b-instruct": "Replicate Llama 3 70B",
+    "replicate/meta/meta-llama-3-8b-instruct": "Replicate Llama 3 8B",
+    "replicate/mistralai/mistral-7b-instruct-v0.1": "Replicate Mistral 7B",
     
-    # DeepSeek AI models (Chinese company with competitive models)
-    "deepseek-chat": "DeepSeek Chat",
-    "deepseek-coder": "DeepSeek Coder",
+    # DeepSeek AI models (Chinese company with competitive models) - CORRECTED PREFIXES
+    "deepseek/deepseek-chat": "DeepSeek Chat",
+    "deepseek/deepseek-coder": "DeepSeek Coder",
+    "deepseek/deepseek-reasoner": "DeepSeek Reasoner",
     
-    # AI21 models (Jurassic language models)
-    "ai21-jamba-1.5-large": "AI21 Jamba 1.5 Large",
-    "ai21-jamba-1.5-mini": "AI21 Jamba 1.5 Mini",
+    # AI21 models (Jurassic language models) - CORRECTED PREFIXES  
+    "ai21/jamba-1.5-large": "AI21 Jamba 1.5 Large",
+    "ai21/jamba-1.5-mini": "AI21 Jamba 1.5 Mini",
     
-    # Fireworks AI models (optimized for speed)
-    "fireworks-llama-3.1-405b": "Fireworks AI Llama 3.1 405B",
-    "fireworks-llama-3.1-70b": "Fireworks AI Llama 3.1 70B",
+    # Fireworks AI models (optimized for speed) - CORRECTED PREFIXES
+    "fireworks_ai/accounts/fireworks/models/llama-v3p2-90b-instruct": "Fireworks AI Llama 3.2 90B",
+    "fireworks_ai/accounts/fireworks/models/llama-v3p1-70b-instruct": "Fireworks AI Llama 3.1 70B",
     
-    # Cerebras AI models (using special computer chips for extra speed)
-    "cerebras-llama-3.1-70b": "Cerebras Llama 3.1 70B (Ultra-fast)",
-    "cerebras-llama-3.1-8b": "Cerebras Llama 3.1 8B (Ultra-fast)"
+    # Cerebras AI models (using special computer chips for extra speed) - CORRECTED PREFIXES
+    "cerebras/llama3.1-70b": "Cerebras Llama 3.1 70B (Ultra-fast)",
+    "cerebras/llama3.1-8b": "Cerebras Llama 3.1 8B (Ultra-fast)"
 }
 
 def get_available_models():
@@ -186,13 +187,13 @@ def get_available_providers():
         "Google AI Studio": "GEMINI_API_KEY",
         "XAI": "XAI_API_KEY",
         "Groq": "GROQ_API_KEY",
-        "Perplexity": "PERPLEXITY_API_KEY",
+        "Perplexity": "PERPLEXITY_API_KEY",  # Check both names
         "Mistral": "MISTRAL_API_KEY",
         "Cohere": "COHERE_API_KEY",
         "AI21": "AI21_API_KEY",
-        "Together": "TOGETHER_API_KEY",
-        "Fireworks": "FIREWORKS_API_KEY",
-        "Replicate": "REPLICATE_API_TOKEN",
+        "Together": "TOGETHER_API_KEY",  # Check both names
+        "Fireworks": "FIREWORKS_API_KEY",  # Check both names
+        "Replicate": "REPLICATE_API_TOKEN",  # User might use either name
         "Cerebras": "CEREBRAS_API_KEY",
         "DeepSeek": "DEEPSEEK_API_KEY",
         "Azure": "AZURE_OPENAI_API_KEY",
@@ -209,6 +210,22 @@ def get_available_providers():
         elif provider == "Google AI Studio":
             # Check for Google AI Studio API key
             if os.getenv("GEMINI_API_KEY"):
+                available.append(provider)
+        elif provider == "Perplexity":
+            # Check both possible key names for Perplexity
+            if os.getenv("PERPLEXITY_API_KEY") or os.getenv("PERPLEXITYAI_API_KEY"):
+                available.append(provider)
+        elif provider == "Together":
+            # Check both possible key names for Together AI
+            if os.getenv("TOGETHER_API_KEY") or os.getenv("TOGETHERAI_API_KEY"):
+                available.append(provider)
+        elif provider == "Fireworks":
+            # Check both possible key names for Fireworks AI
+            if os.getenv("FIREWORKS_API_KEY") or os.getenv("FIREWORKS_AI_API_KEY"):
+                available.append(provider)
+        elif provider == "Replicate":
+            # Check both possible key names for Replicate
+            if os.getenv("REPLICATE_API_TOKEN") or os.getenv("REPLICATE_API_KEY"):
                 available.append(provider)
         elif os.getenv(key):
             available.append(provider)
@@ -254,9 +271,20 @@ def get_provider_status():
                 "category": "Local AI"
             }
         else:
-            # Check if environment variable exists and has a value
-            api_key = os.getenv(env_key)
-            is_configured = bool(api_key and api_key.strip())
+            # Check if environment variable exists and has a value (with fallback checks)
+            is_configured = False
+            
+            if provider == "Perplexity":
+                is_configured = bool((os.getenv("PERPLEXITY_API_KEY") or os.getenv("PERPLEXITYAI_API_KEY", "")).strip())
+            elif provider == "Together":
+                is_configured = bool((os.getenv("TOGETHER_API_KEY") or os.getenv("TOGETHERAI_API_KEY", "")).strip())
+            elif provider == "Fireworks":
+                is_configured = bool((os.getenv("FIREWORKS_API_KEY") or os.getenv("FIREWORKS_AI_API_KEY", "")).strip())
+            elif provider == "Replicate":
+                is_configured = bool((os.getenv("REPLICATE_API_TOKEN") or os.getenv("REPLICATE_API_KEY", "")).strip())
+            else:
+                api_key = os.getenv(env_key)
+                is_configured = bool(api_key and api_key.strip())
             
             provider_status[provider] = {
                 "configured": is_configured,
@@ -452,10 +480,22 @@ class API_Call():
         
         os.environ["XAI_API_KEY"] = os.getenv("XAI_API_KEY", "")
         
+        # XAI API BASE URL SETUP (required for XAI provider to work)
+        xai_api_key = os.getenv("XAI_API_KEY", "")
+        if xai_api_key:
+            # litellm requires XAI_API_BASE for XAI provider
+            os.environ["XAI_API_BASE"] = os.getenv("XAI_API_BASE", "https://api.x.ai/v1")
+        
         # FAST INFERENCE PROVIDERS
         os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY", "")
-        os.environ["PERPLEXITY_API_KEY"] = os.getenv("PERPLEXITY_API_KEY", "")  # Note: liteLLM might use PERPLEXITYAI_API_KEY
+        
+        # PERPLEXITY SETUP (litellm expects PERPLEXITYAI_API_KEY)
+        perplexity_key = os.getenv("PERPLEXITY_API_KEY", "")
+        if perplexity_key:
+            os.environ["PERPLEXITYAI_API_KEY"] = perplexity_key
+        # Also check if user set the correct key name
         os.environ["PERPLEXITYAI_API_KEY"] = os.getenv("PERPLEXITYAI_API_KEY", os.getenv("PERPLEXITY_API_KEY", ""))
+        
         os.environ["MISTRAL_API_KEY"] = os.getenv("MISTRAL_API_KEY", "")
         
         # MICROSOFT AZURE SETUP (needs special handling)
@@ -477,10 +517,10 @@ class API_Call():
             "COHERE_API_KEY": "COHERE_API_KEY",
             "AI21_API_KEY": "AI21_API_KEY",
             
-            # Fast inference platforms
-            "TOGETHER_API_KEY": "TOGETHER_API_KEY",
-            "FIREWORKS_API_KEY": "FIREWORKS_API_KEY",
-            "REPLICATE_API_TOKEN": "REPLICATE_API_TOKEN",  # Note: Replicate uses TOKEN, not KEY
+            # Fast inference platforms - CORRECTED MAPPINGS
+            "TOGETHER_API_KEY": "TOGETHERAI_API_KEY",  # litellm expects TOGETHERAI_API_KEY
+            "FIREWORKS_API_KEY": "FIREWORKS_AI_API_KEY",  # litellm expects FIREWORKS_AI_API_KEY
+            "REPLICATE_API_TOKEN": "REPLICATE_API_KEY",  # litellm expects REPLICATE_API_KEY (not TOKEN)
             "CEREBRAS_API_KEY": "CEREBRAS_API_KEY",
             
             # International providers
