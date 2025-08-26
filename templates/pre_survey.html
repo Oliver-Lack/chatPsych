@@ -18,8 +18,8 @@
             
             
             
-            <button id="consent-agree-btn" class="survey-btn survey-btn-agree">Agree</button>
-            <button id="consent-quit-btn" class="survey-btn survey-btn-quit">Quit</button>
+            <button id="consent-agree-btn" class="survey-button survey-btn-agree">Agree</button>
+            <button id="consent-quit-btn" class="survey-button survey-btn-quit">Quit</button>
         </div>
     </div>
 
@@ -27,8 +27,8 @@
     <div id="quit-confirm-popup" class="survey-quit-confirm-popup survey-hidden">
         <div class="survey-popup-content">
             <h3>Are you sure you want to quit participation in this study?</h3>
-            <button id="quit-confirm-yes-btn" class="survey-btn survey-btn-quit">Yes, Quit</button>
-            <button id="quit-confirm-no-btn" class="survey-btn survey-btn-cancel">No, Go Back</button>
+            <button id="quit-confirm-yes-btn" class="survey-button survey-btn-quit">Yes, Quit</button>
+            <button id="quit-confirm-no-btn" class="survey-button survey-btn-cancel">No, Go Back</button>
         </div>
     </div>
 
@@ -38,7 +38,8 @@
         </div>
         
         <div class="survey-content">
-            <form id="survey-form">
+            <form id="survey-form" class="survey-form">
+                <div id="survey-sections" class="survey-sections">
 
         <!-- Demographics Section -->
         <div class="survey-section" id="demographics-section">
@@ -91,7 +92,8 @@
             </select><br><br>
         </div>
 
-                <div class="submit-section">
+                </div>
+                <div class="survey-navigation">
                     <button type="submit" id="submit-btn">Submit Survey</button>
                 </div>
             </form>

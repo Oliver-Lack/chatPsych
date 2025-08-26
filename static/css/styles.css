@@ -2608,23 +2608,42 @@ body.survey-page {
     width: 16px;
     height: 16px;
   }
+
+  /* Responsive styling for both survey forms */
+  .survey-navigation,
+  .submit-section {
+    margin: 20px -20px -20px -20px;
+    padding: 20px 0;
+  }
+
+  .survey-navigation #submit-btn,
+  .submit-section #submit-btn {
+    padding: 15px 30px;
+    font-size: 16px;
+    margin: 5px;
+  }
+
+  .survey-sections .survey-section,
+  .survey-section {
+    margin: 20px 0;
+    padding: 25px 20px;
+  }
+
+  .survey-button,
+  .survey-btn,
+  .survey-consent-button {
+    padding: 12px 20px;
+    font-size: 14px;
+    margin: 8px 5px;
+  }
+
+  .survey-popup-content {
+    margin: 10px;
+    padding: 20px;
+  }
 }
 
-/* Survey Button Styling */
-.survey-btn {
-  padding: 15px 30px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  font-family: 'Helvetica', sans-serif;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
+/* Survey Button Styling - Updated to match unified approach */
 .survey-btn-agree {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -4309,8 +4328,8 @@ input:checked + .slider-switch:before {
   backdrop-filter: blur(5px);
 }
 
-/* Make survey-consent-button (post-survey) look like survey-btn (pre-survey) */
-.survey-consent-button {
+/* Unified button styling for both surveys */
+.survey-button, .survey-btn, .survey-consent-button {
   padding: 15px 30px;
   border: none;
   border-radius: 8px;
@@ -4322,6 +4341,31 @@ input:checked + .slider-switch:before {
   margin: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Submit button styling for both surveys */
+.survey-navigation #submit-btn,
+.submit-section #submit-btn {
+  padding: 18px 50px;
+  font-size: 18px;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  margin: 10px;
+}
+
+.survey-navigation #submit-btn:hover,
+.submit-section #submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+  background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
 }
 
 .survey-consent-button.agree {
@@ -4369,6 +4413,25 @@ input:checked + .slider-switch:before {
   margin: 40px -50px -40px -50px;
   border-radius: 0 0 12px 12px;
   border-top: 3px solid #3498db;
+}
+
+/* Ensure survey-sections container has proper styling for dynamic content */
+.survey-sections {
+  /* Inherit parent styling, no additional margins to avoid conflicts */
+  background: transparent;
+}
+
+/* Ensure dynamic survey sections match static ones exactly */
+.survey-sections .survey-section {
+  /* All survey-section styling is already defined globally, 
+     but ensure dynamic sections inherit properly */
+  background: #ffffff;
+  margin: 30px 0;
+  padding: 40px 50px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(52, 152, 219, 0.2);
+  transition: all 0.3s ease;
 }
 
 /* Make progress-indicator elements properly styled */
@@ -4462,7 +4525,6 @@ input:checked + .slider-switch:before {
 
 /* Ensure survey-form class is properly styled */
 .survey-form {
-  background: #ffffff;
   padding: 0;
   margin: 0;
 }
