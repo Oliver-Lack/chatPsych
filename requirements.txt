@@ -11,7 +11,7 @@ flask-bootstrap
 awscli
 anthropic==0.34.2
 google-generativeai==0.8.3
-litellm==1.75.5
+litellm==1.76
 python-dotenv==1.0.0
 # Additional dependencies for expanded provider support
 httpx==0.25.2
