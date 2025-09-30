@@ -1,0 +1,3 @@
+username,password,agent_name,user_id,survey_start_timestamp,survey_end_timestamp,survey_completed,interaction_type,pre_age,pre_gender
+test_oliver_css_update,castle,default,1,2025-09-30 12:38:33.591104,2025-09-30 12:38:43.493736,yes,pre_interaction_survey,43,female
+bvhvhj,castle,default,3,2025-09-30 13:30:03.412161,2025-09-30 13:30:16.432910,yes,pre_interaction_survey,44,male

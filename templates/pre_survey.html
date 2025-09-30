@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Survey Form</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="survey-page">
+    <!-- Survey Consent Popup -->
+    <div id="consent-popup" class="survey-consent-popup">
+        <div class="survey-popup-content">
+            <h2>Enter title for information sheet...</h2>
+            <div class="consent-content">
+                <p>Enter the information sheet content that participants will see...</p>
+                <p>Enter consent form content...</p>
+            </div>
+            
+            
+            
+            <button id="consent-agree-btn" class="survey-button survey-btn-agree">Agree</button>
+            <button id="consent-quit-btn" class="survey-button survey-btn-quit">Quit</button>
+        </div>
+    </div>
+
+    <!-- Survey Quit Confirmation Popup -->
+    <div id="quit-confirm-popup" class="survey-quit-confirm-popup survey-hidden">
+        <div class="survey-popup-content">
+            <h3>Are you sure you want to quit participation in this study?</h3>
+            <button id="quit-confirm-yes-btn" class="survey-button survey-btn-quit">Yes, Quit</button>
+            <button id="quit-confirm-no-btn" class="survey-button survey-btn-cancel">No, Go Back</button>
+        </div>
+    </div>
+
+    <div class="survey-container">
+        <div class="survey-header">
+            <h1>Survey Form</h1>
+        </div>
+        
+        <div class="survey-content">
+            <form id="survey-form" class="survey-form">
+                <div id="survey-sections" class="survey-sections">
+
+        <!-- Demographics Section -->
+        <div class="survey-section" id="demographics-section">
+            <div class="survey-section-title">Demographics</div>
+
+            <label for="demographics-age">Age:</label>
+            <input type="number" id="demographics-age" name="age" min="18" max="99" required><br><br>
+
+            <label for="demographics-gender">Gender:</label>
+            <select id="demographics-gender" name="gender" required>
+                <option value="">Select...</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+            </select><br><br>
+        </div>
+
+        <!-- Demographics Section -->
+        <div class="survey-section" id="demographics-section">
+            <div class="survey-section-title">Demographics</div>
+
+            <label for="demographics-age">Age:</label>
+            <input type="number" id="demographics-age" name="age" min="18" max="99" required><br><br>
+
+            <label for="demographics-gender">Gender:</label>
+            <select id="demographics-gender" name="gender" required>
+                <option value="">Select...</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+            </select><br><br>
+        </div>
+
+        <!-- Demographics Section -->
+        <div class="survey-section" id="demographics-section">
+            <div class="survey-section-title">Demographics</div>
+
+            <label for="demographics-age">Age:</label>
+            <input type="number" id="demographics-age" name="age" min="18" max="99" required><br><br>
+
+            <label for="demographics-gender">Gender:</label>
+            <select id="demographics-gender" name="gender" required>
+                <option value="">Select...</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+            </select><br><br>
+        </div>
+
+                </div>
+                <div class="survey-navigation">
+                    <button type="submit" id="submit-btn">Submit Survey</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Survey Submission Message -->
+    <div id="submission-modal" class="survey-submission-modal survey-hidden">
+        <div class="survey-popup-content">
+            <div class="submission-content">
+                <div class="submission-spinner"></div>
+                <h3 id="submission-message">Survey submitted successfully!</h3>
+                <p id="submission-detail">You will now be connected to the AI system.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Redirection links for the JS
+        window.quitRedirectionLink = "https://www.prolific.com/";
+    </script>
+    <script src="/static/js/pre_survey.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+    "pre_survey_responses": [
+        {
+            "username": "test_oliver_css_update",
+            "password": "castle",
+            "agent_name": "default",
+            "user_id": 1,
+            "survey_start_timestamp": "2025-09-30 12:38:33.591104",
+            "survey_end_timestamp": "2025-09-30 12:38:43.493736",
+            "survey_completed": "yes",
+            "interaction_type": "pre_interaction_survey",
+            "pre_age": "43",
+            "pre_gender": "female"
+        },
+        {
+            "username": "bvhvhj",
+            "password": "castle",
+            "agent_name": "default",
+            "user_id": 3,
+            "survey_start_timestamp": "2025-09-30 13:30:03.412161",
+            "survey_end_timestamp": "2025-09-30 13:30:16.432910",
+            "survey_completed": "yes",
+            "interaction_type": "pre_interaction_survey",
+            "pre_age": "44",
+            "pre_gender": "male"
+        }
+    ]
+}

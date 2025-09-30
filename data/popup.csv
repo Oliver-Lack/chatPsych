@@ -1,0 +1,4 @@
+timestamp,username,password,agent_name,user_id,interaction_type,button_selected
+2025-09-30 12:39:17.050398,test_oliver_css_update,castle,default,1,post_chat_popup_selection,Not_Active
+2025-09-30 13:29:40.329859,yep,castle,default,2,post_chat_popup_selection,Not_Active
+2025-09-30 13:30:25.375220,bvhvhj,castle,default,3,post_chat_popup_selection,Not_Active
