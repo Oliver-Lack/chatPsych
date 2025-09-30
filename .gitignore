@@ -3,3 +3,9 @@
 
 # Ignore virtual environment
 venv/
+
+# Ignore all .db files
+*.db
+
+# Ignore __pycache__ directories
+__pycache__/
