@@ -7,9 +7,9 @@
 - **Docker** & **Docker Compose** installed
 - A domain (e.g. `chatpsych-playground.org`) pointed to your server’s IP
 
-First, Open a terminal in your machine.
-
 ## 2. Clone and Configure
+
+Change the $USER to your machines username below, then run chunk of commands in terminal:
 
 ```bash
 sudo apt update
@@ -20,8 +20,10 @@ sudo chown $USER:$USER /srv/chatpsych
 git clone https://github.com/Oliver-Lack/chatPsych.git /srv/chatpsych
 cd /srv/chatpsych
 cp .env.example .env
-sudo nano .env   # fill in your API keys & secrets then control+O, enter, then control+X
+sudo nano .env
 ```
+If the .env.example did not extract and copy from the cp command, copy example file contents from github repo and paste into this .env file. After you have filled in your API keys & secrets then control+O, enter, then control+X
+
 
 ## 3. Setup the Docker Build
 Go to the chatpsych directory that was just cloned and sudo nano each of the files below. 
