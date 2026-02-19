@@ -174,122 +174,159 @@ EC2 instance — edit file (add at end):
 EC2 instance — run:
 sudo reboot
 
-## 7) Server Performance Logging
-
-Info only:
-- Logs CPU, memory, network. Runs in background.
-
-In the EC2 instance — run:
-mkdir -p /logs
-cd /logs
-sudo nano /logs/log_resources.sh
-
-EC2 instance — edit file (paste):
-while true; do
-    sar -u 1 1 >> /logs/cpu_usage.log
-    sar -r 1 1 >> /logs/memory_usage.log
-    sar -n DEV 1 1 >> /logs/network_traffic.log
-    sleep 10
-done
-
-In the EC2 instance — run:
-chmod +x /logs/log_resources.sh
-sudo nohup /logs/log_resources.sh &
-
-Info only:
-- To stop, find PID and kill.
-
-EC2 instance — run:
-ps aux | grep log_resources.sh
-kill <PID>
-
-## 8) Visualize logs (quick console plots)
-
-In the EC2 instance — run:
-cd /logs
-sudo bash -c "awk '/^[0-9]/ {print \$1, \$8}' cpu_usage.log > cpu_plot_data.log"
-sudo bash -c "awk '/^[0-9]/ {print \$1, \$8}' memory_usage.log > memory_plot_data.log"
-sudo bash -c "awk '/^[0-9]/ {print \$1, \$8}' network_traffic.log > network_plot_data.log"
-
-EC2 instance — run:
-gnuplot <<-EOFMarker
-    set terminal dumb
-    set xdata time
-    set timefmt "%H:%M:%S"
-    set format x "%H:%M"
-
-    set xlabel "Time"
-    set ylabel "Idle (%)"
-    plot "cpu_plot_data.log" using 1:2 with lines title "CPU Idle"
-
-    set ylabel "Usage"
-	set yrange [0:100]
-    plot "memory_plot_data.log" using 1:2 with lines title "Memory Usage"
-
-    set ylabel "Traffic (bytes)"
-    plot "network_plot_data.log" using 1:2 with lines title "Network Traffic"
-EOFMarker
-
-## 9) Live monitoring
-
-In the EC2 instance — run:
-sudo apt install htop
-htop
-
-## 10) Final check (Info only)
+## 7) Final check (Info only)
 - Visit your server IP or chatpsych domain. DNS may take up to 6 hours.
 
 ## Extra security measures (optional)
 
-1. **Harden SSH**  
-   Edit SSH config to improve security, 
-   but you'll then need to specify this new port when SSH connecting:  
-   ```
-   sudo nano /etc/ssh/sshd_config
-   ```
-   - Change the SSH `Port` (e.g., 2222).
-   - Set `PermitRootLogin no`.
-   - Add `AllowUsers ubuntu`.
-   ```
-   sudo systemctl reload ssh
-   sudo ufw allow 2222/tcp
-   ```
+### 7.1) Harden SSH
 
-2. **Enable Firewall (UFW)**  
-   ```
-   sudo ufw allow OpenSSH
-   sudo ufw allow 80
-   sudo ufw allow 443
-   sudo ufw enable
-   ```
+Edit SSH config to improve security, but you'll then need to specify this new port when SSH connecting:
 
-3. **Disable Apache Directory Listing**  
-   ```
-   echo "Options -Indexes" | sudo tee -a /etc/apache2/apache2.conf
-   sudo systemctl reload apache2
-   ```
+In EC2 instance — run:
+```bash
+sudo nano /etc/ssh/sshd_config
+```
 
-4. **Prevent Brute Force (Fail2ban)**
-   ```
-   sudo apt install fail2ban
-   sudo systemctl enable --now fail2ban
-   ```
+Info only:
+- Change the SSH `Port` (e.g., 2222).
+- Set `PermitRootLogin no`.
+- Add `AllowUsers ubuntu`.
 
-5. **Automatic Security Updates**  
-   ```
-   sudo apt install unattended-upgrades
-   sudo dpkg-reconfigure --priority=low unattended-upgrades
-   ```
+In EC2 instance — run:
+```bash
+sudo systemctl reload ssh
+sudo ufw allow 2222/tcp
+```
 
-6. **Clean Up Unused Services/Packages**
-   ```
-   sudo apt autoremove
-   sudo systemctl disable <unneeded_service>
-   ```
+### 7.2) Enable Firewall (UFW)
 
-7. **Run Web App As Dedicated Non-root User**  
-   Already covered with `chatpsych_user`. Don’t use `root` for your app.
+In EC2 instance — run:
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw enable
+```
+
+### 7.3) Disable Apache Directory Listing
+
+In EC2 instance — run:
+```bash
+echo "Options -Indexes" | sudo tee -a /etc/apache2/apache2.conf
+sudo systemctl reload apache2
+```
+
+### 7.4) Prevent Brute Force (Fail2ban)
+
+In EC2 instance — run:
+```bash
+sudo apt install fail2ban
+sudo systemctl enable --now fail2ban
+```
+
+### 7.5) Automatic Security Updates
+
+In EC2 instance — run:
+```bash
+sudo apt install unattended-upgrades
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+```
+
+### 7.6) Clean Up Unused Services/Packages
+
+In EC2 instance — run:
+```bash
+sudo apt autoremove
+sudo systemctl disable <unneeded_service>
+```
+
+### 7.7) Run Web App As Dedicated Non-root User
+
+Info only:
+- Already covered with `chatpsych_user`. Don't use `root` for your app.
 
 ---
 
 These steps can help secure your instance a bit more. Only do them after main deployment.
+
+## 8) Setting up server logging
+
+- This section sets up continuous logging of CPU, memory, network traffic, and container logs to JSON files in the `data/server_logs/` directory.
+- Logging scripts are included in the `server_log_services/` directory of the repository.
+
+### 8.1) Install monitoring tools
+
+In EC2 instance — run:
+```bash
+sudo apt install sysstat jq ifstat -y
+```
+
+### 8.2) Create server logs directory and make scripts executable
+
+In EC2 instance — run:
+```bash
+cd /srv/chatpsych
+sudo mkdir -p data/server_logs
+sudo chown -R chatpsych_user:chatpsych_user data/server_logs
+sudo chmod +x server_log_services/*.sh
+sudo chown -R chatpsych_user:chatpsych_user server_log_services/
+```
+
+### 8.3) Setup automated logging with cron
+
+In EC2 instance — run:
+```bash
+sudo crontab -e
+```
+
+In EC2 instance — add these lines at the end of the crontab file (Ctrl+O, Enter, Ctrl+X):
+```cron
+# System metrics - every minute
+* * * * * /srv/chatpsych/server_log_services/log_system_metrics.sh
+
+# Network traffic - every minute
+* * * * * /srv/chatpsych/server_log_services/log_network_traffic.sh
+
+# Docker containers - every 2 minutes
+*/2 * * * * /srv/chatpsych/server_log_services/log_docker_containers.sh
+```
+
+### 8.4) Test the logging scripts
+
+In EC2 instance — run:
+```bash
+# Test each script manually
+sudo /srv/chatpsych/server_log_services/log_system_metrics.sh
+sudo /srv/chatpsych/server_log_services/log_network_traffic.sh
+sudo /srv/chatpsych/server_log_services/log_docker_containers.sh
+
+# Check the log files
+ls -lh /srv/chatpsych/data/server_logs/*.json
+cat /srv/chatpsych/data/server_logs/server_metrics.json | jq '.[0]'
+cat /srv/chatpsych/data/server_logs/network_traffic.json | jq '.[0]'
+cat /srv/chatpsych/data/server_logs/app_container.json | jq '.[0]'
+cat /srv/chatpsych/data/server_logs/nginx_proxy.json | jq '.[0]'
+```
+
+### 8.5) View logs
+
+The log file descriptions:
+  - `server_metrics.json` - CPU, memory, load average
+  - `network_traffic.json` - Network I/O, connection counts
+  - `app_container.json` - ChatPsych container stats and logs
+  - `nginx_proxy.json` - Nginx proxy container stats and logs
+
+To view logs on server:
+```bash
+# View latest 5 entries from any log
+cat /srv/chatpsych/data/server_logs/server_metrics.json | jq '.[-5:]'
+```
+
+Logging runs automatically in the background and does not affect app functionality.
+
+## 9) Live monitoring of server performance
+
+In the EC2 instance — run:
+sudo apt install htop
+htop

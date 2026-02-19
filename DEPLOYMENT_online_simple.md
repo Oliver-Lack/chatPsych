@@ -57,7 +57,7 @@ sudo docker-compose ps
 sudo docker-compose logs
 ```
 
-## Having problems with DNS connection?
+## Want to reset the container (Having DNS issues)?
 Setting up domain connected to instance may require double checking that you have an A record in your DNS pointing to the machines public IP.
 Also, it may take a while (potentially hours) for DNS settings to propagate. Just do some web troubleshooting to make sure the machine has the correct 
 open ports, and the Lets encrypt SSL certificate sometimes is delayed (some browsers don't like http at all. Lets encrypt makes it https).
@@ -95,9 +95,52 @@ sudo fail2ban-client status
 sudo fail2ban-client status sshd
 ```
 
-## Want to Backup/Export Data into new directory called `data-copy`?
+## Want to manually backup/export data files into new directory called `data-copy`?
 
 ```bash
 docker cp chatpsych_app_1:/app/data ./data-copy
 # This copies the data directory from the app to a directory outside the container but in the instance/machine called data-copy
 ```
+
+## Want to log server information (memory, compute, traffic etc..)?
+
+The repository includes automated logging scripts in `server_log_services/` that track CPU, memory, network traffic, and Docker container logs. All logs are saved as JSON files in `data/server_logs/`.
+
+```bash
+# Install monitoring tools
+sudo apt install sysstat jq ifstat -y
+
+# Setup logging directory and permissions
+cd /srv/chatpsych
+sudo mkdir -p data/server_logs
+sudo chown -R $USER:$USER data/server_logs
+sudo chmod +x server_log_services/*.sh
+
+# Setup automated logging via cron
+sudo crontab -e
+# Add these lines to the crontab:
+# * * * * * /srv/chatpsych/server_log_services/log_system_metrics.sh
+# * * * * * /srv/chatpsych/server_log_services/log_network_traffic.sh
+# */2 * * * * /srv/chatpsych/server_log_services/log_docker_containers.sh
+
+# Test the scripts
+sudo /srv/chatpsych/server_log_services/log_system_metrics.sh
+sudo /srv/chatpsych/server_log_services/log_network_traffic.sh
+sudo /srv/chatpsych/server_log_services/log_docker_containers.sh
+
+# View logs
+ls -lh /srv/chatpsych/data/server_logs/
+cat /srv/chatpsych/data/server_logs/server_metrics.json | jq '.[-5:]'
+```
+
+**Log file descriptions:**
+- `server_metrics.json` - CPU usage, memory, load average
+- `network_traffic.json` - Network I/O, connection counts
+- `app_container.json` - ChatPsych container stats and logs
+- `nginx_proxy.json` - Nginx proxy container stats and logs
+
+**Download logs to local machine:**
+```bash
+scp -i "chatpsych.pem" ubuntu@your-server-domain:/srv/chatpsych/data/server_logs/*.json ./logs/
+```
+
