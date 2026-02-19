@@ -1,3 +1,4 @@
 username,password,agent_name,user_id,survey_start_timestamp,survey_end_timestamp,survey_completed,interaction_type,pre_age,pre_gender
 test_oliver_css_update,castle,default,1,2025-09-30 12:38:33.591104,2025-09-30 12:38:43.493736,yes,pre_interaction_survey,43,female
 bvhvhj,castle,default,3,2025-09-30 13:30:03.412161,2025-09-30 13:30:16.432910,yes,pre_interaction_survey,44,male
+lukeisacriminal,onesentencedefault,default,1,2026-01-14 20:24:35.678497,2026-01-14 20:24:52.539112,yes,pre_interaction_survey,45,prefer_not_to_say

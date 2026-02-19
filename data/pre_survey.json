@@ -23,6 +23,18 @@
             "interaction_type": "pre_interaction_survey",
             "pre_age": "44",
             "pre_gender": "male"
+        },
+        {
+            "username": "lukeisacriminal",
+            "password": "onesentencedefault",
+            "agent_name": "default",
+            "user_id": 1,
+            "survey_start_timestamp": "2026-01-14 20:24:35.678497",
+            "survey_end_timestamp": "2026-01-14 20:24:52.539112",
+            "survey_completed": "yes",
+            "interaction_type": "pre_interaction_survey",
+            "pre_age": "45",
+            "pre_gender": "prefer_not_to_say"
         }
     ]
 }

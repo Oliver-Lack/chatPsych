@@ -716,6 +716,101 @@
                     "relativeInteractionJointLogProbability": -33.341777946197624
                 }
             ]
+        },
+        "lukeisacriminal": {
+            "user_id": 1,
+            "interactions": [
+                {
+                    "interaction_type": "message",
+                    "message": "hi, are you there?",
+                    "response": "Error: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: sk-proj-********************************************RbAk. You can find your API key at https://platform.openai.com/account/api-keys.",
+                    "model": "gpt-4.1",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2026-01-14 20:25:03.075108",
+                    "password": "onesentencedefault",
+                    "agent_name": "default",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                }
+            ]
+        },
+        "luke": {
+            "user_id": 3,
+            "interactions": [
+                {
+                    "interaction_type": "message",
+                    "message": "helo",
+                    "response": "Error: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: sk-proj-********************************************************************************************************************************************************KjQA. You can find your API key at https://platform.openai.com/account/api-keys.",
+                    "model": "gpt-4.1",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2026-01-14 20:27:05.194960",
+                    "password": "onesentencedefault",
+                    "agent_name": "default",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                },
+                {
+                    "interaction_type": "message",
+                    "message": "hello",
+                    "response": "Error: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: sk-proj-********************************************************************************************************************************************************r4AA. You can find your API key at https://platform.openai.com/account/api-keys.",
+                    "model": "gpt-4.1",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2026-01-14 20:29:13.943210",
+                    "password": "onesentencedefault",
+                    "agent_name": "default",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                }
+            ]
+        },
+        "lukeww": {
+            "user_id": 4,
+            "interactions": [
+                {
+                    "interaction_type": "message",
+                    "message": "hello there",
+                    "response": "Error: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: sk->K6PO************************************************************************************bqsA. You can find your API key at https://platform.openai.com/account/api-keys.",
+                    "model": "gpt-4.1",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2026-01-14 20:30:46.040100",
+                    "password": "onesentencedefault",
+                    "agent_name": "default",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                },
+                {
+                    "interaction_type": "message",
+                    "message": "hihi",
+                    "response": "Error: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: sk-proj-********************************************************************************************************************************************************_8QA. You can find your API key at https://platform.openai.com/account/api-keys.",
+                    "model": "gpt-4.1",
+                    "temperature": 1,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "logprobs": [],
+                    "timestamp": "2026-01-14 20:35:49.008231",
+                    "password": "onesentencedefault",
+                    "agent_name": "default",
+                    "relativeSequenceJointLogProbability": 0,
+                    "relativeInteractionJointLogProbability": 0
+                }
+            ]
         }
     }
 }
