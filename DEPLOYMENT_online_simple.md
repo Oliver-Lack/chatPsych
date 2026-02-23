@@ -42,7 +42,8 @@ sudo nano docker-compose.yml
 ```bash
 sudo docker compose up --build -d
 ```
-Done. Visit your machines IP address or set custom domain that you connected.  
+Done. Visit your machines IP address or set custom domain that you connected.
+It can take a while for the engine to setup in the background. Check the docker logs below to see whether background setup is still going.   
 
 ---
 
