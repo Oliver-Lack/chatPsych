@@ -9,7 +9,7 @@
 
 ## 2. Clone and Configure
 
-Change the $USER to your machines username below, then run chunk of commands in terminal:
+Change the $USER to your machines username below (e.g., fred:fred), then run chunk of commands in terminal:
 
 ```bash
 sudo apt update
@@ -40,7 +40,7 @@ sudo nano docker-compose.yml
 ## 5. Deploy!
 
 ```bash
-sudo docker-compose up --build -d
+sudo docker compose up --build -d
 ```
 Done. Visit your machines IP address or set custom domain that you connected.  
 
@@ -53,8 +53,8 @@ Ready to go.
 ## Want to check the Docker container is up and running?
 
 ```bash
-sudo docker-compose ps
-sudo docker-compose logs
+sudo docker compose ps
+sudo docker compose logs
 ```
 
 ## Want to reset the container (Having DNS issues)?
@@ -63,8 +63,8 @@ Also, it may take a while (potentially hours) for DNS settings to propagate. Jus
 open ports, and the Lets encrypt SSL certificate sometimes is delayed (some browsers don't like http at all. Lets encrypt makes it https).
 To reset the container, incase you change DNS or instance settings after making the container:
 ```bash
-sudo docker-compose down
-sudo docker-compose up -d
+sudo docker compose down
+sudo docker compose up -d
 ```
 
 ## For extra security and backup...
