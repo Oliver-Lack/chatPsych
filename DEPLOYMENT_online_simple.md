@@ -111,7 +111,7 @@ The repository includes automated logging scripts in `server_log_services/` that
 # Install monitoring tools
 sudo apt install sysstat jq ifstat -y
 
-# Setup logging directory and permissions
+# Setup logging directory and permissions (again, change the $USER to your username)
 cd /srv/chatpsych
 sudo mkdir -p data/server_logs
 sudo chown -R $USER:$USER data/server_logs
@@ -120,9 +120,9 @@ sudo chmod +x server_log_services/*.sh
 # Setup automated logging via cron
 sudo crontab -e
 # Add these lines to the crontab:
-# * * * * * /srv/chatpsych/server_log_services/log_system_metrics.sh
-# * * * * * /srv/chatpsych/server_log_services/log_network_traffic.sh
-# */2 * * * * /srv/chatpsych/server_log_services/log_docker_containers.sh
+* * * * * /srv/chatpsych/server_log_services/log_system_metrics.sh
+* * * * * /srv/chatpsych/server_log_services/log_network_traffic.sh
+*/2 * * * * /srv/chatpsych/server_log_services/log_docker_containers.sh
 
 # Test the scripts
 sudo /srv/chatpsych/server_log_services/log_system_metrics.sh
