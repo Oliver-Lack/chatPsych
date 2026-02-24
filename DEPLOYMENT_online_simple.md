@@ -44,6 +44,7 @@ sudo docker compose up --build -d
 ```
 Done. Visit your machines IP address or set custom domain that you connected.
 It can take a while for the engine to setup in the background. Check the docker logs below to see whether background setup is still going.   
+If wait time is long, check DNS settings (A record in particular at domain host), and then check logs and reset as instructed below. 
 
 ---
 
@@ -56,6 +57,8 @@ Ready to go.
 ```bash
 sudo docker compose ps
 sudo docker compose logs
+# for just the chatpsych app logs use:
+sudo docker compose logs app
 ```
 
 ## Want to reset the container (Having DNS issues)?
