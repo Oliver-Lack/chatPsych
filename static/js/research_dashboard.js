@@ -692,6 +692,10 @@ function downloadLogFile(filename) {
     }
 }
 
+function downloadVisitorLog() {
+    window.location.href = '/download-visitor-log';
+}
+
 document.getElementById('model').addEventListener('change', function() {
     document.getElementById('custom-model').style.display = this.value === 'custom' ? 'block' : 'none';
   });

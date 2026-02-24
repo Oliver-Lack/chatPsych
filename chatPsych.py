@@ -7,6 +7,7 @@ import random
 from datetime import datetime
 import csv
 from dotenv import load_dotenv
+import geoip2.database
 
 load_dotenv(override=True)
 
@@ -19,6 +20,16 @@ def ensure_data_directory():
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     return data_dir
+
+# Visitor logging stuff for IP addresses
+GEOIP_DB_PATH = os.path.join(ensure_data_directory(), 'GeoLite2-City.mmdb')
+
+geoip_reader = None
+if os.path.exists(GEOIP_DB_PATH):
+    try:
+        geoip_reader = geoip2.database.Reader(GEOIP_DB_PATH)
+    except Exception as e:
+        print(f"Warning: Could not load GeoIP database: {e}")
 
 # Console log some stuff to make sure the researcher dashboard env variables are set
 def validate_env_variables():
@@ -326,6 +337,56 @@ def calculate_joint_log_probability(logprobs):
         return 0
     return sum(logprobs)
 
+def log_visitor(endpoint_name):
+    """This logs app visitor data to visitor_log.json"""
+    try:
+        visitor_data = {
+            'timestamp': datetime.now().isoformat(),
+            'ip': request.remote_addr,
+            'endpoint': endpoint_name,
+            'method': request.method,
+            'user_agent': request.headers.get('User-Agent', 'Unknown'),
+            'referrer': request.referrer,
+            'host': request.host,
+            'path': request.path,
+            'query_string': request.query_string.decode('utf-8') if request.query_string else '',
+        }
+        
+        # This just adds GeoIP data if available
+        if geoip_reader and request.remote_addr:
+            try:
+                response = geoip_reader.city(request.remote_addr)
+                visitor_data['geo'] = {
+                    'country': response.country.name,
+                    'country_code': response.country.iso_code,
+                    'city': response.city.name,
+                    'postal_code': response.postal.code,
+                    'latitude': response.location.latitude,
+                    'longitude': response.location.longitude,
+                    'timezone': response.location.time_zone,
+                }
+            except Exception as e:
+                visitor_data['geo'] = {'error': f'GeoIP lookup failed: {str(e)}'}
+        else:
+            visitor_data['geo'] = {'error': 'GeoIP database not available'}
+        
+        data_dir = ensure_data_directory()
+        visitor_log_path = os.path.join(data_dir, 'visitor_log.json')
+        
+        if os.path.exists(visitor_log_path):
+            with open(visitor_log_path, 'r') as f:
+                logs = json.load(f)
+        else:
+            logs = []
+        
+        logs.append(visitor_data)
+        
+        with open(visitor_log_path, 'w') as f:
+            json.dump(logs, f, indent=2)
+            
+    except Exception as e:
+        print(f"Error logging visitor: {e}")
+
 # DATA Logging function for interactions.json and interactions_backup.CSV
 def log_user_data(data):
     data_dir = ensure_data_directory()
@@ -437,6 +498,9 @@ def get_messages(user_id, password):
 # MAIN login route for chatPsych
 @app.route('/', methods=['GET', 'POST'])
 def login():
+    if request.method == 'GET':
+        log_visitor('main_chat_interface')
+    
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -1038,6 +1102,9 @@ def researcher_login():
 def research_dashboard():
     if not flask_session.get('researcher'):
         return redirect(url_for('researcher_login'))
+    
+    log_visitor('researcher_dashboard')
+    
     return render_template('research_dashboard.html')
 
 def authenticate_researcher(researcher_username, researcher_password):
@@ -1565,6 +1632,26 @@ def download_download_log():
         log_file.write(json.dumps(log_entry) + '\n')
 
     return send_from_directory(data_dir, filename, as_attachment=True)
+
+@app.route('/download-visitor-log')
+def download_visitor_log():
+    """This is to download visitor_log.json file"""
+    if not flask_session.get('researcher'):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data_dir = ensure_data_directory()
+    visitor_log_path = os.path.join(data_dir, 'visitor_log.json')
+    
+    if not os.path.exists(visitor_log_path):
+        with open(visitor_log_path, 'w') as f:
+            json.dump([], f)
+    
+    return send_file(
+        visitor_log_path,
+        as_attachment=True,
+        download_name=f'visitor_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json',
+        mimetype='application/json'
+    )
 
 # Timer settings routes
 @app.route('/get-timer-settings', methods=['GET'])

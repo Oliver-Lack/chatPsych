@@ -37,7 +37,7 @@ This interface offers a method for experimental designs that require prompt engi
   
 1. **Framework:** Flask with Gunicorn production server on apache2/nginx. Containerised with Docker.
 2. **Unified API Integration:** 
-   - Primary: OpenAI (GPT-4o, GPT-4, o1 series), Anthropic (Claude 3.5 Sonnet, Claude 4), Google (Gemini 2.0, Gemini 1.5), XAI (Grok 2)
+   - Primary: OpenAI, Anthropic, Google, XAI
    - Extended: Groq (ultra-fast inference), Perplexity (search-augmented), Mistral, Azure OpenAI, Ollama (local), Cohere, Together AI, Replicate, DeepSeek, AI21, Fireworks AI, Cerebras
    - Powered by LiteLLM with intelligent model fallbacks
 3. **Model Management:**
@@ -60,7 +60,7 @@ This interface offers a method for experimental designs that require prompt engi
    - Token usage tracking (prompt, completion, total)
    - Log probability analysis with relative calculations
    - User session management and conversation history
-   - Download logging with timestamp and IP tracking
+   - Download/Visitor logging with timestamp and IP tracking
 7. **Data Captured:**
    - user_id, prolific_id, username, password/condition
    - Model parameters (temperature, model name)
@@ -88,19 +88,18 @@ This interface offers a method for experimental designs that require prompt engi
     - SSL/TLS support via Certbot
     - Gunicorn WSGI server
 
-## Updates, Notes & Message to Researchers
+## Updates & Message to Researchers
 
-**Prospective updates will include:**
+**to do list**:
+- Validate new visitor_log functionality.
+
+**Prospective updates include:**
 -> Text-audio api integration and graphics
 -> MCP integration (e.g., RAG, CAG, and web-search)
 -> Image output integration for multi-modal models
+-> Thinking/Reasoning output options
 
 **Message to other researchers**
 - Please contact [me](https://oliverlack.com) if you want to collaborate/adapt the system for your purpose. Happy to help. 
-- Instances cannot yet run multiple API scripts simultaneously. Make sure the API_Call() in chatPsych.py is set to the correct API script. If agent models do not correspond to the select API_Call(), they will not load. 
-- Before deploying the app, if you want to set the passwords and conditions for your experiments manually, change the static_passwords vector in chatPsych.py.
-- An instance with Wordie will total around 5gb of volume storage before any data is logged. 
-- IMPORTANT: The survey data files will be messed up if you run multiple different surveys per deployment. 
-To save errors in column names in your data files, make sure to only setup one survey configuration per deployment. 
-
+- Also, I'm happy to run workshops/seminars at your institution to foster better human-AI research practices and new collaborations. 
 
