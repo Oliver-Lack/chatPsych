@@ -148,3 +148,7 @@ cat /srv/chatpsych/data/server_logs/server_metrics.json | jq '.[-5:]'
 scp -i "chatpsych.pem" ubuntu@your-server-domain:/srv/chatpsych/data/server_logs/*.json ./logs/
 ```
 
+
+## Debugging notes
+- Make sure each new deployment of chatPsych starts with a fresh (empty) data directory. This avoids conflicts with logging files and past surveys. 
+- If you are new to setting up DNS for custom domains, always double check the A record in your domain host!

@@ -18,7 +18,7 @@ source venv/bin/activate
 
 Navigate to the chatPsych directory and install requirements:
 ```bash
-cd /Users/a1809024/Desktop/PMC/AI_Interface/chatPsych
+cd whereEverYouPulledtheRepo/chatPsych
 pip install -r requirements.txt
 ```
 

@@ -73,9 +73,9 @@ function loadAvailableModels() {
                     agentModelDropdown.appendChild(option);
                 });
                 
-                // Default for dropdown is gpt-4.1
-                if (agentModelDropdown.querySelector('option[value="gpt-4.1"]')) {
-                    agentModelDropdown.value = 'gpt-4.1';
+                // Default for dropdown is gpt-5.2 (latest)
+                if (agentModelDropdown.querySelector('option[value="gpt-5.2"]')) {
+                    agentModelDropdown.value = 'gpt-5.2';
                 }
             }
             
@@ -313,8 +313,8 @@ function createJsonFile() {
 // This is old stuff for legacy API selection
 function selectAPI(apiName) {
     const apiModelMap = {
-        'API_Call_openai': 'gpt-4.1',
-        'API_Call_anthropic': 'claude-sonnet-4-20250514',
+        'API_Call_openai': 'gpt-5.2',
+        'API_Call_anthropic': 'claude-sonnet-4-6',
         'API_Call_google': 'gemini/gemini-2.5-pro',
         'API_Call_xai': 'xai/grok-4'
     };

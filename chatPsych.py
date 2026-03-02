@@ -51,7 +51,7 @@ env_valid = validate_env_variables()
 app = Flask(__name__)
 app.secret_key = os.environ['FLASK_SECRET_KEY']
 API = API_Call()
-current_model = "gpt-4.1" # just for startup
+current_model = "gpt-4o" # just for startup
 
 # These four routes are for functionality in the researcher dashboard
 @app.route('/select-model', methods=['POST'])

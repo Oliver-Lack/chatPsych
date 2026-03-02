@@ -62,38 +62,131 @@ def load_agent(filepath):
 
 # Common names for AI models that users will see in the interface
 MODEL_DISPLAY_NAMES = {
-    # OpenAI
+    # OpenAI - GPT-5 Series (Latest)
+    "gpt-5.2": "GPT-5.2 (Latest)",
+    "gpt-5.2-2025-12-11": "GPT-5.2 (Dec 2025)",
+    "gpt-5.2-pro": "GPT-5.2 Pro",
+    "gpt-5.2-pro-2025-12-11": "GPT-5.2 Pro (Dec 2025)",
+    "gpt-5.2-chat-latest": "GPT-5.2 Chat (Latest)",
+    "gpt-5.2-codex": "GPT-5.2 Codex (Agentic Coding)",
+    "gpt-5.3-codex": "GPT-5.3 Codex (Most Capable)",
+    
+    # OpenAI - GPT-5.1 Series
+    "gpt-5.1": "GPT-5.1",
+    "gpt-5.1-chat-latest": "GPT-5.1 Chat (Latest)",
+    "gpt-5.1-codex": "GPT-5.1 Codex",
+    "gpt-5.1-codex-mini": "GPT-5.1 Codex Mini",
+    "gpt-5.1-codex-max": "GPT-5.1 Codex Max (Long-running)",
+    
+    # OpenAI - GPT-5 Series
+    "gpt-5": "GPT-5",
+    "gpt-5-2025-08-07": "GPT-5 (Aug 2025)",
+    "gpt-5-mini": "GPT-5 Mini",
+    "gpt-5-mini-2025-08-07": "GPT-5 Mini (Aug 2025)",
+    "gpt-5-nano": "GPT-5 Nano",
+    "gpt-5-nano-2025-08-07": "GPT-5 Nano (Aug 2025)",
+    "gpt-5-pro": "GPT-5 Pro",
+    "gpt-5-chat-latest": "GPT-5 Chat (Latest)",
+    "gpt-5-codex": "GPT-5 Codex",
+    
+    # OpenAI - GPT-4 Series
     "gpt-4o": "GPT-4o",
+    "gpt-4o-2024-08-06": "GPT-4o (Aug 2024)",
+    "gpt-4o-2024-05-13": "GPT-4o (May 2024)",
+    "gpt-4o-mini": "GPT-4o Mini",
+    "gpt-4o-mini-2024-07-18": "GPT-4o Mini (Jul 2024)",
     "gpt-4.1": "GPT-4.1 (2025)",
+    "gpt-4.1-mini": "GPT-4.1 Mini",
+    "gpt-4.1-nano": "GPT-4.1 Nano",
     "gpt-4-turbo": "GPT-4 Turbo",
+    "gpt-4-turbo-preview": "GPT-4 Turbo Preview",
+    "gpt-4-0125-preview": "GPT-4 (Jan 2025 Preview)",
+    "gpt-4-1106-preview": "GPT-4 (Nov 2023 Preview)",
     "gpt-4": "GPT-4",
     "gpt-3.5-turbo": "GPT-3.5 Turbo",
-    "o1": "OpenAI o1",
-    "o1-preview": "OpenAI o1 Preview",
-    "o1-mini": "OpenAI o1 Mini",
-    "o3": "OpenAI o3",
-    "o4-mini": "OpenAI o4 Mini",
+    "gpt-3.5-turbo-1106": "GPT-3.5 Turbo (Nov 2023)",
     
-    # Anthropic
+    # OpenAI - O-Series Models
+    "o4-mini": "o4 Mini",
+    "o3": "o3",
+    "o3-mini": "o3 Mini",
+    "o3-pro": "o3 Pro",
+    "o1": "o1",
+    "o1-preview": "o1 Preview",
+    "o1-mini": "o1 Mini",
+    
+    # Anthropic - Claude 4.6 (Latest)
+    "claude-opus-4-6": "Claude Opus 4.6 (Latest)",
+    "claude-opus-4-6-20260205": "Claude Opus 4.6 (Feb 2026)",
+    "claude-sonnet-4-6": "Claude Sonnet 4.6 (Latest)",
+    
+    # Anthropic - Claude 4.5
+    "claude-sonnet-4-5": "Claude Sonnet 4.5",
+    "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5 (Sep 2025)",
+    "claude-opus-4-5": "Claude Opus 4.5",
+    "claude-opus-4-5-20251101": "Claude Opus 4.5 (Nov 2025)",
+    "claude-haiku-4-5": "Claude Haiku 4.5",
+    "claude-haiku-4-5-20251001": "Claude Haiku 4.5 (Oct 2025)",
+    
+    # Anthropic - Claude 4.1
+    "claude-opus-4-1": "Claude Opus 4.1",
+    "claude-opus-4-1-20250805": "Claude Opus 4.1 (Aug 2025)",
+    
+    # Anthropic - Claude 4.0
+    "claude-opus-4": "Claude Opus 4",
+    "claude-opus-4-20250514": "Claude Opus 4 (May 2025)",
+    "claude-sonnet-4": "Claude Sonnet 4",
+    "claude-sonnet-4-20250514": "Claude Sonnet 4 (May 2025)",
+    
+    # Anthropic - Claude 3.7
+    "claude-3-7-sonnet": "Claude 3.7 Sonnet",
+    "claude-3-7-sonnet-20250219": "Claude 3.7 Sonnet (Feb 2025)",
+    
+    # Anthropic - Claude 3.5
     "claude-3-5-sonnet": "Claude 3.5 Sonnet",
+    "claude-3-5-sonnet-20240620": "Claude 3.5 Sonnet (Jun 2024)",
     "claude-3-5-sonnet-20241022": "Claude 3.5 Sonnet (Oct 2024)",
+    
+    # Anthropic - Claude 3.0
     "claude-3-sonnet": "Claude 3 Sonnet",
     "claude-3-sonnet-20240229": "Claude 3 Sonnet (Feb 2024)",
     "claude-3-haiku": "Claude 3 Haiku",
     "claude-3-haiku-20240307": "Claude 3 Haiku (Mar 2024)",
-    "claude-opus-4-20250514": "Claude Opus 4 (May 2025)",
-    "claude-sonnet-4-20250514": "Claude Sonnet 4 (May 2025)",
-    "claude-3-7-sonnet-20250219": "Claude 3.7 Sonnet (Feb 2025)",
+    "claude-3-opus": "Claude 3 Opus",
+    "claude-3-opus-20240229": "Claude 3 Opus (Feb 2024)",
     
-    # Google AI Studio models
+    # Google AI Studio - Gemini 3.x Series (Latest)
+    "gemini/gemini-3.1-pro-preview": "Gemini 3.1 Pro (Preview)",
+    "gemini/gemini-3-flash-preview": "Gemini 3 Flash (Preview)",
+    "gemini/gemini-3-pro-preview": "Gemini 3 Pro (Preview)",
+    "gemini/gemini-3.1-flash-image-preview": "Gemini 3.1 Flash Image (Nano Banana 2)",
+    "gemini/gemini-3-pro-image-preview": "Gemini 3 Pro Image (Nano Banana Pro)",
+    
+    # Google AI Studio - Gemini 2.5 Series
     "gemini/gemini-2.5-pro": "Gemini 2.5 Pro",
-    "gemini/gemini-2.5-flash": "Gemini 2.5 Flash", 
+    "gemini/gemini-2.5-pro-preview-09-2025": "Gemini 2.5 Pro (Sep 2025)",
+    "gemini/gemini-2.5-flash": "Gemini 2.5 Flash",
+    "gemini/gemini-2.5-flash-preview-09-2025": "Gemini 2.5 Flash (Sep 2025)",
+    "gemini/gemini-2.5-flash-lite": "Gemini 2.5 Flash-Lite",
+    "gemini/gemini-2.5-flash-lite-preview-09-2025": "Gemini 2.5 Flash-Lite (Sep 2025)",
+    "gemini/gemini-2.5-flash-image": "Gemini 2.5 Flash Image (Nano Banana)",
+    "gemini/gemini-2.5-flash-preview-tts": "Gemini 2.5 Flash TTS",
+    "gemini/gemini-2.5-pro-preview-tts": "Gemini 2.5 Pro TTS",
+    "gemini/gemini-2.5-computer-use-preview-10-2025": "Gemini 2.5 Computer Use (Oct 2025)",
+    
+    # Google AI Studio - Gemini 2.0 Series
     "gemini/gemini-2.0-flash": "Gemini 2.0 Flash",
+    "gemini/gemini-2.0-flash-exp": "Gemini 2.0 Flash (Experimental)",
+    "gemini/gemini-2.0-flash-lite-preview-02-05": "Gemini 2.0 Flash-Lite (Feb 2025)",
+    
+    # Google AI Studio - Gemini 1.5 Series
     "gemini/gemini-1.5-pro": "Gemini 1.5 Pro",
+    "gemini/gemini-1.5-pro-latest": "Gemini 1.5 Pro (Latest)",
     "gemini/gemini-1.5-flash": "Gemini 1.5 Flash",
     "gemini/gemini-pro": "Gemini Pro",
+    "gemini/gemini-pro-vision": "Gemini Pro Vision",
     
-    # XAI
+    # XAI - Grok Models
     "xai/grok-4": "Grok 4",
     "xai/grok-3": "Grok 3",
     "xai/grok-3-mini-beta": "Grok 3 Mini Beta",
@@ -101,12 +194,14 @@ MODEL_DISPLAY_NAMES = {
     "xai/grok-2": "Grok 2",
     "xai/grok-beta": "Grok Beta",
     
-    # Groq
+    # Groq - Ultra-fast Inference
     "groq/llama-3.1-405b-reasoning": "Groq Llama 3.1 405B (Ultra-fast)",
     "groq/llama-3.1-70b-versatile": "Groq Llama 3.1 70B (Fast)",  
     "groq/llama-3.1-8b-instant": "Groq Llama 3.1 8B (Instant)",
+    "groq/llama-3.2-90b-vision-preview": "Groq Llama 3.2 90B Vision",
     "groq/mixtral-8x7b-32768": "Groq Mixtral 8x7B (Fast)",
     "groq/gemma-7b-it": "Groq Gemma 7B (Fast)",
+    "groq/gemma2-9b-it": "Groq Gemma 2 9B (Fast)",
     
     # Perplexity
     "perplexity/sonar-pro": "Perplexity Sonar Pro (Online)",
@@ -116,9 +211,11 @@ MODEL_DISPLAY_NAMES = {
     
     # Mistral
     "mistral/mistral-large-latest": "Mistral Large (Latest)",
+    "mistral/mistral-large-2411": "Mistral Large 24.11",
     "mistral/mistral-medium-latest": "Mistral Medium",
     "mistral/mistral-small-latest": "Mistral Small",
     "mistral/codestral-latest": "Codestral (Code Specialist)",
+    "mistral/mistral-nemo": "Mistral Nemo",
     "mistral/open-mistral-7b": "Mistral 7B (Open)",
     "mistral/open-mixtral-8x7b": "Mixtral 8x7B (Open)",
     "mistral/open-mixtral-8x22b": "Mixtral 8x22B (Open)",
@@ -128,46 +225,57 @@ MODEL_DISPLAY_NAMES = {
     "azure-gpt-4-turbo": "Azure GPT-4 Turbo",
     "azure-gpt-35-turbo": "Azure GPT-3.5 Turbo",
     
-    # Ollama models
+    # Ollama models (Local)
     "ollama-llama3.1": "Ollama Llama 3.1 (Local)",
+    "ollama-llama3.2": "Ollama Llama 3.2 (Local)",
     "ollama-llama3": "Ollama Llama 3 (Local)",
     "ollama-llama2": "Ollama Llama 2 (Local)",
     "ollama-codellama": "Ollama CodeLlama (Local)",
     "ollama-mistral": "Ollama Mistral (Local)",
     "ollama-phi3": "Ollama Phi-3 (Local)",
+    "ollama-gemma2": "Ollama Gemma 2 (Local)",
     
     # Cohere
     "command-r-plus": "Cohere Command R+ (Enterprise)",
     "command-r": "Cohere Command R (Enterprise)", 
+    "command-r-plus-08-2024": "Cohere Command R+ (Aug 2024)",
     "command-a-03-2025": "Cohere Command A (Mar 2025)",
     
-    # Together
+    # Together AI
     "together_ai/meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo": "Together AI Llama 3.1 405B",
     "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo": "Together AI Llama 3.1 70B",
     "together_ai/meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo": "Together AI Llama 3.1 8B",
+    "together_ai/meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo": "Together AI Llama 3.2 90B Vision",
     "together_ai/mistralai/Mixtral-8x7B-Instruct-v0.1": "Together AI Mixtral 8x7B",
+    "together_ai/Qwen/Qwen2.5-72B-Instruct-Turbo": "Together AI Qwen 2.5 72B",
     
     # Replicate
     "replicate/meta/meta-llama-3-70b-instruct": "Replicate Llama 3 70B",
     "replicate/meta/meta-llama-3-8b-instruct": "Replicate Llama 3 8B",
     "replicate/mistralai/mistral-7b-instruct-v0.1": "Replicate Mistral 7B",
     
-    # DeepSeek
+    # DeepSeek - Advanced Reasoning
     "deepseek/deepseek-chat": "DeepSeek Chat",
     "deepseek/deepseek-coder": "DeepSeek Coder",
     "deepseek/deepseek-reasoner": "DeepSeek Reasoner",
+    "deepseek/deepseek-r1": "DeepSeek R1 (Reasoning)",
+    "deepseek/deepseek-v3": "DeepSeek V3",
     
-    # AI21
+    # AI21 Labs
     "ai21/jamba-1.5-large": "AI21 Jamba 1.5 Large",
     "ai21/jamba-1.5-mini": "AI21 Jamba 1.5 Mini",
+    "ai21/jamba-instruct": "AI21 Jamba Instruct",
     
-    # Fireworks
+    # Fireworks AI
     "fireworks_ai/accounts/fireworks/models/llama-v3p2-90b-instruct": "Fireworks AI Llama 3.2 90B",
     "fireworks_ai/accounts/fireworks/models/llama-v3p1-70b-instruct": "Fireworks AI Llama 3.1 70B",
+    "fireworks_ai/accounts/fireworks/models/qwen2-72b-instruct": "Fireworks AI Qwen 2 72B",
     
-    # Cerebras
+    # Cerebras - Ultra-fast Inference
     "cerebras/llama3.1-70b": "Cerebras Llama 3.1 70B (Ultra-fast)",
-    "cerebras/llama3.1-8b": "Cerebras Llama 3.1 8B (Ultra-fast)"
+    "cerebras/llama3.1-8b": "Cerebras Llama 3.1 8B (Ultra-fast)",
+    "cerebras/llama3.2-1b": "Cerebras Llama 3.2 1B (Ultra-fast)",
+    "cerebras/llama3.2-3b": "Cerebras Llama 3.2 3B (Ultra-fast)"
 }
 
 def get_available_models():
