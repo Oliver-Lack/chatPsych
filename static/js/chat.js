@@ -284,26 +284,130 @@ function appendMessage(message, role, callback) {
     chatContainer.appendChild(newMessage);
 
     const messageContent = newMessage.querySelector('.message-content');
-    const words = message.split(' ');
-    let wordIndex = 0;
-
-    function appendWord() {
-        if (wordIndex < words.length) {
-            messageContent.innerHTML += words[wordIndex] + ' ';
-            wordIndex++;
-            setTimeout(appendWord, 50);
-        } else {
-            chatContainer.scrollTo({
-                top: chatContainer.scrollHeight,
-                behavior: 'smooth'
-            });
-            if (callback) {
-                callback();
+    
+    // This uses a package to parse the AI output as markdown for chat appending
+    if (role === 'llm' && typeof marked !== 'undefined') {
+        // Parse markdown to HTML first
+        const htmlContent = marked.parse(message);
+        messageContent.innerHTML = htmlContent;
+        
+        // The rest of this if statement is for 'streaming' the output to the chat response window
+        messageContent.style.opacity = '0';
+        
+        const fullText = messageContent.textContent;
+        messageContent.textContent = '';
+        messageContent.style.opacity = '1';
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        
+        let charIndex = 0;
+        
+        // This stuff is to create a human-like typing delay in AI responses
+        function getTypingDelay(char, nextChar) {
+            const baseSpeed = 5; // Base speed of character appending
+            const variation = Math.random() * 8; // Random variation in speed
+            
+            // This is for longer pauses after punctuation ;) pretty cool hey!
+            if (char === '.' || char === '!' || char === '?') {
+                return baseSpeed + variation + Math.random() * 150 + 80;
+            }
+            if (char === ',' || char === ';' || char === ':') {
+                return baseSpeed + variation + Math.random() * 60 + 35;
+            }
+            
+            // Ever so slight pause after spaces
+            if (char === ' ') {
+                return baseSpeed + variation + Math.random() * 20;
+            }
+            
+            // Occasional random pauses mid-word
+            if (Math.random() < 0.06) { // change chance of random pause here
+                return baseSpeed + variation + Math.random() * 60 + 30;
+            }
+            
+            return baseSpeed + variation;
+        }
+        
+        function typeCharacter() {
+            if (charIndex < fullText.length) {
+                const currentText = fullText.substring(0, charIndex + 1);
+                
+                tempDiv.innerHTML = htmlContent;
+                const walker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT);
+                let accumulatedLength = 0;
+                let node;
+                
+                while (node = walker.nextNode()) {
+                    const nodeLength = node.textContent.length;
+                    if (accumulatedLength + nodeLength >= charIndex + 1) {
+                        const trimAmount = charIndex + 1 - accumulatedLength;
+                        node.textContent = node.textContent.substring(0, trimAmount);
+                        let sibling = node;
+                        while (sibling.nextSibling) {
+                            sibling.parentNode.removeChild(sibling.nextSibling);
+                        }
+                        let parent = node.parentNode;
+                        while (parent && parent !== tempDiv) {
+                            while (parent.nextSibling) {
+                                parent.parentNode.removeChild(parent.nextSibling);
+                            }
+                            parent = parent.parentNode;
+                        }
+                        break;
+                    }
+                    accumulatedLength += nodeLength;
+                }
+                
+                messageContent.innerHTML = tempDiv.innerHTML;
+                
+                const currentChar = fullText.charAt(charIndex);
+                const nextChar = charIndex + 1 < fullText.length ? fullText.charAt(charIndex + 1) : '';
+                const delay = getTypingDelay(currentChar, nextChar);
+                
+                charIndex++;
+                setTimeout(typeCharacter, delay);
+                
+                chatContainer.scrollTo({
+                    top: chatContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
+            } else {
+                messageContent.innerHTML = htmlContent;
+                chatContainer.scrollTo({
+                    top: chatContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
+                if (callback) {
+                    callback();
+                }
             }
         }
-    }
+        
+        typeCharacter();
+    } else {
+        // For user messages, use word-by-word animation
+        const words = message.split(' ');
+        let wordIndex = 0;
 
-    appendWord();
+        function appendWord() {
+            if (wordIndex < words.length) {
+                messageContent.innerHTML += words[wordIndex] + ' ';
+                wordIndex++;
+                setTimeout(appendWord, 50);
+            } else {
+                chatContainer.scrollTo({
+                    top: chatContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
+                if (callback) {
+                    callback();
+                }
+            }
+        }
+
+        appendWord();
+    }
 }
 
 // Auto-scroll to bottom on manual submit 
@@ -326,7 +430,7 @@ function generateAssistantResponse(userMessage) {
     const gifPlaceholder = insertLoaderPlaceholder();
 
     // The random delay for the appending of content
-    const randomDelay = Math.floor(Math.random() * (2000 - 600 + 1)) + 600;
+    const randomDelay = Math.floor(Math.random() * (1800 - 500 + 1)) + 500;
 
     setTimeout(() => {
         const formData = new FormData();

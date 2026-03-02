@@ -432,37 +432,61 @@ def litellm_api_request(model="gpt-4.1",
         params = {
             "model": model,
             "messages": messages,
-            "temperature": temperature,
-            "top_p": top_p,
             "max_tokens": max_tokens
         }
         
         if "gpt" in model or "o1" in model:
             # OpenAI stuff
+            params["temperature"] = temperature
+            params["top_p"] = top_p
             params["presence_penalty"] = presence_penalty
             params["frequency_penalty"] = frequency_penalty
             if logprobs and "o1" not in model:
                 params["logprobs"] = True
         elif "claude" in model:
             # Anthropic models don't support presence/frequency penalties
-            pass
+            # Anthropic API only allows temperature OR top_p, not both
+            # Use temperature as the primary parameter (more intuitive)
+            params["temperature"] = temperature
         elif "grok" in model:
             # XAI models - some support penalties, others don't
+            params["temperature"] = temperature
+            params["top_p"] = top_p
             if "grok-4" not in model:
                 # Most Grok models support penalties except grok-4
                 params["presence_penalty"] = presence_penalty
                 params["frequency_penalty"] = frequency_penalty
             # grok-4 currently only supports basic parameters
         elif any(provider in model for provider in ["groq", "perplexity", "mistral", "cohere"]):
-            pass
+            # These providers generally support temperature and top_p
+            params["temperature"] = temperature
+            params["top_p"] = top_p
         elif any(provider in model for provider in ["together", "replicate", "fireworks", "cerebras"]):
-            pass
+            # These providers generally support temperature and top_p
+            params["temperature"] = temperature
+            params["top_p"] = top_p
+        elif "gemini" in model:
+            # Google Gemini models
+            params["temperature"] = temperature
+            params["top_p"] = top_p
+        elif "deepseek" in model:
+            # DeepSeek models
+            params["temperature"] = temperature
+            params["top_p"] = top_p
         elif "ollama" in model:
-            pass
+            # Ollama local models
+            params["temperature"] = temperature
+            params["top_p"] = top_p
         elif any(provider in model for provider in ["azure", "bedrock"]):
             if "azure" in model:
+                params["temperature"] = temperature
+                params["top_p"] = top_p
                 params["presence_penalty"] = presence_penalty
                 params["frequency_penalty"] = frequency_penalty
+        else:
+            # Default: include temperature and top_p for other models
+            params["temperature"] = temperature
+            params["top_p"] = top_p
         
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)

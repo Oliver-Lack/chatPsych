@@ -1,0 +1,2 @@
+username,password,agent_name,user_id,survey_start_timestamp,survey_end_timestamp,survey_completed,interaction_type,pre_age,pre_gender,pre_likert_item_0,pre_likert_item_1
+my_id_1,castle,agent_2,1,2026-03-02 12:21:27.696343,2026-03-02 12:21:48.256845,yes,pre_interaction_survey,35,male,5,3

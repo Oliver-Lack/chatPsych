@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Survey Form</title>
+    <title>Pre-interaction survey</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
@@ -10,16 +10,16 @@
     <!-- Survey Consent Popup -->
     <div id="consent-popup" class="survey-consent-popup">
         <div class="survey-popup-content">
-            <h2>Enter title for information sheet...</h2>
+            <h2>The information consent sheet</h2>
             <div class="consent-content">
-                <p>Enter the information sheet content that participants will see...</p>
-                <p>Enter consent form content...</p>
+                <p>Some info for the participants here!</p>
+                <p>Do you consent?</p>
             </div>
             
+            <div class="form-downloads"><a href="/download-form-file/information" class="download-link">Download Information Sheet</a><a href="/download-form-file/consent" class="download-link">Download Consent Form</a></div>
             
-            
-            <button id="consent-agree-btn" class="survey-button survey-btn-agree">Agree</button>
-            <button id="consent-quit-btn" class="survey-button survey-btn-quit">Quit</button>
+            <button id="consent-agree-btn" class="survey-btn survey-btn-agree">Agree</button>
+            <button id="consent-quit-btn" class="survey-btn survey-btn-quit">Quit</button>
         </div>
     </div>
 
@@ -27,19 +27,18 @@
     <div id="quit-confirm-popup" class="survey-quit-confirm-popup survey-hidden">
         <div class="survey-popup-content">
             <h3>Are you sure you want to quit participation in this study?</h3>
-            <button id="quit-confirm-yes-btn" class="survey-button survey-btn-quit">Yes, Quit</button>
-            <button id="quit-confirm-no-btn" class="survey-button survey-btn-cancel">No, Go Back</button>
+            <button id="quit-confirm-yes-btn" class="survey-btn survey-btn-quit">Yes, Quit</button>
+            <button id="quit-confirm-no-btn" class="survey-btn survey-btn-cancel">No, Go Back</button>
         </div>
     </div>
 
     <div class="survey-container">
         <div class="survey-header">
-            <h1>Survey Form</h1>
+            <h1>Pre-interaction survey</h1>
         </div>
         
         <div class="survey-content">
-            <form id="survey-form" class="survey-form">
-                <div id="survey-sections" class="survey-sections">
+            <form id="survey-form">
 
         <!-- Demographics Section -->
         <div class="survey-section" id="demographics-section">
@@ -58,49 +57,51 @@
             </select><br><br>
         </div>
 
-        <!-- Demographics Section -->
-        <div class="survey-section" id="demographics-section">
-            <div class="survey-section-title">Demographics</div>
-
-            <label for="demographics-age">Age:</label>
-            <input type="number" id="demographics-age" name="age" min="18" max="99" required><br><br>
-
-            <label for="demographics-gender">Gender:</label>
-            <select id="demographics-gender" name="gender" required>
-                <option value="">Select...</option>
-                <option value="female">Female</option>
-                <option value="male">Male</option>
-                <option value="other">Other</option>
-                <option value="prefer_not_to_say">Prefer not to say</option>
-            </select><br><br>
+        <!-- Likert Scale Section -->
+        <div class="survey-section" id="likert-scale-section">
+            <div class="survey-section-title">Likert Scale Items</div>
+            <table class="survey-likert-table">
+                <tr>
+                    <th>Statement</th>
+                    <th>Strongly Disagree</th>
+                    <th>Disagree</th>
+                    <th>Somewhat Disagree</th>
+                    <th>Neutral</th>
+                    <th>Somewhat Agree</th>
+                    <th>Agree</th>
+                    <th>Strongly Agree</th>
+                </tr>
+                <tr>
+                    <td>How familiar are you with chatbots?</td>
+                    <td><input type="radio" name="likert_item_0" value="1" required></td>
+                    <td><input type="radio" name="likert_item_0" value="2" ></td>
+                    <td><input type="radio" name="likert_item_0" value="3" ></td>
+                    <td><input type="radio" name="likert_item_0" value="4" ></td>
+                    <td><input type="radio" name="likert_item_0" value="5" ></td>
+                    <td><input type="radio" name="likert_item_0" value="6" ></td>
+                    <td><input type="radio" name="likert_item_0" value="7" ></td>
+                </tr>
+                <tr>
+                    <td>How often do you use AI?</td>
+                    <td><input type="radio" name="likert_item_1" value="1" required></td>
+                    <td><input type="radio" name="likert_item_1" value="2" ></td>
+                    <td><input type="radio" name="likert_item_1" value="3" ></td>
+                    <td><input type="radio" name="likert_item_1" value="4" ></td>
+                    <td><input type="radio" name="likert_item_1" value="5" ></td>
+                    <td><input type="radio" name="likert_item_1" value="6" ></td>
+                    <td><input type="radio" name="likert_item_1" value="7" ></td>
+                </tr>
+            </table>
         </div>
-
-        <!-- Demographics Section -->
-        <div class="survey-section" id="demographics-section">
-            <div class="survey-section-title">Demographics</div>
-
-            <label for="demographics-age">Age:</label>
-            <input type="number" id="demographics-age" name="age" min="18" max="99" required><br><br>
-
-            <label for="demographics-gender">Gender:</label>
-            <select id="demographics-gender" name="gender" required>
-                <option value="">Select...</option>
-                <option value="female">Female</option>
-                <option value="male">Male</option>
-                <option value="other">Other</option>
-                <option value="prefer_not_to_say">Prefer not to say</option>
-            </select><br><br>
-        </div>
-
-                </div>
-                <div class="survey-navigation">
+    
+                <div class="submit-section">
                     <button type="submit" id="submit-btn">Submit Survey</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Survey Submission Message -->
+    <!-- Survey Submission Modal -->
     <div id="submission-modal" class="survey-submission-modal survey-hidden">
         <div class="survey-popup-content">
             <div class="submission-content">
@@ -112,7 +113,7 @@
     </div>
 
     <script>
-        // Redirection links for the JS
+        // Make quit redirection link available to external JS
         window.quitRedirectionLink = "https://www.prolific.com/";
     </script>
     <script src="/static/js/pre_survey.js"></script>
