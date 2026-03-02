@@ -1076,5 +1076,145 @@
     "geo": {
       "error": "GeoIP database not available"
     }
+  },
+  {
+    "timestamp": "2026-03-02T16:15:31.945755",
+    "ip": "127.0.0.1",
+    "endpoint": "main_chat_interface",
+    "method": "GET",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "referrer": "http://0.0.0.0:8080/research_dashboard",
+    "host": "0.0.0.0:8080",
+    "path": "/",
+    "query_string": "",
+    "geo": {
+      "error": "GeoIP database not available"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T16:17:52.099304",
+    "ip": "127.0.0.1",
+    "endpoint": "researcher_dashboard",
+    "method": "GET",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "referrer": "http://0.0.0.0:8080/",
+    "host": "0.0.0.0:8080",
+    "path": "/research_dashboard",
+    "query_string": "",
+    "geo": {
+      "error": "GeoIP database not available"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T16:19:17.054980",
+    "ip": "127.0.0.1",
+    "endpoint": "main_chat_interface",
+    "method": "GET",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "referrer": "http://0.0.0.0:8080/research_dashboard",
+    "host": "0.0.0.0:8080",
+    "path": "/",
+    "query_string": "",
+    "geo": {
+      "error": "GeoIP database not available"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T16:21:17.810329",
+    "ip": "127.0.0.1",
+    "endpoint": "researcher_dashboard",
+    "method": "GET",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "referrer": "http://0.0.0.0:8080/",
+    "host": "0.0.0.0:8080",
+    "path": "/research_dashboard",
+    "query_string": "",
+    "geo": {
+      "error": "GeoIP database not available"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T16:23:04.146405",
+    "ip": "127.0.0.1",
+    "endpoint": "main_chat_interface",
+    "method": "GET",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "referrer": "http://0.0.0.0:8080/research_dashboard",
+    "host": "0.0.0.0:8080",
+    "path": "/",
+    "query_string": "",
+    "geo": {
+      "error": "GeoIP database not available"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T16:25:43.074444",
+    "ip": "127.0.0.1",
+    "endpoint": "main_chat_interface",
+    "method": "GET",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "referrer": "http://0.0.0.0:8080/research_dashboard",
+    "host": "0.0.0.0:8080",
+    "path": "/",
+    "query_string": "",
+    "geo": {
+      "error": "GeoIP database not available"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T16:26:39.883396",
+    "ip": "127.0.0.1",
+    "endpoint": "researcher_dashboard",
+    "method": "GET",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "referrer": "http://0.0.0.0:8080/",
+    "host": "0.0.0.0:8080",
+    "path": "/research_dashboard",
+    "query_string": "",
+    "geo": {
+      "error": "GeoIP database not available"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T16:27:47.872251",
+    "ip": "127.0.0.1",
+    "endpoint": "main_chat_interface",
+    "method": "GET",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "referrer": "http://0.0.0.0:8080/research_dashboard",
+    "host": "0.0.0.0:8080",
+    "path": "/",
+    "query_string": "",
+    "geo": {
+      "error": "GeoIP database not available"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T16:29:04.672642",
+    "ip": "127.0.0.1",
+    "endpoint": "main_chat_interface",
+    "method": "GET",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "referrer": "http://0.0.0.0:8080/research_dashboard",
+    "host": "0.0.0.0:8080",
+    "path": "/",
+    "query_string": "",
+    "geo": {
+      "error": "GeoIP database not available"
+    }
+  },
+  {
+    "timestamp": "2026-03-02T16:31:44.641082",
+    "ip": "127.0.0.1",
+    "endpoint": "main_chat_interface",
+    "method": "GET",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    "referrer": null,
+    "host": "0.0.0.0:8000",
+    "path": "/",
+    "query_string": "",
+    "geo": {
+      "error": "GeoIP database not available"
+    }
   }
 ]

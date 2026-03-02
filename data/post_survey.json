@@ -1,0 +1,20 @@
+{
+    "post_survey_responses": [
+        {
+            "username": "my_id1777",
+            "password": "castle",
+            "agent_name": "agent_2",
+            "user_id": 20,
+            "survey_start_timestamp": "2026-03-02 16:32:49.685560",
+            "survey_end_timestamp": "2026-03-02 16:33:07.025067",
+            "survey_completed": "yes",
+            "interaction_type": "post_interaction_survey",
+            "post_likert_item_0": "3",
+            "post_likert_item_1": "7",
+            "post_likert_item_2": "4",
+            "post_free_text_response_0": "no",
+            "post_free_text_response_1": "no",
+            "post_free_text_response_2": "nah"
+        }
+    ]
+}

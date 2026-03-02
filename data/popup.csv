@@ -1,0 +1,4 @@
+timestamp,username,password,agent_name,user_id,interaction_type,button_selected
+2026-03-02 16:20:53.244699,my_id_876,agent_1,agent_1,16,post_chat_popup_selection,Not_Active
+2026-03-02 16:24:19.970318,my_id999,castle,agent_2,17,post_chat_popup_selection,Not_Active
+2026-03-02 16:32:47.909899,my_id1777,castle,agent_2,20,post_chat_popup_selection,Not_Active

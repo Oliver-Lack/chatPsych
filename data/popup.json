@@ -1,0 +1,31 @@
+{
+    "popup_responses": [
+        {
+            "timestamp": "2026-03-02 16:20:53.244699",
+            "username": "my_id_876",
+            "password": "agent_1",
+            "agent_name": "agent_1",
+            "user_id": 16,
+            "interaction_type": "post_chat_popup_selection",
+            "button_selected": "Not_Active"
+        },
+        {
+            "timestamp": "2026-03-02 16:24:19.970318",
+            "username": "my_id999",
+            "password": "castle",
+            "agent_name": "agent_2",
+            "user_id": 17,
+            "interaction_type": "post_chat_popup_selection",
+            "button_selected": "Not_Active"
+        },
+        {
+            "timestamp": "2026-03-02 16:32:47.909899",
+            "username": "my_id1777",
+            "password": "castle",
+            "agent_name": "agent_2",
+            "user_id": 20,
+            "interaction_type": "post_chat_popup_selection",
+            "button_selected": "Not_Active"
+        }
+    ]
+}
