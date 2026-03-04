@@ -1105,12 +1105,14 @@ select option:checked {
 
 .branding-form .setting-group input[type="text"] {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   background-color: #333;
-  border: 2px solid #555;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 14px;
+  border: 1px solid #555;
+  border-radius:  5px;
+  color: #e9e9e9;
+  font-size:  16px;
+  font-family: 'Helvetica', sans-serif;
+  box-sizing: border-box;
   transition: border-color 0.3s ease;
 }
 
@@ -1365,34 +1367,28 @@ select option:checked {
   font-family: 'Helvetica', sans-serif;
 }
 
-.agent-creation-form select,
-#model {
-  width: 60%;
-  padding: 12px 16px;
-  color: #e9e9e9 !important;
-  background: #444 !important;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23e9e9e9' viewBox='0 0 16 16'%3e%3cpath d='m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z'/%3e%3c/svg%3e") !important;
-  background-repeat: no-repeat !important;
-  background-position: right 12px center !important;
-  background-size: 12px !important;
-  padding-right: 40px !important;
-  appearance: none !important;
-  border: 1px solid #555 !important;
+.parameter-item select {
+  width: 100%;
+  padding: 10px;
+  color: #e9e9e9;
+  background: #333;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23e9e9e9' viewBox='0 0 16 16'%3e%3cpath d='m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  padding-right: 40px;
+  appearance: none;
+  border: 1px solid #555;
   font-size: 16px;
-  border-radius: 4px;
+  border-radius: 5px;
   font-family: 'Helvetica', sans-serif;
-  margin-top: 10px;
+  box-sizing: border-box;
 }
 
-#model:focus {
+.parameter-item select:focus {
   outline: none;
-  border-color: #FF8266 !important;
+  border-color: #FF8266;
   box-shadow: 0 0 5px rgba(255, 130, 102, 0.3);
-}
-
-.agent-creation-form label[for="model"] {
-  margin-bottom: 5px;
-  display: block;
 }
 
 .agent-creation-form textarea {
@@ -1414,6 +1410,60 @@ select option:checked {
 
 .agent-creation-form button:hover {
   background-color: #FF8266;
+}
+
+.model-parameters-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.parameter-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.parameter-item label {
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #e6e6e6;
+  font-size: 14px;
+  max-width: 100%;
+}
+
+.parameter-item label em {
+  display: block;
+  font-weight: normal;
+  font-size: 12px;
+  color: #b0b0b0;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.parameter-item input,
+.parameter-item textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background-color: #333;
+  color: #e9e9e9;
+  font-size: 16px;
+  box-sizing: border-box;
+  font-family: 'Helvetica', sans-serif;
+}
+
+.parameter-item textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.parameter-item input:focus,
+.parameter-item textarea:focus {
+  outline: none;
+  border-color: #FF8266;
+  box-shadow: 0 0 5px rgba(255, 130, 102, 0.3);
 }
 
 /* General form styling for research dashboard */
@@ -2009,16 +2059,19 @@ button:hover {
   flex: 1;
   min-width: 200px;
   padding: 10px;
-  border: 2px solid #555;
+  border: 1px solid #555;
   border-radius: 5px;
-  background-color: #1a1a1a;
-  color: #ffffff;
-  font-size: 14px;
+  background-color: #333;
+  color: #e9e9e9;
+  font-size: 16px;
+  font-family: 'Helvetica', sans-serif;
+  box-sizing: border-box;
 }
 
 .password-setting-group input[type="text"]:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: #FF8266;
+  box-shadow: 0 0 5px rgba(255, 130, 102, 0.3);
 }
 
 .config-button {
@@ -2410,11 +2463,27 @@ button:hover {
 .data-download-section h2 {
   color: #e6e6e6;
   text-align: left;
+  margin-bottom: 20px;
+}
+
+.download-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.download-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.download-column h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
 }
 
 .download-button {
-  margin-top: 15px;
-  align-items: center;
+  margin-top: 0;
   margin-bottom: 10px;
   padding: 10px;
   background-color: #555;
@@ -2423,7 +2492,7 @@ button:hover {
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
-  width: 50%;
+  width: 100%;
 }
 
 .download-button:hover {
@@ -2879,10 +2948,10 @@ select option:checked {
 
 .setting-group label {
   display: block;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: bold;
   margin-bottom: 8px;
-  color: #ffffff;
+  color: #e6e6e6;
 }
 
 .setting-group input[type="number"],
@@ -2890,17 +2959,20 @@ select option:checked {
   width: 100%;
   max-width: 300px;
   padding: 10px;
-  border: 2px solid #555;
+  border: 1px solid #555;
   border-radius: 5px;
-  background-color: #1a1a1a;
-  color: #ffffff;
-  font-size: 14px;
+  background-color: #333;
+  color: #e9e9e9;
+  font-size: 16px;
+  font-family: 'Helvetica', sans-serif;
+  box-sizing: border-box;
 }
 
 .setting-group input[type="number"]:focus,
 .setting-group input[type="url"]:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: #FF8266;
+  box-shadow: 0 0 5px rgba(255, 130, 102, 0.3);
 }
 
 .setting-group input[type="checkbox"] {
@@ -2941,20 +3013,22 @@ select option:checked {
 .config-column label {
   display: block;
   font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 5px;
-  color: #ffffff;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #e6e6e6;
 }
 
 .config-column input[type="text"],
 .config-column input[type="url"] {
   width: 100%;
   padding: 10px;
-  border: 2px solid #555;
+  border: 1px solid #555;
   border-radius: 5px;
-  background-color: #1a1a1a;
-  color: #ffffff;
-  font-size: 14px;
+  background-color: #333;
+  color: #e9e9e9;
+  font-size: 16px;
+  font-family: 'Helvetica', sans-serif;
+  box-sizing: border-box;
 }
 
 .config-toggle {
@@ -4214,6 +4288,25 @@ select option:checked {
   border-radius: 5px;
 }
 
+.information-consent-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.information-consent-grid .form-subsection {
+  margin: 0;
+}
+
+.information-consent-grid .file-status {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .survey-sections-container {
   border-radius: 5px;
   padding: 15px;
@@ -4240,12 +4333,15 @@ select option:checked {
 }
 
 .section-type-selector select {
-  padding: 8px 12px;
-  background: #393939;
-  color: white;
+  padding: 10px;
+  background: #333;
+  color: #e9e9e9;
   border: 1px solid #555;
-  border-radius: 3px;
+  border-radius: 5px;
   min-width: 200px;
+  font-size: 16px;
+  font-family: 'Helvetica', sans-serif;
+  box-sizing: border-box;
 }
 
 .survey-section-config {
@@ -5346,12 +5442,15 @@ input:checked + .slider-switch:before {
 }
 
 .post-interaction-survey-form .section-type-selector select {
-  padding: 8px 12px;
-  background: #393939;
-  color: white;
+  padding: 10px;
+  background: #333;
+  color: #e9e9e9;
   border: 1px solid #555;
-  border-radius: 3px;
+  border-radius: 5px;
   min-width: 200px;
+  font-size: 16px;
+  font-family: 'Helvetica', sans-serif;
+  box-sizing: border-box;
 }
 
 .post-interaction-survey-form .survey-section-config {
@@ -5850,12 +5949,14 @@ input:checked + .slider-switch:before {
 
 .branding-form .setting-group input[type="text"] {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   background-color: #333;
-  border: 2px solid #555;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 14px;
+  border: 1px solid #555;
+  border-radius:  5px;
+  color: #e9e9e9;
+  font-size:  16px;
+  font-family: 'Helvetica', sans-serif;
+  box-sizing: border-box;
   transition: border-color 0.3s ease;
 }
 

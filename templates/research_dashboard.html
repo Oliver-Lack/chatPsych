@@ -19,12 +19,12 @@
             <a href="{{ url_for('login') }}" class="special-back-button researcher-sidebar-content">Back to Login</a>
             <button class="researcher-sidebar-content" onclick="showForm('about')">About</button>
             <button class="researcher-sidebar-content" onclick="showForm('branding')">Branding</button>
-            <button class="researcher-sidebar-content" onclick="showForm('post-chat-popup')">Post-Chat Popup</button>
             <button class="researcher-sidebar-content" onclick="showForm('timer-settings')">Timer</button>
             <button class="researcher-sidebar-content" onclick="showForm('url-configuration')">Redirection Links</button>
             <button class="researcher-sidebar-content" onclick="showForm('agent-creation')">Create Agent</button>
             <button class="researcher-sidebar-content" onclick="showForm('pre-interaction-survey')">Pre-Interaction Survey</button>
             <button class="researcher-sidebar-content" onclick="showForm('post-interaction-survey')">Post-Interaction Survey</button>
+            <button class="researcher-sidebar-content" onclick="showForm('post-chat-popup')">Post-Chat Popup</button>
             <button class="researcher-sidebar-content" onclick="showForm('review-passwords')">Randomised Condition Assignment</button>
             <button class="researcher-sidebar-content" onclick="showForm('download-section')">Download Data</button>
         </aside>
@@ -191,65 +191,74 @@
                 <form id="agent-form" class="agent-creation-form">
                     <div class="form-section">
                         <h3>Agent Configuration</h3>
-                        <label for="json-filename">Agent Name (JSON File Name):<br></label><br>
-                        <input type="text" id="json-filename" name="json-filename" placeholder="e.g., my_experiment_condition_1" required>
-                        <small>This will create a file named 'your-name.json' in the agents folder</small>
+                        <div class="parameter-item">
+                            <label for="json-filename">Agent Name (JSON File Name)<br><em>This will create a file named 'your-name.json' in the agents folder</em></label>
+                            <input type="text" id="json-filename" name="json-filename" placeholder="e.g., my_experiment_condition_1" required>
+                        </div>
                         
-                        <label for="preprompt"><br>PrePrompt (System Message):<br></label><br>
-                        <textarea id="preprompt" name="PrePrompt" placeholder="Enter the system prompt that will guide the AI's behavior..." required></textarea><br>
+                        <div class="parameter-item">
+                            <label for="preprompt">PrePrompt (System Message)<br><em>Enter the system prompt that will guide the AI's behavior</em></label>
+                            <textarea id="preprompt" name="PrePrompt" placeholder="Enter the system prompt that will guide the AI's behavior..." required></textarea>
+                        </div>
+                    </div>
 
                     <div class="form-section">
                         <h3>Model Selection</h3>
-                        <label for="model"><br>AI Model:</label><br>
-                        <select id="model" name="model" required>
-                            <option value="">Loading models...</option>
-                        </select>
-                        <input type="text" id="custom-model" name="custom-model" style="display:none;" placeholder="Enter custom model name">
-                        
-                        <div class="model-quick-select">
-                            <h4>Quick Model Selection</h4>
-                            <div class="provider-buttons">
-                                <button type="button" class="api-button" onclick="setAgentModel('gpt-5.2')">OpenAI GPT-5.2</button>
-                                <button type="button" class="api-button" onclick="setAgentModel('claude-sonnet-4-6')">Anthropic Claude Sonnet 4.6</button>
-                                <button type="button" class="api-button" onclick="setAgentModel('gemini/gemini-2.5-pro')">Google Gemini 2.5 Pro</button>
-                                <button type="button" class="api-button" onclick="setAgentModel('xai/grok-4')">XAI Grok 4</button>
+                        <div class="model-parameters-grid">
+                            <div class="parameter-item">
+                                <label for="model">AI Model<br><em>Select the AI model to use for this agent</em></label>
+                                <select id="model" name="model" required>
+                                    <option value="">Loading models...</option>
+                                </select>
+                            </div>
+                            <div class="parameter-item" id="custom-model-container" style="display:none;">
+                                <label for="custom-model">Custom Model Name<br><em>Enter custom model name (e.g., gpt-4, claude-3-opus-20240229)</em></label>
+                                <input type="text" id="custom-model" name="custom-model" placeholder="Enter custom model name">
                             </div>
                         </div>
                     </div>
 
                     <div class="form-section">
                         <h3>Model Parameters</h3>
-                        <label for="temperature"><br>Temperature (default: 1)<br><br><em>Controls randomness: 0-2 (OpenAI) or 0-1 (Anthropic).:</em></label>
-                        <br><br>
-                        <input type="number" id="temperature" name="temperature" step="0.01" min="0" max="2" value="1" required><br>
+                        <div class="model-parameters-grid">
+                            <div class="parameter-item">
+                                <label for="temperature">Temperature (default: 1)<br><em>Controls randomness: 0-2 (OpenAI) or 0-1 (Anthropic).</em></label>
+                                <input type="number" id="temperature" name="temperature" step="0.01" min="0" max="2" value="1" required>
+                            </div>
 
-                        <label for="top_p"><br>Top P (default: 1)<br><br><em>Nucleus sampling: 0-1. Lower values = more focused responses:</em></label>
-                        <br><br>
-                        <input type="number" id="top_p" name="top_p" step="0.01" min="0" max="1" value="1" required><br>
+                            <div class="parameter-item">
+                                <label for="top_p">Top P (default: 1)<br><em>Nucleus sampling: 0-1. Lower values = more focused responses.</em></label>
+                                <input type="number" id="top_p" name="top_p" step="0.01" min="0" max="1" value="1" required>
+                            </div>
 
-                        <label for="n"> <br>N (default: 1)<br><br><em>Number of response choices to generate:</em></label>
-                        <br><br>
-                        <input type="number" id="n" name="n" value="1" required><br>
-                        
-                        <label for="presence_penalty"><br>Presence Penalty <br><br><em>-2.0 to 2.0. Positive values encourage new topics:</em></label>
-                        <br><br>
-                        <input type="number" id="presence_penalty" name="presence_penalty" step="0.01" min="-2" max="2" value="0" required><br>
-                        
-                        <label for="frequency_penalty"><br>Frequency Penalty <br><br><em>-2.0 to 2.0. Positive values reduce repetition:</em></label>
-                        <br><br>
-                        <input type="number" id="frequency_penalty" name="frequency_penalty" step="0.01" min="-2" max="2" value="0" required><br>
-                        
-                        <label for="max_completion_tokens"><br>Max Completion Tokens:</label>
-                        <br><br>
-                        <input type="number" id="max_completion_tokens" name="max_completion_tokens" min="1" value="1000" required><br>
+                            <div class="parameter-item">
+                                <label for="n">N (default: 1)<br><em>Number of response choices to generate.</em></label>
+                                <input type="number" id="n" name="n" value="1" required>
+                            </div>
+                            
+                            <div class="parameter-item">
+                                <label for="presence_penalty">Presence Penalty<br><em>-2.0 to 2.0. Positive values encourage new topics.</em></label>
+                                <input type="number" id="presence_penalty" name="presence_penalty" step="0.01" min="-2" max="2" value="0" required>
+                            </div>
+                            
+                            <div class="parameter-item">
+                                <label for="frequency_penalty">Frequency Penalty<br><em>-2.0 to 2.0. Positive values reduce repetition.</em></label>
+                                <input type="number" id="frequency_penalty" name="frequency_penalty" step="0.01" min="-2" max="2" value="0" required>
+                            </div>
+                            
+                            <div class="parameter-item">
+                                <label for="max_completion_tokens">Max Completion Tokens</label>
+                                <input type="number" id="max_completion_tokens" name="max_completion_tokens" min="1" value="1000" required>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-section">
                         <h3>Password Assignment</h3>
-                        <label for="agent-password">Password for this Agent:</label>
-                        <br><br>
-                        <input type="text" id="agent-password" name="agent-password" placeholder="Enter a memorable password for participants" required>
-                        <small>Participants can use this password to access this specific agent condition</small>
+                        <div class="parameter-item">
+                            <label for="agent-password">Password for this Agent<br><em>Participants can use this password to access this specific agent condition</em></label>
+                            <input type="text" id="agent-password" name="agent-password" placeholder="Enter a memorable password for participants" required>
+                        </div>
                     </div>
 
                     <div class="form-actions">
@@ -283,28 +292,30 @@
                 <div class="form-section">
                     <h3>Information and Consent Forms</h3>
                     
-                    <div class="form-subsection">
-                        <label for="information-title">Information Sheet Title:</label>
-                        <input type="text" id="information-title" name="information-title" value="Enter title for information sheet..." placeholder="Enter title for information sheet">
-                        
-                        <label for="information-content">Information Sheet Content:</label>
-                        <textarea id="information-content" name="information-content" rows="6" placeholder="Enter the information sheet content that participants will see...">Enter the information sheet content that participants will see...</textarea>
-                        
-                        <div class="file-upload-section">
-                            <label for="information-file">Upload Information Sheet (PDF):</label>
-                            <input type="file" id="information-file" name="information-file" accept=".pdf" onchange="handleFileUpload('information')">
-                            <div id="information-file-status" class="file-status"></div>
+                    <div class="information-consent-grid">
+                        <div class="form-subsection">
+                            <label for="information-title">Information Sheet Title:</label>
+                            <input type="text" id="information-title" name="information-title" value="Enter title for information sheet..." placeholder="Enter title for information sheet">
+                            
+                            <label for="information-content">Information Sheet Content:</label>
+                            <textarea id="information-content" name="information-content" rows="6" placeholder="Enter the information sheet content that participants will see...">Enter the information sheet content that participants will see...</textarea>
+                            
+                            <div class="file-upload-section">
+                                <label for="information-file">Upload Information Sheet (PDF):</label>
+                                <input type="file" id="information-file" name="information-file" accept=".pdf" onchange="handleFileUpload('information')">
+                                <div id="information-file-status" class="file-status"></div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-subsection">
-                        <label for="consent-content">Consent Form Content:</label>
-                        <textarea id="consent-content" name="consent-content" rows="4" placeholder="Enter consent form content...">Enter consent form content...</textarea>
                         
-                        <div class="file-upload-section">
-                            <label for="consent-file">Upload Consent Form (PDF):</label>
-                            <input type="file" id="consent-file" name="consent-file" accept=".pdf" onchange="handleFileUpload('consent')">
-                            <div id="consent-file-status" class="file-status"></div>
+                        <div class="form-subsection">
+                            <label for="consent-content">Consent Form Content:</label>
+                            <textarea id="consent-content" name="consent-content" rows="6" placeholder="Enter consent form content...">Enter consent form content...</textarea>
+                            
+                            <div class="file-upload-section">
+                                <label for="consent-file">Upload Consent Form (PDF):</label>
+                                <input type="file" id="consent-file" name="consent-file" accept=".pdf" onchange="handleFileUpload('consent')">
+                                <div id="consent-file-status" class="file-status"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -539,25 +550,31 @@
             </main>
             <main id="download-section" class="data-download-section">
                 <h2>Download Data</h2>
-                <h3>Chat Interaction Data</h3>
-                <button class="download-button" onclick="downloadInteractionsFile('interactions.json')">Download interactions.json</button>
-                <button class="download-button" onclick="downloadInteractionsFile('interactions_backup.csv')">Download interactions_backup.csv</button>
-                
-                <h3>Pre-Survey Data</h3>
-                <button class="download-button" onclick="downloadSurveyFile('pre_survey.json')">Download pre_survey.json</button>
-                <button class="download-button" onclick="downloadSurveyFile('pre_survey.csv')">Download pre_survey.csv</button>
-                
-                <h3>Post-Survey Data</h3>
-                <button class="download-button" onclick="downloadSurveyFile('post_survey.json')">Download post_survey.json</button>
-                <button class="download-button" onclick="downloadSurveyFile('post_survey.csv')">Download post_survey.csv</button>
-                
-                <h3>Post-Chat Popup Data</h3>
-                <button class="download-button" onclick="downloadPopupFile('popup.json')">Download popup.json</button>
-                <button class="download-button" onclick="downloadPopupFile('popup.csv')">Download popup.csv</button>
-                
-                <h3>System Logs</h3>
-                <button class="download-button" onclick="downloadLogFile('download_log.json')">Download Log</button>
-                <button class="download-button" onclick="downloadVisitorLog()">DOWNLOAD VISITOR LOG</button>
+                <div class="download-grid">
+                    <div class="download-column">
+                        <h3>Chat Interaction Data</h3>
+                        <button class="download-button" onclick="downloadInteractionsFile('interactions.json')">Download interactions.json</button>
+                        <button class="download-button" onclick="downloadInteractionsFile('interactions_backup.csv')">Download interactions_backup.csv</button>
+                        
+                        <h3>Pre-Survey Data</h3>
+                        <button class="download-button" onclick="downloadSurveyFile('pre_survey.json')">Download pre_survey.json</button>
+                        <button class="download-button" onclick="downloadSurveyFile('pre_survey.csv')">Download pre_survey.csv</button>
+                        
+                        <h3>Post-Survey Data</h3>
+                        <button class="download-button" onclick="downloadSurveyFile('post_survey.json')">Download post_survey.json</button>
+                        <button class="download-button" onclick="downloadSurveyFile('post_survey.csv')">Download post_survey.csv</button>
+                    </div>
+                    
+                    <div class="download-column">
+                        <h3>Post-Chat Popup Data</h3>
+                        <button class="download-button" onclick="downloadPopupFile('popup.json')">Download popup.json</button>
+                        <button class="download-button" onclick="downloadPopupFile('popup.csv')">Download popup.csv</button>
+                        
+                        <h3>System Logs</h3>
+                        <button class="download-button" onclick="downloadLogFile('download_log.json')">Download Log</button>
+                        <button class="download-button" onclick="downloadVisitorLog()">DOWNLOAD VISITOR LOG</button>
+                    </div>
+                </div>
             </main>
             <main id="url-configuration" class="url-configuration-section">
                 <h2>URL Configuration</h2>

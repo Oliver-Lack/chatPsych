@@ -697,8 +697,11 @@ function downloadVisitorLog() {
 }
 
 document.getElementById('model').addEventListener('change', function() {
-    document.getElementById('custom-model').style.display = this.value === 'custom' ? 'block' : 'none';
-  });
+    const customModelContainer = document.getElementById('custom-model-container');
+    if (customModelContainer) {
+        customModelContainer.style.display = this.value === 'custom' ? 'block' : 'none';
+    }
+});
 
 // Timer Settings
 function loadTimerSettings() {

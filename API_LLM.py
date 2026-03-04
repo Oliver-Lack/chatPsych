@@ -62,6 +62,9 @@ def load_agent(filepath):
 
 # Common names for AI models that users will see in the interface
 MODEL_DISPLAY_NAMES = {
+    # Custom Model
+    "custom": "Custom Model (Enter model name manually)",
+    
     # OpenAI - GPT-5 Series (Latest)
     "gpt-5.2": "GPT-5.2 (Latest)",
     "gpt-5.2-2025-12-11": "GPT-5.2 (Dec 2025)",
