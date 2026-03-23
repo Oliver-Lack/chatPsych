@@ -6,6 +6,7 @@ import json
 import random
 from datetime import datetime
 import csv
+import re
 from dotenv import load_dotenv
 import geoip2.database
 
@@ -20,6 +21,20 @@ def ensure_data_directory():
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     return data_dir
+
+
+_COLUMN_LABEL_SANITIZE_RE = re.compile(r"[^A-Za-z0-9_]+")
+
+
+def sanitize_column_label(label, fallback):
+    """Return a safe column label for HTML field names and CSV headers."""
+    candidate = (label or "").strip()
+    if not candidate:
+        candidate = (fallback or "").strip()
+    candidate = candidate.replace(" ", "_")
+    candidate = _COLUMN_LABEL_SANITIZE_RE.sub("_", candidate)
+    candidate = candidate.strip("_")
+    return candidate or "field"
 
 # Visitor logging stuff for IP addresses
 GEOIP_DB_PATH = os.path.join(ensure_data_directory(), 'GeoLite2-City.mmdb')
@@ -948,95 +963,26 @@ def load_survey_config():
 
 # This function deals with scraping the survey data from different section types
 def collect_dynamic_survey_data(form_data, survey_config, prefix=''):
-    """Collect survey data dynamically based on configuration"""
+    """Collect survey data using the submitted form field names.
+
+    The survey generator uses hidden researcher-defined column labels as HTML field
+    names. Those names become the CSV/JSON column keys (prefixed with pre_/post_).
+    """
     survey_data = {}
-    
-    if not survey_config:
-        for key, value in form_data.items():
-            if value:  
+
+    for key in form_data.keys():
+        if key.endswith('[]'):
+            base_key = key[:-2]
+            values = form_data.getlist(key)
+            if values:
+                prefixed_key = f"{prefix}{base_key}" if prefix else base_key
+                survey_data[prefixed_key] = values
+        else:
+            value = form_data.get(key)
+            if value is not None and str(value).strip() != '':
                 prefixed_key = f"{prefix}{key}" if prefix else key
                 survey_data[prefixed_key] = value
-        return survey_data
-    
-    sections = survey_config.get('sections', {})
-    
-    # demographics data
-    if sections.get('demographics', {}).get('enabled', False):
-        demographics_fields = sections['demographics'].get('fields', {})
-        if demographics_fields.get('age', {}).get('enabled', False):
-            prefixed_key = f"{prefix}age" if prefix else 'age'
-            survey_data[prefixed_key] = form_data.get('age')
-        if demographics_fields.get('gender', {}).get('enabled', False):
-            prefixed_key = f"{prefix}gender" if prefix else 'gender'
-            survey_data[prefixed_key] = form_data.get('gender')
-    
-    # Likert scale data
-    if sections.get('likert', {}).get('enabled', False):
-        items = sections['likert'].get('items', [])
-        for i, item in enumerate(items):
-            field_name = f"likert_item_{i}"
-            if field_name in form_data:
-                prefixed_key = f"{prefix}likert_{i}_{item[:30]}" if prefix else f"likert_{i}_{item[:30]}"
-                survey_data[prefixed_key] = form_data.get(field_name)
-    
-    # free text data
-    if sections.get('freetext', {}).get('enabled', False):
-        questions = sections['freetext'].get('questions', [])
-        for i, question_config in enumerate(questions):
-            field_name = f"free_text_response_{i}"
-            if field_name in form_data:
-                prefixed_key = f"{prefix}{field_name}" if prefix else field_name
-                survey_data[prefixed_key] = form_data.get(field_name)
 
-    # other section types
-    section_types = ['checkbox', 'dropdown', 'slider', 'image', 'video', 'pdf']
-    for section_type in section_types:
-        section_keys = [k for k in sections.keys() if k.startswith(f'{section_type}-')]
-        for section_key in section_keys:
-            section = sections[section_key]
-            if section.get('enabled', False):
-                section_id = section_key.replace('-', '_')
-                
-                if section_type == 'checkbox':
-                    # For checkbox sections
-                    checkbox_values = form_data.getlist(f"{section_id}_response[]")
-                    if checkbox_values:
-                        prefixed_key = f"{prefix}{section_id}_response" if prefix else f"{section_id}_response"
-                        survey_data[prefixed_key] = checkbox_values
-                elif section_type == 'dropdown':
-                    # For dropdown sections
-                    if f"{section_id}_response" in form_data:
-                        prefixed_key = f"{prefix}{section_id}_response" if prefix else f"{section_id}_response"
-                        survey_data[prefixed_key] = form_data.get(f"{section_id}_response")
-                elif section_type == 'slider':
-                    # For slider sections
-                    if f"{section_id}_response" in form_data:
-                        prefixed_key = f"{prefix}{section_id}_response" if prefix else f"{section_id}_response"
-                        survey_data[prefixed_key] = form_data.get(f"{section_id}_response")
-                elif section_type in ['image', 'video', 'pdf']:
-                    # For media sections
-                    if f"{section_id}_response" in form_data:
-                        prefixed_key = f"{prefix}{section_id}_response" if prefix else f"{section_id}_response"
-                        survey_data[prefixed_key] = form_data.get(f"{section_id}_response")
-                    # Also collect any rating responses
-                    if f"{section_id}_rating" in form_data:
-                        prefixed_key = f"{prefix}{section_id}_rating" if prefix else f"{section_id}_rating"
-                        survey_data[prefixed_key] = form_data.get(f"{section_id}_rating")
-                    # And text responses
-                    if f"{section_id}_text" in form_data:
-                        prefixed_key = f"{prefix}{section_id}_text" if prefix else f"{section_id}_text"
-                        survey_data[prefixed_key] = form_data.get(f"{section_id}_text")
-                    # And checkbox responses
-                    checkbox_values = form_data.getlist(f"{section_id}_checkbox[]")
-                    if checkbox_values:
-                        prefixed_key = f"{prefix}{section_id}_checkbox" if prefix else f"{section_id}_checkbox"
-                        survey_data[prefixed_key] = checkbox_values
-    
-    for key, value in form_data.items():
-        prefixed_key = f"{prefix}{key}" if prefix else key
-        if prefixed_key not in survey_data and value: 
-            survey_data[prefixed_key] = value
-    
     return survey_data
 
 # CHAT route 
@@ -2532,16 +2478,18 @@ def generate_demographics_section(config):
     
     if fields.get('age', {}).get('enabled', False):
         age_config = fields['age']
+        age_name = sanitize_column_label(age_config.get('column_label') or age_config.get('columnLabel'), 'age')
         html += f'''
             <label for="demographics-age">Age:</label>
-            <input type="number" id="demographics-age" name="age" min="{age_config.get('min', 18)}" max="{age_config.get('max', 99)}" required><br><br>
+            <input type="number" id="demographics-age" name="{age_name}" min="{age_config.get('min', 18)}" max="{age_config.get('max', 99)}" required><br><br>
 '''
     
     if fields.get('gender', {}).get('enabled', False):
         gender_config = fields['gender']
+        gender_name = sanitize_column_label(gender_config.get('column_label') or gender_config.get('columnLabel'), 'gender')
         html += '''
             <label for="demographics-gender">Gender:</label>
-            <select id="demographics-gender" name="gender" required>
+            <select id="demographics-gender" name="''' + gender_name + '''" required>
                 <option value="">Select...</option>
 '''
         for option in gender_config.get('options', ['Female', 'Male', 'Other', 'Prefer not to say']):
@@ -2575,10 +2523,17 @@ def generate_likert_section(config, randomize_items=False):
         random.shuffle(items)
     
     for i, item in enumerate(items):
+        if isinstance(item, dict):
+            statement = item.get('text') or item.get('statement') or item.get('item') or ''
+            column_label = item.get('column_label') or item.get('columnLabel')
+        else:
+            statement = item
+            column_label = None
+
+        item_name = sanitize_column_label(column_label, f"likert_item_{i}")
         html += f'''                <tr>
-                    <td>{item}</td>
+                    <td>{statement}</td>
 '''
-        item_name = f"likert_item_{i}"
         for j, _ in enumerate(scale_labels):
             required = 'required' if j == 0 else ''
             html += f'                    <td><input type="radio" name="{item_name}" value="{j+1}" {required}></td>\n'
@@ -2605,10 +2560,12 @@ def generate_freetext_section(config, randomize_items=False):
     for i, question_config in enumerate(questions):
         question = question_config.get('question', '')
         rows = question_config.get('rows', 4)
+        column_label = question_config.get('column_label') or question_config.get('columnLabel')
+        field_name = sanitize_column_label(column_label, f"free_text_response_{i}")
         field_id = f"free-text-response-{i}"
         
         html += f'''            <label for="{field_id}">{question}</label><br>
-            <textarea id="{field_id}" name="free_text_response_{i}" rows="{rows}" cols="50" required></textarea><br><br>
+            <textarea id="{field_id}" name="{field_name}" rows="{rows}" cols="50" required></textarea><br><br>
 '''
     
     html += '        </div>\n'
@@ -2629,6 +2586,7 @@ def generate_custom_section(config):
     fields = config.get('fields', [])
     for i, field_config in enumerate(fields):
         field_id = f"custom-field-{i}"
+        field_name = sanitize_column_label(field_config.get('column_label') or field_config.get('columnLabel'), field_id)
         field_label = field_config.get('label', f'Field {i+1}')
         field_type = field_config.get('type', 'text')
         field_options = field_config.get('options', '')
@@ -2638,9 +2596,9 @@ def generate_custom_section(config):
         html += f'            <label for="{field_id}">{field_label}</label><br>\n'
         
         if field_type == 'textarea':
-            html += f'            <textarea id="{field_id}" name="{field_id}" rows="4" {required_attr}></textarea><br><br>\n'
+            html += f'            <textarea id="{field_id}" name="{field_name}" rows="4" {required_attr}></textarea><br><br>\n'
         elif field_type == 'select':
-            html += f'            <select id="{field_id}" name="{field_id}" {required_attr}>\n'
+            html += f'            <select id="{field_id}" name="{field_name}" {required_attr}>\n'
             for option in field_options.split(','):
                 option = option.strip()
                 if option:
@@ -2651,7 +2609,7 @@ def generate_custom_section(config):
                 option = option.strip()
                 if option:
                     radio_id = f"{field_id}-{j}"
-                    html += f'            <input type="radio" id="{radio_id}" name="{field_id}" value="{option}" {required_attr}>\n'
+                    html += f'            <input type="radio" id="{radio_id}" name="{field_name}" value="{option}" {required_attr}>\n'
                     html += f'            <label for="{radio_id}">{option}</label><br>\n'
             html += '<br>\n'
         elif field_type == 'checkbox':
@@ -2659,11 +2617,11 @@ def generate_custom_section(config):
                 option = option.strip()
                 if option:
                     checkbox_id = f"{field_id}-{j}"
-                    html += f'            <input type="checkbox" id="{checkbox_id}" name="{field_id}[]" value="{option}">\n'
+                    html += f'            <input type="checkbox" id="{checkbox_id}" name="{field_name}[]" value="{option}">\n'
                     html += f'            <label for="{checkbox_id}">{option}</label><br>\n'
             html += '<br>\n'
         else:
-            html += f'            <input type="{field_type}" id="{field_id}" name="{field_id}" {required_attr}><br><br>\n'
+            html += f'            <input type="{field_type}" id="{field_id}" name="{field_name}" {required_attr}><br><br>\n'
     
     html += '        </div>\n'
     return html
@@ -2675,6 +2633,8 @@ def generate_checkbox_section(config, section_id):
     question = config.get('question', 'Please select all that apply:')
     options = config.get('options', [])
     
+    column_label = sanitize_column_label(config.get('column_label') or config.get('columnLabel'), f"{section_id}_response")
+
     html = f'''
         <!-- Checkbox Section -->
         <div class="survey-section" id="{section_id}">
@@ -2684,7 +2644,7 @@ def generate_checkbox_section(config, section_id):
     
     for i, option in enumerate(options):
         checkbox_id = f"{section_id}_option_{i}"
-        html += f'''            <input type="checkbox" id="{checkbox_id}" name="{section_id}_response[]" value="{option}">
+        html += f'''            <input type="checkbox" id="{checkbox_id}" name="{column_label}[]" value="{option}">
             <label for="{checkbox_id}">{option}</label><br>
 '''
     
@@ -2700,12 +2660,13 @@ def generate_dropdown_section(config, section_id):
     required = config.get('required', False)
     required_attr = 'required' if required else ''
     
+    column_label = sanitize_column_label(config.get('column_label') or config.get('columnLabel'), f"{section_id}_response")
     html = f'''
         <!-- Dropdown Section -->
         <div class="survey-section" id="{section_id}">
             <div class="survey-section-title">{title}</div>
             <label for="{section_id}_select">{question}</label><br>
-            <select id="{section_id}_select" name="{section_id}_response" {required_attr}>
+            <select id="{section_id}_select" name="{column_label}" {required_attr}>
                 <option value="">Select an option...</option>
 '''
     
@@ -2725,6 +2686,7 @@ def generate_slider_section(config, section_id):
     slider_type = config.get('slider_type', 'labels') 
     required = config.get('required', False)
     required_attr = 'required' if required else ''
+    column_label = sanitize_column_label(config.get('column_label') or config.get('columnLabel'), f"{section_id}_response")
     
     html = f'''
         <!-- Slider Section -->
@@ -2743,7 +2705,7 @@ def generate_slider_section(config, section_id):
                     <span class="slider-min">{min_val}</span>
                     <span class="slider-max">{max_val}</span>
                 </div>
-                <input type="range" id="{section_id}_slider" name="{section_id}_response" 
+                  <input type="range" id="{section_id}_slider" name="{column_label}" 
                        min="{min_val}" max="{max_val}" value="{default_val}" 
                        class="survey-slider" {required_attr} data-slider-interacted="false">
                 <div class="slider-value-display">
@@ -2767,7 +2729,7 @@ def generate_slider_section(config, section_id):
                     <span class="slider-min">{left_label}</span>
                     <span class="slider-max">{right_label}</span>
                 </div>
-                <input type="range" id="{section_id}_slider" name="{section_id}_response" 
+                  <input type="range" id="{section_id}_slider" name="{column_label}" 
                        min="1" max="{steps}" value="{default_val}" 
                        class="survey-slider" {required_attr} data-slider-interacted="false">
                 <div class="slider-value-display">
@@ -2823,13 +2785,17 @@ def generate_image_section(config, section_id):
     
     if require_response:
         response_type = config.get('response_type', 'rating')
+        response_column_label = sanitize_column_label(
+            config.get('response_column_label') or config.get('responseColumnLabel') or config.get('column_label') or config.get('columnLabel'),
+            f"{section_id}_{response_type}"
+        )
         
         if response_type == 'rating':
             question = config.get('rating_question', 'How would you rate this image?')
             scale = config.get('rating_scale', 10)
             html += f'''            <div class="response-section">
                 <label for="{section_id}_rating">{question}</label>
-                <select id="{section_id}_rating" name="{section_id}_rating" required>
+                <select id="{section_id}_rating" name="{response_column_label}" required>
                     <option value="">Select rating...</option>
 '''
             for i in range(1, scale + 1):
@@ -2841,7 +2807,7 @@ def generate_image_section(config, section_id):
             rows = config.get('text_rows', 4)
             html += f'''            <div class="response-section">
                 <label for="{section_id}_text">{question}</label>
-                <textarea id="{section_id}_text" name="{section_id}_text" rows="{rows}" required></textarea>
+                <textarea id="{section_id}_text" name="{response_column_label}" rows="{rows}" required></textarea>
             </div>
 '''
         elif response_type == 'checkbox':
@@ -2852,7 +2818,7 @@ def generate_image_section(config, section_id):
 '''
             for i, option in enumerate(options):
                 html += f'''                <div class="checkbox-option">
-                    <input type="checkbox" id="{section_id}_checkbox_{i}" name="{section_id}_checkbox[]" value="{option}">
+                    <input type="checkbox" id="{section_id}_checkbox_{i}" name="{response_column_label}[]" value="{option}">
                     <label for="{section_id}_checkbox_{i}">{option}</label>
                 </div>
 '''
@@ -2925,13 +2891,17 @@ def generate_video_section(config, section_id):
     
     if require_response:
         response_type = config.get('response_type', 'rating')
+        response_column_label = sanitize_column_label(
+            config.get('response_column_label') or config.get('responseColumnLabel') or config.get('column_label') or config.get('columnLabel'),
+            f"{section_id}_{response_type}"
+        )
         
         if response_type == 'rating':
             question = config.get('rating_question', 'How would you rate this video?')
             scale = config.get('rating_scale', 10)
             html += f'''            <div class="response-section">
                 <label for="{section_id}_rating">{question}</label>
-                <select id="{section_id}_rating" name="{section_id}_rating" required>
+                <select id="{section_id}_rating" name="{response_column_label}" required>
                     <option value="">Select rating...</option>
 '''
             for i in range(1, scale + 1):
@@ -2943,7 +2913,7 @@ def generate_video_section(config, section_id):
             rows = config.get('text_rows', 4)
             html += f'''            <div class="response-section">
                 <label for="{section_id}_text">{question}</label>
-                <textarea id="{section_id}_text" name="{section_id}_text" rows="{rows}" required></textarea>
+                <textarea id="{section_id}_text" name="{response_column_label}" rows="{rows}" required></textarea>
             </div>
 '''
         elif response_type == 'checkbox':
@@ -2954,7 +2924,7 @@ def generate_video_section(config, section_id):
 '''
             for i, option in enumerate(options):
                 html += f'''                <div class="checkbox-option">
-                    <input type="checkbox" id="{section_id}_checkbox_{i}" name="{section_id}_checkbox[]" value="{option}">
+                    <input type="checkbox" id="{section_id}_checkbox_{i}" name="{response_column_label}[]" value="{option}">
                     <label for="{section_id}_checkbox_{i}">{option}</label>
                 </div>
 '''
@@ -3005,12 +2975,16 @@ def generate_pdf_section(config, section_id):
     
     if require_response:
         response_type = config.get('response_type', 'confirmation')
+        response_column_label = sanitize_column_label(
+            config.get('response_column_label') or config.get('responseColumnLabel') or config.get('column_label') or config.get('columnLabel'),
+            f"{section_id}_{response_type}"
+        )
         
         if response_type == 'confirmation':
             confirmation_text = config.get('confirmation_text', 'I have read and understood the document')
             html += f'''            <div class="response-section">
                 <div class="checkbox-option">
-                    <input type="checkbox" id="{section_id}_confirmation" name="{section_id}_response" value="confirmed" required>
+                    <input type="checkbox" id="{section_id}_confirmation" name="{response_column_label}" value="confirmed" required>
                     <label for="{section_id}_confirmation">{confirmation_text}</label>
                 </div>
             </div>
@@ -3020,7 +2994,7 @@ def generate_pdf_section(config, section_id):
             scale = config.get('rating_scale', 10)
             html += f'''            <div class="response-section">
                 <label for="{section_id}_rating">{question}</label>
-                <select id="{section_id}_rating" name="{section_id}_rating" required>
+                <select id="{section_id}_rating" name="{response_column_label}" required>
                     <option value="">Select rating...</option>
 '''
             for i in range(1, scale + 1):
@@ -3032,7 +3006,7 @@ def generate_pdf_section(config, section_id):
             rows = config.get('text_rows', 4)
             html += f'''            <div class="response-section">
                 <label for="{section_id}_text">{question}</label>
-                <textarea id="{section_id}_text" name="{section_id}_text" rows="{rows}" required></textarea>
+                <textarea id="{section_id}_text" name="{response_column_label}" rows="{rows}" required></textarea>
             </div>
 '''
         elif response_type == 'checkbox':
@@ -3043,7 +3017,7 @@ def generate_pdf_section(config, section_id):
 '''
             for i, option in enumerate(options):
                 html += f'''                <div class="checkbox-option">
-                    <input type="checkbox" id="{section_id}_checkbox_{i}" name="{section_id}_checkbox[]" value="{option}">
+                    <input type="checkbox" id="{section_id}_checkbox_{i}" name="{response_column_label}[]" value="{option}">
                     <label for="{section_id}_checkbox_{i}">{option}</label>
                 </div>
 '''

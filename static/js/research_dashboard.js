@@ -1227,6 +1227,32 @@ function addSurveySection() {
     }
 }
 
+// Column label helpers (researcher-only; not shown to participants)
+function sanitizeColumnLabel(label) {
+    if (!label) return '';
+    return label
+        .trim()
+        .replace(/\s+/g, '_')
+        .replace(/[^A-Za-z0-9_]/g, '_')
+        .replace(/^_+|_+$/g, '');
+}
+
+function generateDefaultColumnLabel(text, fallback) {
+    const fromText = sanitizeColumnLabel((text || '').toLowerCase());
+    return fromText || sanitizeColumnLabel((fallback || '').toLowerCase()) || 'field';
+}
+
+function ensureUniqueColumnLabel(baseLabel, used) {
+    let label = baseLabel;
+    let counter = 2;
+    while (used.has(label)) {
+        label = `${baseLabel}_${counter}`;
+        counter += 1;
+    }
+    used.add(label);
+    return label;
+}
+
 // These are all the functions to create the different section types
 function createDemographicsSection(sectionId) {
     return `
@@ -1247,6 +1273,7 @@ function createDemographicsSection(sectionId) {
                 <div class="field-config">
                     <input type="checkbox" checked>
                     <label>Age Field</label>
+                    <input type="text" class="age-column-label" value="age" placeholder="Column label (hidden)" style="width: 160px;">
                     <input type="number" value="18" placeholder="Min" style="width: 60px;">
                     <input type="number" value="99" placeholder="Max" style="width: 60px;">
                 </div>
@@ -1254,6 +1281,7 @@ function createDemographicsSection(sectionId) {
                 <div class="field-config">
                     <input type="checkbox" checked>
                     <label>Gender Field</label>
+                    <input type="text" class="gender-column-label" value="gender" placeholder="Column label (hidden)" style="width: 160px;">
                     <div class="gender-options">
                         <input type="text" value="Female,Male,Other,Prefer not to say" placeholder="Comma-separated options">
                     </div>
@@ -1304,11 +1332,13 @@ function createLikertSection(sectionId) {
                 <h5>Likert Items:</h5>
                 <div class="likert-items" id="likert-items-${sectionId}">
                     <div class="likert-item">
-                        <input type="text" value="I enjoy using technology." placeholder="Enter statement">
+                        <input type="text" class="likert-statement" value="I enjoy using technology." placeholder="Enter statement">
+                        <input type="text" class="likert-column-label" placeholder="Column label (hidden)">
                         <button type="button" class="btn-remove" onclick="removeLikertItem(this)">×</button>
                     </div>
                     <div class="likert-item">
-                        <input type="text" value="I feel comfortable sharing my opinions online." placeholder="Enter statement">
+                        <input type="text" class="likert-statement" value="I feel comfortable sharing my opinions online." placeholder="Enter statement">
+                        <input type="text" class="likert-column-label" placeholder="Column label (hidden)">
                         <button type="button" class="btn-remove" onclick="removeLikertItem(this)">×</button>
                     </div>
                 </div>
@@ -1336,7 +1366,9 @@ function createFreetextSection(sectionId) {
             <div class="freetext-questions" id="freetext-questions-${sectionId}">
                 <div class="freetext-question">
                     <label>Question:</label>
-                    <input type="text" value="Please describe your experience with online surveys:" placeholder="Enter question">
+                    <input type="text" class="freetext-question-text" value="Please describe your experience with online surveys:" placeholder="Enter question">
+                    <label>Column label (hidden):</label>
+                    <input type="text" class="freetext-column-label" placeholder="e.g., survey_experience">
                     <label>Text area rows:</label>
                     <input type="number" value="4" min="1" max="20" style="width: 60px;">
                     <button type="button" class="btn-remove" onclick="removeFreetextQuestion(this)">×</button>
@@ -1390,7 +1422,10 @@ function createCheckboxSection(sectionId) {
             <input type="text" value="Multiple Choice Selection" placeholder="Section title">
             
             <label>Question/Instructions:</label>
-            <input type="text" value="Please select all that apply:" placeholder="Question or instructions">
+            <input type="text" class="section-question" value="Please select all that apply:" placeholder="Question or instructions">
+
+            <label>Column label (hidden):</label>
+            <input type="text" class="section-column-label" placeholder="e.g., selection_checkbox_1">
             
             <div class="checkbox-options-container">
                 <h5>Checkbox Options:</h5>
@@ -1426,10 +1461,13 @@ function createDropdownSection(sectionId) {
             <input type="text" value="Selection" placeholder="Section title">
             
             <label>Question/Instructions:</label>
-            <input type="text" value="Please select an option:" placeholder="Question or instructions">
+            <input type="text" class="section-question" value="Please select an option:" placeholder="Question or instructions">
+
+            <label>Column label (hidden):</label>
+            <input type="text" class="section-column-label" placeholder="e.g., selection_dropdown_1">
             
             <label>Required:</label>
-            <input type="checkbox" checked>
+            <input type="checkbox" class="section-required" checked>
             
             <div class="dropdown-options-container">
                 <h5>Dropdown Options:</h5>
@@ -1466,10 +1504,13 @@ function createSliderSection(sectionId) {
             <input type="text" value="Rating Scale" placeholder="Section title">
             
             <label>Question/Instructions:</label>
-            <input type="text" value="Please rate using the slider:" placeholder="Question or instructions">
+            <input type="text" class="section-question" value="Please rate using the slider:" placeholder="Question or instructions">
+
+            <label>Column label (hidden):</label>
+            <input type="text" class="section-column-label" placeholder="e.g., rating_slider_1">
             
             <label>Required:</label>
-            <input type="checkbox" checked>
+            <input type="checkbox" class="section-required" checked>
             
             <div class="slider-type-container">
                 <h5>Slider Type:</h5>
@@ -1565,6 +1606,9 @@ function createImageSection(sectionId) {
                     <label for="require-response-${sectionId}">Require participant response about this image</label>
                     
                     <div class="response-config" style="display: none;">
+                        <label>Response column label (hidden):</label>
+                        <input type="text" class="response-column-label" placeholder="e.g., image_response_1">
+
                         <label>Response Type:</label>
                         <select onchange="toggleImageResponseType('${sectionId}', this.value)">
                             <option value="rating">Rating Scale</option>
@@ -1652,6 +1696,9 @@ function createVideoSection(sectionId) {
                     <label for="require-response-${sectionId}">Require participant response about this video</label>
                     
                     <div class="response-config" style="display: none;">
+                        <label>Response column label (hidden):</label>
+                        <input type="text" class="response-column-label" placeholder="e.g., video_response_1">
+
                         <label>Response Type:</label>
                         <select onchange="toggleVideoResponseType('${sectionId}', this.value)">
                             <option value="rating">Rating Scale</option>
@@ -1729,6 +1776,9 @@ function createPDFSection(sectionId) {
                     <label for="require-response-${sectionId}">Require participant response about this PDF</label>
                     
                     <div class="response-config" style="display: none;">
+                        <label>Response column label (hidden):</label>
+                        <input type="text" class="response-column-label" placeholder="e.g., pdf_response_1">
+
                         <label>Response Type:</label>
                         <select onchange="togglePDFResponseType('${sectionId}', this.value)">
                             <option value="confirmation">Confirmation (I have read this document)</option>
@@ -1777,7 +1827,8 @@ function addLikertItemToSection(sectionId) {
     const newItem = document.createElement('div');
     newItem.className = 'likert-item';
     newItem.innerHTML = `
-        <input type="text" placeholder="Enter statement">
+        <input type="text" class="likert-statement" placeholder="Enter statement">
+        <input type="text" class="likert-column-label" placeholder="Column label (hidden)">
         <button type="button" class="btn-remove" onclick="removeLikertItem(this)">×</button>
     `;
     container.appendChild(newItem);
@@ -1789,7 +1840,9 @@ function addFreetextQuestionToSection(sectionId) {
     newQuestion.className = 'freetext-question';
     newQuestion.innerHTML = `
         <label>Question:</label>
-        <input type="text" placeholder="Enter question">
+        <input type="text" class="freetext-question-text" placeholder="Enter question">
+        <label>Column label (hidden):</label>
+        <input type="text" class="freetext-column-label" placeholder="e.g., free_text_1">
         <label>Text area rows:</label>
         <input type="number" value="4" min="1" max="20" style="width: 60px;">
         <button type="button" class="btn-remove" onclick="removeFreetextQuestion(this)">×</button>
@@ -1802,7 +1855,7 @@ function addCustomFieldToSection(sectionId) {
     const fieldDiv = document.createElement('div');
     fieldDiv.className = 'field-config';
     fieldDiv.innerHTML = `
-        <input type="text" placeholder="Field label" style="width: 200px;">
+        <input type="text" class="custom-field-label" placeholder="Field label" style="width: 200px;">
         <select style="width: 120px;">
             <option value="text">Text Input</option>
             <option value="textarea">Text Area</option>
@@ -1813,7 +1866,8 @@ function addCustomFieldToSection(sectionId) {
             <option value="checkbox">Checkboxes</option>
             <option value="likert">Likert Scale</option>
         </select>
-        <input type="text" placeholder="Options/validation" style="flex: 1;">
+        <input type="text" class="custom-field-options" placeholder="Options/validation" style="flex: 1;">
+        <input type="text" class="custom-field-column-label" placeholder="Column label (hidden)" style="width: 200px;">
         <input type="checkbox"> <label style="margin: 0;">Required</label>
         <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
     `;
@@ -2039,6 +2093,8 @@ function collectSurveyConfiguration() {
         },
         sections: {}
     };
+
+    const usedColumnLabels = new Set();
     
     // Collect configuration from all dynamic sections
     const dynamicSections = document.querySelectorAll('#dynamic-sections-container .survey-section-config');
@@ -2058,9 +2114,21 @@ function collectSurveyConfiguration() {
         if (sectionType === 'demographics') {
             const ageCheckbox = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="checkbox"]');
             const genderCheckbox = sectionElement.querySelector('.demographics-fields .field-config:nth-child(2) input[type="checkbox"]');
+            const ageColumnLabelInput = sectionElement.querySelector('.age-column-label');
+            const genderColumnLabelInput = sectionElement.querySelector('.gender-column-label');
             const ageMinInput = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="number"]:first-of-type');
             const ageMaxInput = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="number"]:last-of-type');
             const genderOptionsInput = sectionElement.querySelector('.gender-options input[type="text"]');
+
+            let ageColumnLabel = sanitizeColumnLabel(ageColumnLabelInput?.value);
+            if (!ageColumnLabel) ageColumnLabel = generateDefaultColumnLabel('age', 'age');
+            ageColumnLabel = ensureUniqueColumnLabel(ageColumnLabel, usedColumnLabels);
+            if (ageColumnLabelInput) ageColumnLabelInput.value = ageColumnLabel;
+
+            let genderColumnLabel = sanitizeColumnLabel(genderColumnLabelInput?.value);
+            if (!genderColumnLabel) genderColumnLabel = generateDefaultColumnLabel('gender', 'gender');
+            genderColumnLabel = ensureUniqueColumnLabel(genderColumnLabel, usedColumnLabels);
+            if (genderColumnLabelInput) genderColumnLabelInput.value = genderColumnLabel;
             
             config.sections[sectionId] = {
                 type: 'demographics',
@@ -2069,11 +2137,13 @@ function collectSurveyConfiguration() {
                 fields: {
                     age: {
                         enabled: ageCheckbox ? ageCheckbox.checked : false,
+                        column_label: ageColumnLabel,
                         min: ageMinInput ? ageMinInput.value : '18',
                         max: ageMaxInput ? ageMaxInput.value : '99'
                     },
                     gender: {
                         enabled: genderCheckbox ? genderCheckbox.checked : false,
+                        column_label: genderColumnLabel,
                         options: genderOptionsInput ? genderOptionsInput.value.split(',').map(s => s.trim()) : []
                     }
                 }
@@ -2082,11 +2152,22 @@ function collectSurveyConfiguration() {
             const likertItems = [];
             const scaleTypeSelect = sectionElement.querySelector('.likert-scale-type');
             const scaleLabelsInput = sectionElement.querySelector('.scale-labels');
-            
-            sectionElement.querySelectorAll('.likert-items .likert-item input[type="text"]').forEach(input => {
-                if (input.value.trim()) {
-                    likertItems.push(input.value.trim());
-                }
+
+            sectionElement.querySelectorAll('.likert-items .likert-item').forEach((itemDiv, index) => {
+                const statementInput = itemDiv.querySelector('.likert-statement');
+                const columnLabelInput = itemDiv.querySelector('.likert-column-label');
+                const statement = statementInput ? statementInput.value.trim() : '';
+                if (!statement) return;
+
+                let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+                if (!columnLabel) columnLabel = generateDefaultColumnLabel(statement, `likert_item_${index + 1}`);
+                columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+                if (columnLabelInput) columnLabelInput.value = columnLabel;
+
+                likertItems.push({
+                    text: statement,
+                    column_label: columnLabel
+                });
             });
             
             config.sections[sectionId] = {
@@ -2101,12 +2182,20 @@ function collectSurveyConfiguration() {
             const freetextQuestions = [];
             
             sectionElement.querySelectorAll('.freetext-questions .freetext-question').forEach(questionDiv => {
-                const questionText = questionDiv.querySelector('input[type="text"]').value.trim();
+                const questionTextInput = questionDiv.querySelector('.freetext-question-text');
+                const columnLabelInput = questionDiv.querySelector('.freetext-column-label');
+                const questionText = questionTextInput ? questionTextInput.value.trim() : '';
                 const rows = questionDiv.querySelector('input[type="number"]').value;
                 if (questionText) {
+                    let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+                    if (!columnLabel) columnLabel = generateDefaultColumnLabel(questionText, `free_text_${freetextQuestions.length + 1}`);
+                    columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+                    if (columnLabelInput) columnLabelInput.value = columnLabel;
+
                     freetextQuestions.push({
                         question: questionText,
-                        rows: parseInt(rows) || 4
+                        rows: parseInt(rows) || 4,
+                        column_label: columnLabel
                     });
                 }
             });
@@ -2122,17 +2211,24 @@ function collectSurveyConfiguration() {
             const descriptionTextarea = sectionElement.querySelector('textarea');
             
             sectionElement.querySelectorAll('.custom-fields .field-config').forEach(fieldDiv => {
-                const labelInput = fieldDiv.querySelector('input[type="text"]:first-of-type');
+                const labelInput = fieldDiv.querySelector('.custom-field-label') || fieldDiv.querySelector('input[type="text"]');
                 const typeSelect = fieldDiv.querySelector('select');
-                const optionsInput = fieldDiv.querySelector('input[type="text"]:last-of-type');
+                const optionsInput = fieldDiv.querySelector('.custom-field-options');
+                const columnLabelInput = fieldDiv.querySelector('.custom-field-column-label');
                 const requiredCheckbox = fieldDiv.querySelector('input[type="checkbox"]');
                 
                 if (labelInput && labelInput.value.trim()) {
+                    let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+                    if (!columnLabel) columnLabel = generateDefaultColumnLabel(labelInput.value.trim(), `custom_${customFields.length + 1}`);
+                    columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+                    if (columnLabelInput) columnLabelInput.value = columnLabel;
+
                     customFields.push({
                         label: labelInput.value.trim(),
                         type: typeSelect ? typeSelect.value : 'text',
                         options: optionsInput ? optionsInput.value : '',
-                        required: requiredCheckbox ? requiredCheckbox.checked : false
+                        required: requiredCheckbox ? requiredCheckbox.checked : false,
+                        column_label: columnLabel
                     });
                 }
             });
@@ -2146,7 +2242,8 @@ function collectSurveyConfiguration() {
             };
         } else if (sectionType === 'checkbox') {
             const options = [];
-            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; 
+            const questionInput = sectionElement.querySelector('.section-question');
+            const columnLabelInput = sectionElement.querySelector('.section-column-label');
             
             sectionElement.querySelectorAll('.checkbox-options .option-item input[type="text"]').forEach(input => {
                 if (input.value.trim()) {
@@ -2154,17 +2251,24 @@ function collectSurveyConfiguration() {
                 }
             });
             
+            let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+            if (!columnLabel) columnLabel = generateDefaultColumnLabel(questionInput?.value || titleInput?.value, `checkbox_${sectionId.replace(/[^0-9]/g, '')}`);
+            columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+            if (columnLabelInput) columnLabelInput.value = columnLabel;
+
             config.sections[sectionId] = {
                 type: 'checkbox',
                 enabled: true,
                 title: titleInput ? titleInput.value : 'Multiple Choice Selection',
                 question: questionInput ? questionInput.value : 'Please select all that apply:',
-                options: options
+                options: options,
+                column_label: columnLabel
             };
         } else if (sectionType === 'dropdown') {
             const options = [];
-            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; 
-            const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+            const questionInput = sectionElement.querySelector('.section-question');
+            const requiredCheckbox = sectionElement.querySelector('.section-required');
+            const columnLabelInput = sectionElement.querySelector('.section-column-label');
             
             sectionElement.querySelectorAll('.dropdown-options .option-item input[type="text"]').forEach(input => {
                 if (input.value.trim()) {
@@ -2172,19 +2276,31 @@ function collectSurveyConfiguration() {
                 }
             });
             
+            let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+            if (!columnLabel) columnLabel = generateDefaultColumnLabel(questionInput?.value || titleInput?.value, `dropdown_${sectionId.replace(/[^0-9]/g, '')}`);
+            columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+            if (columnLabelInput) columnLabelInput.value = columnLabel;
+
             config.sections[sectionId] = {
                 type: 'dropdown',
                 enabled: true,
                 title: titleInput ? titleInput.value : 'Selection',
                 question: questionInput ? questionInput.value : 'Please select an option:',
                 required: requiredCheckbox ? requiredCheckbox.checked : false,
-                options: options
+                options: options,
+                column_label: columnLabel
             };
         } else if (sectionType === 'slider') {
-            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; 
-            const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+            const questionInput = sectionElement.querySelector('.section-question');
+            const requiredCheckbox = sectionElement.querySelector('.section-required');
+            const columnLabelInput = sectionElement.querySelector('.section-column-label');
             const sliderTypeRadio = sectionElement.querySelector(`input[name="slider-type-${sectionId}"]:checked`);
             const sliderType = sliderTypeRadio ? sliderTypeRadio.value : 'labels';
+
+            let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+            if (!columnLabel) columnLabel = generateDefaultColumnLabel(questionInput?.value || titleInput?.value, `slider_${sectionId.replace(/[^0-9]/g, '')}`);
+            columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+            if (columnLabelInput) columnLabelInput.value = columnLabel;
             
             let sliderConfig = {
                 type: 'slider',
@@ -2192,7 +2308,8 @@ function collectSurveyConfiguration() {
                 title: titleInput ? titleInput.value : 'Rating Scale',
                 question: questionInput ? questionInput.value : 'Please rate using the slider:',
                 required: requiredCheckbox ? requiredCheckbox.checked : false,
-                slider_type: sliderType
+                slider_type: sliderType,
+                column_label: columnLabel
             };
             
             if (sliderType === 'labels') {
@@ -2244,6 +2361,13 @@ function collectSurveyConfiguration() {
             // Handle response configuration
             if (imageConfig.require_response && responseTypeSelect) {
                 imageConfig.response_type = responseTypeSelect.value;
+
+                const responseColumnLabelInput = sectionElement.querySelector('.response-column-label');
+                let responseColumnLabel = sanitizeColumnLabel(responseColumnLabelInput?.value);
+                if (!responseColumnLabel) responseColumnLabel = generateDefaultColumnLabel(titleInput?.value, `image_${sectionId.replace(/[^0-9]/g, '')}`);
+                responseColumnLabel = ensureUniqueColumnLabel(responseColumnLabel, usedColumnLabels);
+                if (responseColumnLabelInput) responseColumnLabelInput.value = responseColumnLabel;
+                imageConfig.response_column_label = responseColumnLabel;
                 
                 const responseDetails = sectionElement.querySelector('.response-details');
                 if (responseDetails) {
@@ -2302,6 +2426,13 @@ function collectSurveyConfiguration() {
             // Handle response configuration
             if (videoConfig.require_response && responseTypeSelect) {
                 videoConfig.response_type = responseTypeSelect.value;
+
+                const responseColumnLabelInput = sectionElement.querySelector('.response-column-label');
+                let responseColumnLabel = sanitizeColumnLabel(responseColumnLabelInput?.value);
+                if (!responseColumnLabel) responseColumnLabel = generateDefaultColumnLabel(titleInput?.value, `video_${sectionId.replace(/[^0-9]/g, '')}`);
+                responseColumnLabel = ensureUniqueColumnLabel(responseColumnLabel, usedColumnLabels);
+                if (responseColumnLabelInput) responseColumnLabelInput.value = responseColumnLabel;
+                videoConfig.response_column_label = responseColumnLabel;
                 
                 const responseDetails = sectionElement.querySelector('.response-details');
                 if (responseDetails) {
@@ -2353,6 +2484,13 @@ function collectSurveyConfiguration() {
             // Handle response configuration
             if (pdfConfig.require_response && responseTypeSelect) {
                 pdfConfig.response_type = responseTypeSelect.value;
+
+                const responseColumnLabelInput = sectionElement.querySelector('.response-column-label');
+                let responseColumnLabel = sanitizeColumnLabel(responseColumnLabelInput?.value);
+                if (!responseColumnLabel) responseColumnLabel = generateDefaultColumnLabel(titleInput?.value, `pdf_${sectionId.replace(/[^0-9]/g, '')}`);
+                responseColumnLabel = ensureUniqueColumnLabel(responseColumnLabel, usedColumnLabels);
+                if (responseColumnLabelInput) responseColumnLabelInput.value = responseColumnLabel;
+                pdfConfig.response_column_label = responseColumnLabel;
                 
                 const responseDetails = sectionElement.querySelector('.response-details');
                 if (responseDetails) {
@@ -2490,6 +2628,15 @@ function populateSurveyForm(config) {
                 case 'slider':
                     sectionHTML = createSliderSection(sectionId);
                     break;
+                case 'image':
+                    sectionHTML = createImageSection(sectionId);
+                    break;
+                case 'video':
+                    sectionHTML = createVideoSection(sectionId);
+                    break;
+                case 'pdf':
+                    sectionHTML = createPDFSection(sectionId);
+                    break;
                 case 'custom':
                     sectionHTML = createCustomSection(sectionId);
                     break;
@@ -2526,19 +2673,23 @@ function populateSectionData(sectionId, sectionConfig) {
         // Populate demographics fields
         if (sectionConfig.fields?.age) {
             const ageCheckbox = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="checkbox"]');
+            const ageColumnLabelInput = sectionElement.querySelector('.age-column-label');
             const ageMinInput = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="number"]:first-of-type');
             const ageMaxInput = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="number"]:last-of-type');
             
             if (ageCheckbox) ageCheckbox.checked = sectionConfig.fields.age.enabled;
+            if (ageColumnLabelInput) ageColumnLabelInput.value = sectionConfig.fields.age.column_label || 'age';
             if (ageMinInput) ageMinInput.value = sectionConfig.fields.age.min || '18';
             if (ageMaxInput) ageMaxInput.value = sectionConfig.fields.age.max || '99';
         }
         
         if (sectionConfig.fields?.gender) {
             const genderCheckbox = sectionElement.querySelector('.demographics-fields .field-config:nth-child(2) input[type="checkbox"]');
+            const genderColumnLabelInput = sectionElement.querySelector('.gender-column-label');
             const genderOptionsInput = sectionElement.querySelector('.gender-options input[type="text"]');
             
             if (genderCheckbox) genderCheckbox.checked = sectionConfig.fields.gender.enabled;
+            if (genderColumnLabelInput) genderColumnLabelInput.value = sectionConfig.fields.gender.column_label || 'gender';
             if (genderOptionsInput && sectionConfig.fields.gender.options) {
                 genderOptionsInput.value = sectionConfig.fields.gender.options.join(', ');
             }
@@ -2560,10 +2711,13 @@ function populateSectionData(sectionId, sectionConfig) {
         if (itemsContainer && sectionConfig.items) {
             itemsContainer.innerHTML = '';
             sectionConfig.items.forEach(item => {
+                const statement = typeof item === 'string' ? item : (item.text || '');
+                const columnLabel = typeof item === 'string' ? '' : (item.column_label || '');
                 const newItem = document.createElement('div');
                 newItem.className = 'likert-item';
                 newItem.innerHTML = `
-                    <input type="text" value="${item}" placeholder="Enter statement">
+                    <input type="text" class="likert-statement" value="${statement}" placeholder="Enter statement">
+                    <input type="text" class="likert-column-label" value="${columnLabel}" placeholder="Column label (hidden)">
                     <button type="button" class="btn-remove" onclick="removeLikertItem(this)">×</button>
                 `;
                 itemsContainer.appendChild(newItem);
@@ -2582,7 +2736,9 @@ function populateSectionData(sectionId, sectionConfig) {
                 newQuestion.className = 'freetext-question';
                 newQuestion.innerHTML = `
                     <label>Question:</label>
-                    <input type="text" value="${questionConfig.question}" placeholder="Enter question">
+                    <input type="text" class="freetext-question-text" value="${questionConfig.question}" placeholder="Enter question">
+                    <label>Column label (hidden):</label>
+                    <input type="text" class="freetext-column-label" value="${questionConfig.column_label || ''}" placeholder="e.g., free_text_1">
                     <label>Text area rows:</label>
                     <input type="number" value="${questionConfig.rows || 4}" min="1" max="20" style="width: 60px;">
                     <button type="button" class="btn-remove" onclick="removeFreetextQuestion(this)">×</button>
@@ -2605,7 +2761,7 @@ function populateSectionData(sectionId, sectionConfig) {
                 const fieldDiv = document.createElement('div');
                 fieldDiv.className = 'field-config';
                 fieldDiv.innerHTML = `
-                    <input type="text" value="${fieldConfig.label}" placeholder="Field label" style="width: 200px;">
+                    <input type="text" class="custom-field-label" value="${fieldConfig.label}" placeholder="Field label" style="width: 200px;">
                     <select style="width: 120px;">
                         <option value="text" ${fieldConfig.type === 'text' ? 'selected' : ''}>Text Input</option>
                         <option value="textarea" ${fieldConfig.type === 'textarea' ? 'selected' : ''}>Text Area</option>
@@ -2616,7 +2772,8 @@ function populateSectionData(sectionId, sectionConfig) {
                         <option value="checkbox" ${fieldConfig.type === 'checkbox' ? 'selected' : ''}>Checkboxes</option>
                         <option value="likert" ${fieldConfig.type === 'likert' ? 'selected' : ''}>Likert Scale</option>
                     </select>
-                    <input type="text" value="${fieldConfig.options || ''}" placeholder="Options/validation" style="flex: 1;">
+                    <input type="text" class="custom-field-options" value="${fieldConfig.options || ''}" placeholder="Options/validation" style="flex: 1;">
+                    <input type="text" class="custom-field-column-label" value="${fieldConfig.column_label || ''}" placeholder="Column label (hidden)" style="width: 200px;">
                     <input type="checkbox" ${fieldConfig.required ? 'checked' : ''}> <label style="margin: 0;">Required</label>
                     <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
                 `;
@@ -2625,9 +2782,13 @@ function populateSectionData(sectionId, sectionConfig) {
         }
     } else if (sectionConfig.type === 'checkbox') {
         // Populate checkbox section
-        const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1];
+        const questionInput = sectionElement.querySelector('.section-question');
+        const columnLabelInput = sectionElement.querySelector('.section-column-label');
         if (questionInput && sectionConfig.question) {
             questionInput.value = sectionConfig.question;
+        }
+        if (columnLabelInput) {
+            columnLabelInput.value = sectionConfig.column_label || '';
         }
         
         // Populate checkbox options
@@ -2646,14 +2807,18 @@ function populateSectionData(sectionId, sectionConfig) {
         }
     } else if (sectionConfig.type === 'dropdown') {
         // Populate dropdown section
-        const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1];
+        const questionInput = sectionElement.querySelector('.section-question');
+        const columnLabelInput = sectionElement.querySelector('.section-column-label');
         if (questionInput && sectionConfig.question) {
             questionInput.value = sectionConfig.question;
         }
         
-        const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+        const requiredCheckbox = sectionElement.querySelector('.section-required');
         if (requiredCheckbox) {
             requiredCheckbox.checked = sectionConfig.required || false;
+        }
+        if (columnLabelInput) {
+            columnLabelInput.value = sectionConfig.column_label || '';
         }
         
         // Populate dropdown options
@@ -2672,14 +2837,18 @@ function populateSectionData(sectionId, sectionConfig) {
         }
     } else if (sectionConfig.type === 'slider') {
         // Populate slider section
-        const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1];
+        const questionInput = sectionElement.querySelector('.section-question');
+        const columnLabelInput = sectionElement.querySelector('.section-column-label');
         if (questionInput && sectionConfig.question) {
             questionInput.value = sectionConfig.question;
         }
         
-        const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+        const requiredCheckbox = sectionElement.querySelector('.section-required');
         if (requiredCheckbox) {
             requiredCheckbox.checked = sectionConfig.required || false;
+        }
+        if (columnLabelInput) {
+            columnLabelInput.value = sectionConfig.column_label || '';
         }
         
         // Set slider type
@@ -2704,6 +2873,170 @@ function populateSectionData(sectionId, sectionConfig) {
             const defaultInput = sectionElement.querySelector('.label-config input[type="number"]:nth-of-type(2)');
             if (stepInput) stepInput.value = sectionConfig.steps || 7;
             if (defaultInput) defaultInput.value = sectionConfig.default_value || 4;
+        }
+    } else if (sectionConfig.type === 'image') {
+        const descriptionTextarea = sectionElement.querySelector('textarea');
+        if (descriptionTextarea) descriptionTextarea.value = sectionConfig.description || '';
+
+        const altTextInput = sectionElement.querySelector('.image-alt-text input[type="text"]');
+        if (altTextInput) altTextInput.value = sectionConfig.alt_text || '';
+
+        const selects = sectionElement.querySelectorAll('select');
+        const displaySizeSelect = selects[0];
+        const alignmentSelect = selects[1];
+        if (displaySizeSelect && sectionConfig.display_size) displaySizeSelect.value = sectionConfig.display_size;
+        if (alignmentSelect && sectionConfig.alignment) alignmentSelect.value = sectionConfig.alignment;
+
+        const requireResponseCheckbox = sectionElement.querySelector(`#require-response-${sectionId}`);
+        const responseConfig = sectionElement.querySelector('.response-config');
+        if (requireResponseCheckbox) requireResponseCheckbox.checked = sectionConfig.require_response || false;
+        if (requireResponseCheckbox && responseConfig && !requireResponseCheckbox.dataset.responseToggleBound) {
+            requireResponseCheckbox.addEventListener('change', function() {
+                responseConfig.style.display = this.checked ? 'block' : 'none';
+            });
+            requireResponseCheckbox.dataset.responseToggleBound = '1';
+        }
+        if (responseConfig) responseConfig.style.display = (sectionConfig.require_response ? 'block' : 'none');
+
+        if (sectionConfig.require_response) {
+            const responseColumnLabelInput = sectionElement.querySelector('.response-column-label');
+            if (responseColumnLabelInput) responseColumnLabelInput.value = sectionConfig.response_column_label || '';
+
+            const responseTypeSelect = sectionElement.querySelector('.response-config select');
+            const responseType = sectionConfig.response_type || 'rating';
+            if (responseTypeSelect) {
+                responseTypeSelect.value = responseType;
+                toggleImageResponseType(sectionId, responseType);
+            }
+
+            const responseDetails = document.getElementById(`image-response-details-${sectionId}`);
+            if (responseDetails) {
+                const inputs = responseDetails.querySelectorAll('input, textarea');
+                if (responseType === 'rating') {
+                    if (inputs[0]) inputs[0].value = sectionConfig.rating_question || 'How would you rate this image?';
+                    if (inputs[1]) inputs[1].value = sectionConfig.rating_scale ?? 10;
+                } else if (responseType === 'text') {
+                    if (inputs[0]) inputs[0].value = sectionConfig.text_question || 'What are your thoughts about this image?';
+                    if (inputs[1]) inputs[1].value = sectionConfig.text_rows ?? 4;
+                } else if (responseType === 'checkbox') {
+                    if (inputs[0]) inputs[0].value = sectionConfig.checkbox_question || 'Select all that apply to this image:';
+                    if (inputs[1]) inputs[1].value = Array.isArray(sectionConfig.checkbox_options) ? sectionConfig.checkbox_options.join('\n') : '';
+                }
+            }
+        }
+    } else if (sectionConfig.type === 'video') {
+        const descriptionTextarea = sectionElement.querySelector('textarea');
+        if (descriptionTextarea) descriptionTextarea.value = sectionConfig.description || '';
+
+        const sourceTypeSelect = sectionElement.querySelector('.video-source-options select');
+        const urlInput = sectionElement.querySelector('.video-url-section input[type="url"]');
+        const videoSizeSelect = sectionElement.querySelectorAll('select')[1];
+        if (videoSizeSelect && sectionConfig.video_size) videoSizeSelect.value = sectionConfig.video_size;
+
+        const autoplayCheckbox = sectionElement.querySelector(`#autoplay-${sectionId}`);
+        const controlsCheckbox = sectionElement.querySelector(`#controls-${sectionId}`);
+        const loopCheckbox = sectionElement.querySelector(`#loop-${sectionId}`);
+        if (autoplayCheckbox) autoplayCheckbox.checked = sectionConfig.autoplay || false;
+        if (controlsCheckbox) controlsCheckbox.checked = sectionConfig.controls !== false;
+        if (loopCheckbox) loopCheckbox.checked = sectionConfig.loop || false;
+
+        const hasUrl = !!(sectionConfig.video_url && String(sectionConfig.video_url).trim());
+        if (sourceTypeSelect) {
+            sourceTypeSelect.value = hasUrl ? 'url' : 'upload';
+            toggleVideoSourceType(sectionId, sourceTypeSelect.value);
+        }
+        if (hasUrl && urlInput) urlInput.value = sectionConfig.video_url;
+
+        const requireResponseCheckbox = sectionElement.querySelector(`#require-response-${sectionId}`);
+        const responseConfig = sectionElement.querySelector('.response-config');
+        if (requireResponseCheckbox) requireResponseCheckbox.checked = sectionConfig.require_response || false;
+        if (requireResponseCheckbox && responseConfig && !requireResponseCheckbox.dataset.responseToggleBound) {
+            requireResponseCheckbox.addEventListener('change', function() {
+                responseConfig.style.display = this.checked ? 'block' : 'none';
+            });
+            requireResponseCheckbox.dataset.responseToggleBound = '1';
+        }
+        if (responseConfig) responseConfig.style.display = (sectionConfig.require_response ? 'block' : 'none');
+
+        if (sectionConfig.require_response) {
+            const responseColumnLabelInput = sectionElement.querySelector('.response-column-label');
+            if (responseColumnLabelInput) responseColumnLabelInput.value = sectionConfig.response_column_label || '';
+
+            const responseTypeSelect = sectionElement.querySelector('.response-config select');
+            const responseType = sectionConfig.response_type || 'rating';
+            if (responseTypeSelect) {
+                responseTypeSelect.value = responseType;
+                toggleVideoResponseType(sectionId, responseType);
+            }
+
+            const responseDetails = document.getElementById(`video-response-details-${sectionId}`);
+            if (responseDetails) {
+                const inputs = responseDetails.querySelectorAll('input, textarea');
+                if (responseType === 'rating') {
+                    if (inputs[0]) inputs[0].value = sectionConfig.rating_question || 'How would you rate this video?';
+                    if (inputs[1]) inputs[1].value = sectionConfig.rating_scale ?? 10;
+                } else if (responseType === 'text') {
+                    if (inputs[0]) inputs[0].value = sectionConfig.text_question || 'What are your thoughts about this video?';
+                    if (inputs[1]) inputs[1].value = sectionConfig.text_rows ?? 4;
+                } else if (responseType === 'checkbox') {
+                    if (inputs[0]) inputs[0].value = sectionConfig.checkbox_question || 'Select all that apply to this video:';
+                    if (inputs[1]) inputs[1].value = Array.isArray(sectionConfig.checkbox_options) ? sectionConfig.checkbox_options.join('\n') : '';
+                }
+            }
+        }
+    } else if (sectionConfig.type === 'pdf') {
+        const descriptionTextarea = sectionElement.querySelector('textarea');
+        if (descriptionTextarea) descriptionTextarea.value = sectionConfig.description || '';
+
+        const selects = sectionElement.querySelectorAll('select');
+        const heightSelect = selects[0];
+        const modeSelect = selects[1];
+        if (heightSelect && sectionConfig.display_height) heightSelect.value = sectionConfig.display_height;
+        if (modeSelect && sectionConfig.display_mode) modeSelect.value = sectionConfig.display_mode;
+
+        const allowDownloadCheckbox = sectionElement.querySelector(`#allow-download-${sectionId}`);
+        const requireViewCheckbox = sectionElement.querySelector(`#require-view-${sectionId}`);
+        if (allowDownloadCheckbox) allowDownloadCheckbox.checked = sectionConfig.allow_download !== false;
+        if (requireViewCheckbox) requireViewCheckbox.checked = sectionConfig.require_view || false;
+
+        const requireResponseCheckbox = sectionElement.querySelector(`#require-response-${sectionId}`);
+        const responseConfig = sectionElement.querySelector('.response-config');
+        if (requireResponseCheckbox) requireResponseCheckbox.checked = sectionConfig.require_response || false;
+        if (requireResponseCheckbox && responseConfig && !requireResponseCheckbox.dataset.responseToggleBound) {
+            requireResponseCheckbox.addEventListener('change', function() {
+                responseConfig.style.display = this.checked ? 'block' : 'none';
+            });
+            requireResponseCheckbox.dataset.responseToggleBound = '1';
+        }
+        if (responseConfig) responseConfig.style.display = (sectionConfig.require_response ? 'block' : 'none');
+
+        if (sectionConfig.require_response) {
+            const responseColumnLabelInput = sectionElement.querySelector('.response-column-label');
+            if (responseColumnLabelInput) responseColumnLabelInput.value = sectionConfig.response_column_label || '';
+
+            const responseTypeSelect = sectionElement.querySelector('.response-config select');
+            const responseType = sectionConfig.response_type || 'confirmation';
+            if (responseTypeSelect) {
+                responseTypeSelect.value = responseType;
+                togglePDFResponseType(sectionId, responseType);
+            }
+
+            const responseDetails = document.getElementById(`pdf-response-details-${sectionId}`);
+            if (responseDetails) {
+                const inputs = responseDetails.querySelectorAll('input, textarea');
+                if (responseType === 'confirmation') {
+                    if (inputs[0]) inputs[0].value = sectionConfig.confirmation_text || 'I have read and understood the document';
+                } else if (responseType === 'rating') {
+                    if (inputs[0]) inputs[0].value = sectionConfig.rating_question || 'How would you rate this document?';
+                    if (inputs[1]) inputs[1].value = sectionConfig.rating_scale ?? 10;
+                } else if (responseType === 'text') {
+                    if (inputs[0]) inputs[0].value = sectionConfig.text_question || 'What are your thoughts about this document?';
+                    if (inputs[1]) inputs[1].value = sectionConfig.text_rows ?? 4;
+                } else if (responseType === 'checkbox') {
+                    if (inputs[0]) inputs[0].value = sectionConfig.checkbox_question || 'Select all that apply to this document:';
+                    if (inputs[1]) inputs[1].value = Array.isArray(sectionConfig.checkbox_options) ? sectionConfig.checkbox_options.join('\n') : '';
+                }
+            }
         }
     }
 }
@@ -3230,6 +3563,17 @@ function addPostSurveySection() {
         newSection.setAttribute('data-section', sectionId);
         newSection.innerHTML = sectionHTML;
         dynamicContainer.appendChild(newSection);
+
+        // Initialize response toggles for media sections
+        if (['image', 'video', 'pdf'].includes(selectedType)) {
+            const responseCheckbox = newSection.querySelector(`#require-response-${sectionId}`);
+            const responseConfig = newSection.querySelector('.response-config');
+            if (responseCheckbox && responseConfig) {
+                responseCheckbox.addEventListener('change', function() {
+                    responseConfig.style.display = this.checked ? 'block' : 'none';
+                });
+            }
+        }
     }
 }
 
@@ -3401,9 +3745,21 @@ function collectPostSurveyConfiguration() {
         if (sectionType === 'demographics') {
             const ageCheckbox = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="checkbox"]');
             const genderCheckbox = sectionElement.querySelector('.demographics-fields .field-config:nth-child(2) input[type="checkbox"]');
+            const ageColumnLabelInput = sectionElement.querySelector('.age-column-label');
+            const genderColumnLabelInput = sectionElement.querySelector('.gender-column-label');
             const ageMinInput = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="number"]:first-of-type');
             const ageMaxInput = sectionElement.querySelector('.demographics-fields .field-config:first-child input[type="number"]:last-of-type');
             const genderOptionsInput = sectionElement.querySelector('.gender-options input[type="text"]');
+
+            let ageColumnLabel = sanitizeColumnLabel(ageColumnLabelInput?.value);
+            if (!ageColumnLabel) ageColumnLabel = generateDefaultColumnLabel('age', 'age');
+            ageColumnLabel = ensureUniqueColumnLabel(ageColumnLabel, usedColumnLabels);
+            if (ageColumnLabelInput) ageColumnLabelInput.value = ageColumnLabel;
+
+            let genderColumnLabel = sanitizeColumnLabel(genderColumnLabelInput?.value);
+            if (!genderColumnLabel) genderColumnLabel = generateDefaultColumnLabel('gender', 'gender');
+            genderColumnLabel = ensureUniqueColumnLabel(genderColumnLabel, usedColumnLabels);
+            if (genderColumnLabelInput) genderColumnLabelInput.value = genderColumnLabel;
             
             config.sections[sectionId] = {
                 type: 'demographics',
@@ -3412,11 +3768,13 @@ function collectPostSurveyConfiguration() {
                 fields: {
                     age: {
                         enabled: ageCheckbox ? ageCheckbox.checked : false,
+                        column_label: ageColumnLabel,
                         min: ageMinInput ? ageMinInput.value : '18',
                         max: ageMaxInput ? ageMaxInput.value : '99'
                     },
                     gender: {
                         enabled: genderCheckbox ? genderCheckbox.checked : false,
+                        column_label: genderColumnLabel,
                         options: genderOptionsInput ? genderOptionsInput.value.split(',').map(s => s.trim()) : []
                     }
                 }
@@ -3425,11 +3783,22 @@ function collectPostSurveyConfiguration() {
             const likertItems = [];
             const scaleTypeSelect = sectionElement.querySelector('.likert-scale-type');
             const scaleLabelsInput = sectionElement.querySelector('.scale-labels');
-            
-            sectionElement.querySelectorAll('.likert-items .likert-item input[type="text"]').forEach(input => {
-                if (input.value.trim()) {
-                    likertItems.push(input.value.trim());
-                }
+
+            sectionElement.querySelectorAll('.likert-items .likert-item').forEach((itemDiv, index) => {
+                const statementInput = itemDiv.querySelector('.likert-statement');
+                const columnLabelInput = itemDiv.querySelector('.likert-column-label');
+                const statement = statementInput ? statementInput.value.trim() : '';
+                if (!statement) return;
+
+                let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+                if (!columnLabel) columnLabel = generateDefaultColumnLabel(statement, `likert_item_${index + 1}`);
+                columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+                if (columnLabelInput) columnLabelInput.value = columnLabel;
+
+                likertItems.push({
+                    text: statement,
+                    column_label: columnLabel
+                });
             });
             
             config.sections[sectionId] = {
@@ -3444,12 +3813,19 @@ function collectPostSurveyConfiguration() {
             const freetextQuestions = [];
             
             sectionElement.querySelectorAll('.freetext-questions .freetext-question').forEach(questionDiv => {
-                const questionText = questionDiv.querySelector('input[type="text"]').value.trim();
+                const questionTextInput = questionDiv.querySelector('.freetext-question-text');
+                const columnLabelInput = questionDiv.querySelector('.freetext-column-label');
+                const questionText = questionTextInput ? questionTextInput.value.trim() : '';
                 const rows = questionDiv.querySelector('input[type="number"]').value;
                 if (questionText) {
+                    let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+                    if (!columnLabel) columnLabel = generateDefaultColumnLabel(questionText, `free_text_${freetextQuestions.length + 1}`);
+                    columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+                    if (columnLabelInput) columnLabelInput.value = columnLabel;
                     freetextQuestions.push({
                         question: questionText,
-                        rows: parseInt(rows) || 4
+                        rows: parseInt(rows) || 4,
+                        column_label: columnLabel
                     });
                 }
             });
@@ -3465,17 +3841,23 @@ function collectPostSurveyConfiguration() {
             const descriptionTextarea = sectionElement.querySelector('textarea');
             
             sectionElement.querySelectorAll('.custom-fields .field-config').forEach(fieldDiv => {
-                const labelInput = fieldDiv.querySelector('input[type="text"]:first-of-type');
+                const labelInput = fieldDiv.querySelector('.custom-field-label') || fieldDiv.querySelector('input[type="text"]');
                 const typeSelect = fieldDiv.querySelector('select');
-                const optionsInput = fieldDiv.querySelector('input[type="text"]:last-of-type');
+                const optionsInput = fieldDiv.querySelector('.custom-field-options');
+                const columnLabelInput = fieldDiv.querySelector('.custom-field-column-label');
                 const requiredCheckbox = fieldDiv.querySelector('input[type="checkbox"]');
                 
                 if (labelInput && labelInput.value.trim()) {
+                    let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+                    if (!columnLabel) columnLabel = generateDefaultColumnLabel(labelInput.value.trim(), `custom_${customFields.length + 1}`);
+                    columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+                    if (columnLabelInput) columnLabelInput.value = columnLabel;
                     customFields.push({
                         label: labelInput.value.trim(),
                         type: typeSelect ? typeSelect.value : 'text',
                         options: optionsInput ? optionsInput.value : '',
-                        required: requiredCheckbox ? requiredCheckbox.checked : false
+                        required: requiredCheckbox ? requiredCheckbox.checked : false,
+                        column_label: columnLabel
                     });
                 }
             });
@@ -3489,7 +3871,8 @@ function collectPostSurveyConfiguration() {
             };
         } else if (sectionType === 'checkbox') {
             const options = [];
-            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; // Second text input is the question
+            const questionInput = sectionElement.querySelector('.section-question');
+            const columnLabelInput = sectionElement.querySelector('.section-column-label');
             
             sectionElement.querySelectorAll('.checkbox-options .option-item input[type="text"]').forEach(input => {
                 if (input.value.trim()) {
@@ -3497,17 +3880,24 @@ function collectPostSurveyConfiguration() {
                 }
             });
             
+            let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+            if (!columnLabel) columnLabel = generateDefaultColumnLabel(questionInput?.value || titleInput?.value, `checkbox_${sectionId.replace(/[^0-9]/g, '')}`);
+            columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+            if (columnLabelInput) columnLabelInput.value = columnLabel;
+
             config.sections[sectionId] = {
                 type: 'checkbox',
                 enabled: true,
                 title: titleInput ? titleInput.value : 'Multiple Choice Selection',
                 question: questionInput ? questionInput.value : 'Please select all that apply:',
-                options: options
+                options: options,
+                column_label: columnLabel
             };
         } else if (sectionType === 'dropdown') {
             const options = [];
-            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; // Second text input is the question
-            const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+            const questionInput = sectionElement.querySelector('.section-question');
+            const requiredCheckbox = sectionElement.querySelector('.section-required');
+            const columnLabelInput = sectionElement.querySelector('.section-column-label');
             
             sectionElement.querySelectorAll('.dropdown-options .option-item input[type="text"]').forEach(input => {
                 if (input.value.trim()) {
@@ -3515,19 +3905,31 @@ function collectPostSurveyConfiguration() {
                 }
             });
             
+            let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+            if (!columnLabel) columnLabel = generateDefaultColumnLabel(questionInput?.value || titleInput?.value, `dropdown_${sectionId.replace(/[^0-9]/g, '')}`);
+            columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+            if (columnLabelInput) columnLabelInput.value = columnLabel;
+
             config.sections[sectionId] = {
                 type: 'dropdown',
                 enabled: true,
                 title: titleInput ? titleInput.value : 'Selection',
                 question: questionInput ? questionInput.value : 'Please select an option:',
                 required: requiredCheckbox ? requiredCheckbox.checked : false,
-                options: options
+                options: options,
+                column_label: columnLabel
             };
         } else if (sectionType === 'slider') {
-            const questionInput = sectionElement.querySelectorAll('input[type="text"]')[1]; // Second text input is the question
-            const requiredCheckbox = sectionElement.querySelector('input[type="checkbox"]');
+            const questionInput = sectionElement.querySelector('.section-question');
+            const requiredCheckbox = sectionElement.querySelector('.section-required');
+            const urlInput = sectionElement.querySelector('.video-url-section input[type="url"]');
             const sliderTypeRadio = sectionElement.querySelector(`input[name="slider-type-${sectionId}"]:checked`);
             const sliderType = sliderTypeRadio ? sliderTypeRadio.value : 'labels';
+
+            let columnLabel = sanitizeColumnLabel(columnLabelInput?.value);
+            if (!columnLabel) columnLabel = generateDefaultColumnLabel(questionInput?.value || titleInput?.value, `slider_${sectionId.replace(/[^0-9]/g, '')}`);
+            columnLabel = ensureUniqueColumnLabel(columnLabel, usedColumnLabels);
+            if (columnLabelInput) columnLabelInput.value = columnLabel;
             
             let sliderConfig = {
                 type: 'slider',
@@ -3535,7 +3937,8 @@ function collectPostSurveyConfiguration() {
                 title: titleInput ? titleInput.value : 'Rating Scale',
                 question: questionInput ? questionInput.value : 'Please rate using the slider:',
                 required: requiredCheckbox ? requiredCheckbox.checked : false,
-                slider_type: sliderType
+                slider_type: sliderType,
+                column_label: columnLabel
             };
             
             if (sliderType === 'labels') {
@@ -3577,6 +3980,15 @@ function collectPostSurveyConfiguration() {
                 require_response: requireResponseCheckbox ? requireResponseCheckbox.checked : false,
                 response_type: responseTypeSelect ? responseTypeSelect.value : 'rating'
             };
+
+            if (config.sections[sectionId].require_response) {
+                const responseColumnLabelInput = sectionElement.querySelector('.response-column-label');
+                let responseColumnLabel = sanitizeColumnLabel(responseColumnLabelInput?.value);
+                if (!responseColumnLabel) responseColumnLabel = generateDefaultColumnLabel(titleInput?.value, `image_${sectionId.replace(/[^0-9]/g, '')}`);
+                responseColumnLabel = ensureUniqueColumnLabel(responseColumnLabel, usedColumnLabels);
+                if (responseColumnLabelInput) responseColumnLabelInput.value = responseColumnLabel;
+                config.sections[sectionId].response_column_label = responseColumnLabel;
+            }
         } else if (sectionType === 'video') {
             const descriptionTextarea = sectionElement.querySelector('textarea');
             const fileInput = sectionElement.querySelector(`#video-upload-${sectionId}`);
@@ -3600,6 +4012,15 @@ function collectPostSurveyConfiguration() {
                 loop: loopCheckbox ? loopCheckbox.checked : false,
                 require_response: requireResponseCheckbox ? requireResponseCheckbox.checked : false
             };
+
+            if (config.sections[sectionId].require_response) {
+                const responseColumnLabelInput = sectionElement.querySelector('.response-column-label');
+                let responseColumnLabel = sanitizeColumnLabel(responseColumnLabelInput?.value);
+                if (!responseColumnLabel) responseColumnLabel = generateDefaultColumnLabel(titleInput?.value, `video_${sectionId.replace(/[^0-9]/g, '')}`);
+                responseColumnLabel = ensureUniqueColumnLabel(responseColumnLabel, usedColumnLabels);
+                if (responseColumnLabelInput) responseColumnLabelInput.value = responseColumnLabel;
+                config.sections[sectionId].response_column_label = responseColumnLabel;
+            }
         } else if (sectionType === 'pdf') {
             const descriptionTextarea = sectionElement.querySelector('textarea');
             const fileInput = sectionElement.querySelector(`#pdf-upload-${sectionId}`);
@@ -3617,6 +4038,15 @@ function collectPostSurveyConfiguration() {
                 display_size: displaySizeSelect ? displaySizeSelect.value : 'medium',
                 require_response: requireResponseCheckbox ? requireResponseCheckbox.checked : false
             };
+
+            if (config.sections[sectionId].require_response) {
+                const responseColumnLabelInput = sectionElement.querySelector('.response-column-label');
+                let responseColumnLabel = sanitizeColumnLabel(responseColumnLabelInput?.value);
+                if (!responseColumnLabel) responseColumnLabel = generateDefaultColumnLabel(titleInput?.value, `pdf_${sectionId.replace(/[^0-9]/g, '')}`);
+                responseColumnLabel = ensureUniqueColumnLabel(responseColumnLabel, usedColumnLabels);
+                if (responseColumnLabelInput) responseColumnLabelInput.value = responseColumnLabel;
+                config.sections[sectionId].response_column_label = responseColumnLabel;
+            }
         }
         // Add more section types as needed following the same pattern as the main survey
     });
@@ -3633,10 +4063,74 @@ function validateSurveyConfiguration(config) {
     if (enabledSections.length === 0) {
         return 'At least one survey section must be enabled and configured.';
     }
+
+    // Validate column labels (hidden export keys): presence + uniqueness
+    const labelPattern = /^[A-Za-z0-9_]+$/;
+    const seenLabels = new Map();
+    const checkLabel = (label, context) => {
+        if (!label || String(label).trim() === '') {
+            return `Missing column label for ${context}.`;
+        }
+        const normalized = String(label).trim();
+        if (!labelPattern.test(normalized)) {
+            return `Invalid column label "${normalized}" for ${context}. Use only letters, numbers, and underscores.`;
+        }
+        if (seenLabels.has(normalized)) {
+            return `Duplicate column label "${normalized}" used for both ${seenLabels.get(normalized)} and ${context}.`;
+        }
+        seenLabels.set(normalized, context);
+        return null;
+    };
     
     // Validate each enabled section
     for (const [sectionId, section] of Object.entries(config.sections || {})) {
         if (!section.enabled) continue;
+
+        if (section.type === 'demographics') {
+            if (section.fields?.age?.enabled) {
+                const err = checkLabel(section.fields.age.column_label, `Demographics (Age) in section "${section.title}"`);
+                if (err) return err;
+            }
+            if (section.fields?.gender?.enabled) {
+                const err = checkLabel(section.fields.gender.column_label, `Demographics (Gender) in section "${section.title}"`);
+                if (err) return err;
+            }
+        }
+
+        if (section.type === 'likert' && Array.isArray(section.items)) {
+            for (let idx = 0; idx < section.items.length; idx++) {
+                const item = section.items[idx];
+                if (typeof item === 'string') continue;
+                const err = checkLabel(item?.column_label, `Likert item #${idx + 1} in section "${section.title}"`);
+                if (err) return err;
+            }
+        }
+
+        if (section.type === 'freetext' && Array.isArray(section.questions)) {
+            for (let idx = 0; idx < section.questions.length; idx++) {
+                const q = section.questions[idx];
+                const err = checkLabel(q?.column_label, `Free text question #${idx + 1} in section "${section.title}"`);
+                if (err) return err;
+            }
+        }
+
+        if (section.type === 'custom' && Array.isArray(section.fields)) {
+            for (let idx = 0; idx < section.fields.length; idx++) {
+                const field = section.fields[idx];
+                const err = checkLabel(field?.column_label, `Custom field #${idx + 1} in section "${section.title}"`);
+                if (err) return err;
+            }
+        }
+
+        if (section.type === 'checkbox' || section.type === 'dropdown' || section.type === 'slider') {
+            const err = checkLabel(section.column_label, `${section.type} response in section "${section.title}"`);
+            if (err) return err;
+        }
+
+        if ((section.type === 'image' || section.type === 'video' || section.type === 'pdf') && section.require_response) {
+            const err = checkLabel(section.response_column_label, `${section.type} response in section "${section.title}"`);
+            if (err) return err;
+        }
         
         if (section.type === 'likert') {
             // Validate Likert scale configuration
@@ -3776,6 +4270,15 @@ function populatePostSurveyForm(config) {
                     break;
                 case 'slider':
                     sectionHTML = createSliderSection(sectionId);
+                    break;
+                case 'image':
+                    sectionHTML = createImageSection(sectionId);
+                    break;
+                case 'video':
+                    sectionHTML = createVideoSection(sectionId);
+                    break;
+                case 'pdf':
+                    sectionHTML = createPDFSection(sectionId);
                     break;
                 case 'custom':
                     sectionHTML = createCustomSection(sectionId);
